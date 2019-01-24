@@ -12,7 +12,8 @@ def _get_version_string():
 
     return get_package_version(dirname(__file__))
 
-setup(name='PipelineMDL',
+
+setup(name='GUI-Extensions',
       version=_get_version_string(),
       author='cas',
       author_email='cas',
@@ -22,10 +23,15 @@ setup(name='PipelineMDL',
       package_dir={'': 'src'},
       packages=find_packages('src'),
       entry_points={
-          'karabo.middlelayer_device': [
-              'PipelineMDL = pipelineMDL.PipelineMDL:PipelineMDL'
+          'karabogui.gui_extensions': [
+              'BPMPositionWidget = extensions.BPMPositionWidget'
           ],
+
       },
-      package_data={},
+      include_package_data=True,
+      package_data={
+          '': ['*.py', '*.ui'],
+          'extensions': ['*.py', '*.ui'],
+      },
       requires=[],
       )
