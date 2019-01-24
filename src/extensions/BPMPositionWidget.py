@@ -25,13 +25,13 @@ class BPMPositionModel(BaseWidgetObjectData):
 
 
 @register_scene_reader('BPMPosition', version=2)
-def _color_bool_reader(read_func, element):
+def _bpm_position_reader(read_func, element):
     traits = read_base_widget_data(element)
     return BPMPositionModel(**traits)
 
 
 @register_scene_writer(BPMPositionModel)
-def _color_bool_writer(write_func, model, parent):
+def _bpm_position_writer(write_func, model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'BPMPosition')
     return element
