@@ -6,5 +6,5 @@ from karabo.common.scenemodel.io_utils import (
     read_base_widget_data, read_empty_display_editable_widget,
     write_base_widget_data)
 from karabogui.controllers.api import (
-    BaseBindingController, register_binding_controller, with_display_type)
+    BaseBindingController, register_binding_controller)
 from karabo.common.scenemodel.api import BaseWidgetObjectData
