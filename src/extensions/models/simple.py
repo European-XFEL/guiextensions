@@ -1,8 +1,11 @@
 from xml.etree.ElementTree import SubElement
 
-from .api import (
-    BaseWidgetObjectData, read_base_widget_data, register_scene_reader,
-    register_scene_writer, write_base_widget_data, WIDGET_ELEMENT_TAG)
+from karabo.common.scenemodel.api import BaseWidgetObjectData
+from karabo.common.scenemodel.const import WIDGET_ELEMENT_TAG
+from karabo.common.scenemodel.io_utils import (
+    read_base_widget_data, write_base_widget_data)
+from karabo.common.scenemodel.registry import (
+    register_scene_reader, register_scene_writer)
 
 
 class IPMQuadrant(BaseWidgetObjectData):
