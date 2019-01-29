@@ -24,7 +24,7 @@ setup(name='GUI-Extensions',
       packages=find_packages('src'),
       entry_points={
           'karabogui.gui_extensions': [
-              'BPMPositionWidget = extensions.BPMPositionWidget'
+              'IPMQuadrant = extensions.display_ipm_quadrant'
           ],
 
       },
@@ -32,6 +32,7 @@ setup(name='GUI-Extensions',
       package_data={
           '': ['*.py', '*.ui'],
           'extensions': ['*.py', '*.ui'],
+          'extensions.models': ['*.py', '*.ui'],
       },
       requires=[],
       )
