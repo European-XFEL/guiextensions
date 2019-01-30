@@ -1,3 +1,6 @@
+before_script:
+  - source ci/prepare "$CI_BUILD_NAME"
+
 .test_build_template: &test_build
   script:
     - export REL_OS_NAME=$(lsb_release -is)
