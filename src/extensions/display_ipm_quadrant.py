@@ -86,6 +86,11 @@ class Quadrant(QLabel):
     is_compatible=with_display_type('WidgetNode|IPM-Quadrant'),
     priority=0)
 class DisplayIPMQuadrant(BaseBindingController):
+    """The IPM Quadrant widget is used to provide visual information
+
+    It provides the latest beam positions in a quadrant like label. The latest
+    updated beam position is shown with a red circle.
+    """
     # The scene data model class for this controller
     model = Instance(IPMQuadrant, args=())
 
