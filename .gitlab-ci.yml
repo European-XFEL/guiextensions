@@ -1,5 +1,5 @@
 before_script:
-  - source ci/prepare "$CI_BUILD_NAME"
+  - source src/ci/prepare "$CI_BUILD_NAME"
 
 .test_build_template: &test_build
   script:
