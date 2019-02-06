@@ -1,5 +1,5 @@
 before_script:
-  - source src/ci/prepare "$CI_BUILD_NAME"
+  - source ci/prepare.sh "$CI_BUILD_NAME"
 
 .test_build_template: &test_build
   script:
@@ -21,16 +21,26 @@ before_script:
   except:
     - master
 
+.upload_template: &upload
+  script:
+    - source ci/upload.sh
+
+.release_build: &release-build
+  <<: *upload
+  only:
+    - /^(\d+\.)(\d+\.)(\d+)((a|b|rc|\.)\d+)?$/
+  except:
+    - branches
+    - schedules
+
+##### Release build #####
+
+release build ubuntu16:
+  image: europeanxfel/karabo-ci:ubuntu-16
+  <<: *release-build
+
 ##### Test build #####
-test:ubuntu14:
-  image: europeanxfel/karabo-ci:ubuntu-14
-  <<: *test_build
 
 test:ubuntu16:
   image: europeanxfel/karabo-ci:ubuntu-16
   <<: *test_build
-
-test:centos7:
-  image: europeanxfel/karabo-ci:centos-7
-  <<: *test_build
-
