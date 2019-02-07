@@ -23,12 +23,12 @@ before_script:
 
 .upload_template: &upload
   script:
-    - source ci/upload.sh
+    - source ci/upload.sh "$CI_BUILD_NAME"
 
 .release_build: &release-build
   <<: *upload
   only:
-    - /^(\d+\.)(\d+\.)(\d+)((a|b|rc|\.)\d+)?$/
+    - /^(\d+\.)(\d+\.?)(\d+)$/
   except:
     - branches
     - schedules
