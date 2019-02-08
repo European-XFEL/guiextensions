@@ -4,7 +4,7 @@ Developing the Scene
 
 As it is an important part of the Karabo GUI, we expect that the Scene will
 require new widgets/elements and other changes as time goes by. The following
-should be considered guidelines for accomplishing that in a way which doesn't
+should be considered guidelines for accomplishing that in a way which does not
 cause undue pain to existing users of the GUI.
 
 
@@ -21,7 +21,7 @@ makes use of the model objects.
 
 .. note::
 
-  This separation of model and view has an important benefit: You don't *need*
+  This separation of model and view has an important benefit: You do not *need*
   a GUI to work with scenes. Having a well defined and **independent** data
   model means that power users can script the creation/modification of scene
   files.
@@ -80,7 +80,7 @@ data which is already there, you should take note of the following:
   * Create a reader function for the class. Register the reader with the
     ``register_scene_reader`` decorator. Make sure you pass
     ``version=<current version>`` (where ``<current version>`` is the value of
-    ``SCENE_FILE_VERSION``) to the decorator. Don't pass ``SCENE_FILE_VERSION``
+    ``SCENE_FILE_VERSION``) to the decorator. Do not pass ``SCENE_FILE_VERSION``
     because this value will change over time and you want to pin your reader to
     a single version.
   * Create a writer function for the class. Register the writer with the

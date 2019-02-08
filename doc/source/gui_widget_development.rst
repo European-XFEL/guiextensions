@@ -36,7 +36,7 @@ if the MODEL contains traits, the developer will add:
 WIDGET CONTROLLER
 =================
 
-- Add the WIDGET CONTROLLER code to the `src/pythonGui/karabogui/controllers/[display|edit]`
+- Add the WIDGET CONTROLLER code to the `src/extensions/`
   directory.
 - Note that it is a requirement (enforced by register_binding_controller) that
   controller classes define a `model` trait which binds them to the scene MODEL
@@ -47,8 +47,7 @@ WIDGET CONTROLLER
 UNIT TESTS
 ==========
 
-- Add the UNIT TEST to the
-  `src/extensions/tests/test_widget_**DISPLAYTYPE**.py`
+- Add the UNIT TEST to the `src/extensions/tests/test_widget_**DISPLAYTYPE**.py`
   file
 
 
