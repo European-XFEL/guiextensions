@@ -1,14 +1,12 @@
 #!/usr/bin/env bash
 
-echo "Starting release job for "
-
 JOB_SCOPE=$(echo $1 | cut -f1 -d' ')
 JOB_TYPE=$(echo $1 | cut -f2 -d' ')
 TARGET_OS=$(echo $1 | cut -f3 -d' ')
 
-echo "$JOB_TYPE"
+echo "Starting release job for $JOB_SCOPE"
 
-if [[ "$JOB_TYPE" != "Release" ]]; then
+if [[ "$JOB_SCOPE" != "release" ]]; then
     exit
 fi
 
