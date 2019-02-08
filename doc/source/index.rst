@@ -13,7 +13,9 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-   intro
+   gui_scene_development
+   gui_widget_development
+
 
 Indices and tables
 ==================
