@@ -1,38 +1,20 @@
-#!/usr/bin/env python
-from os.path import dirname
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
+VERSION = '0.0.0'
 
-def _get_version_string():
-    try:
-        from karabo.packaging.versioning import get_package_version
-    except ImportError:
-        print("WARNING: Karabo framework not found! Version will be blank!")
-        return ''
-
-    return get_package_version(dirname(__file__))
-
-
-setup(name='GUI-Extensions',
-      version=_get_version_string(),
-      author='cas',
-      author_email='cas',
-      description='',
-      long_description='',
-      url='',
-      package_dir={'': 'src'},
-      packages=find_packages('src'),
-      entry_points={
-          'karabogui.gui_extensions': [
-              'IPMQuadrant = extensions.display_ipm_quadrant'
-          ],
-
-      },
-      include_package_data=True,
-      package_data={
-          '': ['*.py', '*.ui'],
-          'extensions': ['*.py', '*.ui'],
-          'extensions.models': ['*.py', '*.ui'],
-      },
-      requires=[],
-      )
+setup(
+    name='GUI-Extensions',
+    version=VERSION,
+    author='CAS',
+    author_email='CAS',
+    description='Widget extensions for KaraboGui',
+    url='https://git.xfel.eu/gitlab/karaboDevices/guiextensions/',
+    package_dir={'': 'src'},
+    packages=find_packages('src'),
+    entry_points={
+        'karabogui.gui_extensions': [
+            'IPMQuadrant = extensions.display_ipm_quadrant'
+        ],
+    },
+    include_package_data=True,
+)
