@@ -26,9 +26,7 @@ echo "Creating wheel at $CI_PROJECT_DIR"
 # Create wheel in dist/
 python setup.py bdist_wheel
 
-# Rename the wheel file
-WHEEL_FILE=GUI_Extensions-$COMMIT_TAG-py3.whl
-mv $CI_PROJECT_DIR/dist/GUI_Extensions-*.whl $WHEEL_FILE
+WHEEL_FILE=$CI_PROJECT_DIR/dist/GUI_Extensions-*.whl
 
 # Make directories on remote
 SSH_KARABO_DIR=/var/www/html/karabo
