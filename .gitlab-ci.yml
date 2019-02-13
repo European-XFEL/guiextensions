@@ -1,36 +1,33 @@
 before_script:
-  - source src/ci/prepare "$CI_BUILD_NAME"
+  - source ci/prepare.sh "$CI_BUILD_NAME"
 
 .test_build_template: &test_build
   script:
-    - export REL_OS_NAME=$(lsb_release -is)
-    - export REL_OS_VERS_LONG=$(lsb_release -rs | sed -r "s/^([0-9]+).*/\1/")
-    - export REL_PROJECT_NAME=$CI_PROJECT_NAME
-    - export REL_TAG=$CI_BUILD_REF_NAME
-    - export KARABO_TAG="Nightly"
-    - export KARABO_BROKER_TOPIC="gitlab_ci_$CI_JOB_ID"
-    - curl http://exflserv05.desy.de/karabo/karaboFramework/nightly/karabo-$KARABO_TAG-Release-$REL_OS_NAME-$REL_OS_VERS_LONG-x86_64.sh > karabo.sh
-    - bash karabo.sh --prefix=/root
-    - source /root/karabo/activate
-    - pushd $CI_PROJECT_DIR
-    - karabo -g https://$XFEL_TOKEN@git.xfel.eu/gitlab install $REL_PROJECT_NAME $REL_TAG
-    - pip install --upgrade .
-    - nosetests .
+    - source ci/build.sh "$CI_BUILD_NAME"
+    - source ci/test.sh "$CI_BUILD_NAME"
   only:
     - branches
   except:
     - master
 
+.release_build: &release-build
+  script:
+    - source ci/build.sh "$CI_BUILD_NAME"
+    - source ci/upload.sh "$CI_BUILD_NAME"
+  only:
+    - /^(\d+\.)(\d+\.?)(\d+)$/
+  except:
+    - branches
+    - schedules
+
+##### Release build #####
+
+release build ubuntu16:
+  image: europeanxfel/karabo-ci:ubuntu-16
+  <<: *release-build
+
 ##### Test build #####
-test:ubuntu14:
-  image: europeanxfel/karabo-ci:ubuntu-14
-  <<: *test_build
 
 test:ubuntu16:
   image: europeanxfel/karabo-ci:ubuntu-16
   <<: *test_build
-
-test:centos7:
-  image: europeanxfel/karabo-ci:centos-7
-  <<: *test_build
-

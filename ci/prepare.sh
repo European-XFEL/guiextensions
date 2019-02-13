@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 
 __lang_setting() {
     case "$1" in
