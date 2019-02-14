@@ -1,10 +1,8 @@
 from setuptools import find_packages, setup
 
-VERSION = '0.0.0'
-
 setup(
     name='GUI-Extensions',
-    version=VERSION,
+    use_scm_version={'write_to': 'src/extensions/_version.py'},
     author='CAS',
     author_email='CAS',
     description='Widget extensions for KaraboGui',
