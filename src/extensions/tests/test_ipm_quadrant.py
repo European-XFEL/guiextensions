@@ -1,14 +1,15 @@
-from karabo.middlelayer import Configurable, Float, Node
+from karabo.middlelayer import Configurable, Float, Hash, Node
 from karabogui.testing import (
-    GuiTestCase, get_class_property_proxy, set_proxy_value)
+    GuiTestCase, get_class_property_proxy, set_proxy_hash)
 
 from ..display_ipm_quadrant import DisplayIPMQuadrant
 
 
 class DataNode(Configurable):
     displayType = "WidgetNode|IPM-Quadrant"
-    avgNormX = Float(defaultValue=0.1)
-    avgNormY = Float(defaultValue=-0.7)
+    posX = Float(defaultValue=0.1)
+    posY = Float(defaultValue=-0.7)
+    iAvg = Float(defaultValue=-2000)
 
 
 class Object(Configurable):
@@ -29,7 +30,15 @@ class TestWidgetNode(GuiTestCase):
         assert self.controller.widget is None
 
     def test_values(self):
-        set_proxy_value(self.proxy, 'node.avgNormX', -11.0)
-        set_proxy_value(self.proxy, 'node.avgNormY', -7.0)
-        self.assertEqual(self.controller.widget.pos_x, -11.0)
-        self.assertEqual(self.controller.widget.pos_y, -7.0)
+        set_proxy_hash(self.proxy, Hash('node.posX', -0.2, 'node.posY', -0.7,
+                                        'node.iAvg', -2000.0))
+        self.assertEqual(self.controller.widget.pos_x, -0.2)
+        self.assertEqual(self.controller.widget.pos_y, -0.7)
+        self.assertEqual(self.controller.widget.intensity, -2000)
+
+    def test_values_oob(self):
+        set_proxy_hash(self.proxy, Hash('node.posX', -1.2, 'node.posY', 1.7,
+                                        'node.iAvg', -2000.0))
+        self.assertEqual(self.controller.widget.pos_x, -1.0)
+        self.assertEqual(self.controller.widget.pos_y, 1.0)
+        self.assertEqual(self.controller.widget.intensity, -2000)

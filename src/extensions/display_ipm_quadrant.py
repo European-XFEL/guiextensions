@@ -6,7 +6,7 @@
 
 from PyQt4.QtCore import Qt, QPoint, QRect
 from PyQt4.QtGui import QColor, QLabel, QPainter, QPen
-from traits.api import Instance, Undefined
+from traits.api import Instance
 
 from karabogui.binding.api import WidgetNodeBinding
 from karabogui.controllers.api import (
@@ -40,8 +40,8 @@ class Quadrant(QLabel):
         self.gap_size_x = 0.2
         self.gap_size_y = 0.2
         self.diameter = 10
-        self.beam_width = 2
-        self.beam_height = 2
+        self.beam_width = 1
+        self.beam_height = 1
 
         # The beam positions
         self.pos_x = 0.0
@@ -110,6 +110,7 @@ class DisplayIPMQuadrant(BaseBindingController):
     def value_update(self, proxy):
         if proxy.value is None:
             return
+        # NOTE: We utilize that all values are set at once in the pipeline!
         pos_x = proxy.value.posX.value
         pos_y = proxy.value.posY.value
         intensity = proxy.value.iAvg.value
