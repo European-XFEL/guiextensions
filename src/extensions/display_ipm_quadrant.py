@@ -65,7 +65,7 @@ class Quadrant(QLabel):
         gap_y = QRect(center.x() - 1 - diameter / 2, center.y() + 1
                       - gap_width_y / 2, diameter + 2, gap_width_y)
         pos_x = center.x() + self.pos_x * center.x() / 2
-        pos_y = center.y() + self.pos_y * center.y() / 2
+        pos_y = center.y() - self.pos_y * center.y() / 2
 
         with QPainter(self) as painter:
             # Draw the quadrant circle
@@ -113,6 +113,6 @@ class DisplayIPMQuadrant(BaseBindingController):
         # NOTE: We utilize that all values are set at once in the pipeline!
         pos_x = proxy.value.posX.value
         pos_y = proxy.value.posY.value
-        intensity = proxy.value.iAvg.value
+        intensity = proxy.value.intensity.value
         self.widget.set_parameter(pos_x, pos_y, intensity)
         self.widget.update()
