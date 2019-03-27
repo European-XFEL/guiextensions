@@ -12,7 +12,7 @@ from karabogui.binding.api import WidgetNodeBinding
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller, with_display_type)
 
-from .models.simple import IPMQuadrant
+from .models.simple import IPMQuadrantModel
 
 SILVER = QColor(192, 192, 192)
 FIREBRICK = QColor(178, 34, 34)
@@ -100,7 +100,7 @@ class DisplayIPMQuadrant(BaseBindingController):
     updated beam position is shown with a red circle.
     """
     # The scene data model class for this controller
-    model = Instance(IPMQuadrant, args=())
+    model = Instance(IPMQuadrantModel, args=())
 
     def create_widget(self, parent):
         widget = Quadrant(parent)

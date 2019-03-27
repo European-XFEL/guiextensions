@@ -8,17 +8,17 @@ from karabo.common.scenemodel.registry import (
     register_scene_reader, register_scene_writer)
 
 
-class IPMQuadrant(BaseWidgetObjectData):
+class IPMQuadrantModel(BaseWidgetObjectData):
     """ A model for the Intensity Position Monitor"""
 
 
 @register_scene_reader('IPM-Quadrant', version=2)
 def _bpm_position_reader(read_func, element):
     traits = read_base_widget_data(element)
-    return IPMQuadrant(**traits)
+    return IPMQuadrantModel(**traits)
 
 
-@register_scene_writer(IPMQuadrant)
+@register_scene_writer(IPMQuadrantModel)
 def _bpm_position_writer(write_func, model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'IPM-Quadrant')
