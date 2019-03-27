@@ -1,7 +1,7 @@
 from setuptools import find_packages, setup
 
 setup(
-    name='GUI-Extensions',
+    name='GUIExtensions',
     use_scm_version={'write_to': 'src/extensions/_version.py'},
     author='CAS',
     author_email='CAS',
