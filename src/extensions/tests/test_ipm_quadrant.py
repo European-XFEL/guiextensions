@@ -9,7 +9,7 @@ class DataNode(Configurable):
     displayType = "WidgetNode|IPM-Quadrant"
     posX = Float(defaultValue=0.1)
     posY = Float(defaultValue=-0.7)
-    iAvg = Float(defaultValue=-2000)
+    intensity = Float(defaultValue=-2000)
 
 
 class Object(Configurable):
@@ -31,14 +31,14 @@ class TestWidgetNode(GuiTestCase):
 
     def test_values(self):
         set_proxy_hash(self.proxy, Hash('node.posX', -0.2, 'node.posY', -0.7,
-                                        'node.iAvg', -2000.0))
+                                        'node.intensity', -2000.0))
         self.assertEqual(self.controller.widget.pos_x, -0.2)
         self.assertEqual(self.controller.widget.pos_y, -0.7)
         self.assertEqual(self.controller.widget.intensity, -2000)
 
     def test_values_oob(self):
         set_proxy_hash(self.proxy, Hash('node.posX', -1.2, 'node.posY', 1.7,
-                                        'node.iAvg', -2000.0))
+                                        'node.intensity', -2000.0))
         self.assertEqual(self.controller.widget.pos_x, -1.0)
         self.assertEqual(self.controller.widget.pos_y, 1.0)
         self.assertEqual(self.controller.widget.intensity, -2000)
