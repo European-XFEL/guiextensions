@@ -5,7 +5,7 @@
 
 .. _welcome:
 
-Welcome to GUI-Extensions documentation!
+Welcome to GUIExtensions documentation!
 ========================================
 
 Contents:
