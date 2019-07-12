@@ -46,7 +46,7 @@ class Ellipse(EllipseROI):
     ui_name='Scatter Position Widget',
     klassname='ScatterPosition',
     binding_type=WidgetNodeBinding,
-    is_compatible=with_display_type('WidgetNode|IPM-Quadrant'),
+    is_compatible=with_display_type('WidgetNode|ScatterPosition'),
     priority=0, can_show_nothing=False)
 class DisplayScatterPosition(BaseBindingController):
     model = Instance(ScatterPositionModel, args=())
