@@ -1,0 +1,47 @@
+from ..const import (
+    ACTUAL_STEP, CURRENT_INDEX, NUM_DATA_SOURCES, SCAN_TYPE, START_POSITIONS,
+    STEPS, STOP_POSITIONS)
+
+
+ASCAN_CONFIG = {
+    SCAN_TYPE: "ascan",
+    NUM_DATA_SOURCES: 1,
+    STEPS: [5],
+    ACTUAL_STEP: 0,
+    CURRENT_INDEX: [0],
+    START_POSITIONS: [0],
+    STOP_POSITIONS: [10]
+}
+
+
+A2SCAN_CONFIG = {
+    SCAN_TYPE: "a2scan",
+    NUM_DATA_SOURCES: 1,
+    STEPS: [5],
+    ACTUAL_STEP: 0,
+    CURRENT_INDEX: [0],
+    START_POSITIONS: [0, 5],
+    STOP_POSITIONS: [10, 15]
+}
+
+
+MESH_CONFIG = {
+    SCAN_TYPE: "mesh",
+    NUM_DATA_SOURCES: 1,
+    STEPS: [5, 10],
+    ACTUAL_STEP: 0,
+    CURRENT_INDEX: [0, 0],
+    START_POSITIONS: [10, 10],
+    STOP_POSITIONS: [5, 20]
+}
+
+
+C2SCAN_CONFIG = {
+    SCAN_TYPE: "c2scan",
+    NUM_DATA_SOURCES: 1,
+    STEPS: [5],
+    ACTUAL_STEP: 0,
+    CURRENT_INDEX: [0],
+    START_POSITIONS: [0, 5],
+    STOP_POSITIONS: [10, 15]
+}

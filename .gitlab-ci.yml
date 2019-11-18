@@ -6,7 +6,7 @@ before_script:
     - source ci/build.sh "$CI_BUILD_NAME"
     - source ci/test.sh "$CI_BUILD_NAME"
   only:
-    - branches
+    - /^scantool.+$/
   except:
     - master
 
@@ -22,12 +22,12 @@ before_script:
 
 ##### Release build #####
 
-release build ubuntu16:
-  image: europeanxfel/karabo-ci:ubuntu-16
+release build miniconda:
+  image: europeanxfel/karabo-ci:miniconda-3
   <<: *release-build
 
 ##### Test build #####
 
-test:ubuntu16:
-  image: europeanxfel/karabo-ci:ubuntu-16
+test:miniconda:
+  image: europeanxfel/karabo-ci:miniconda-3
   <<: *test_build

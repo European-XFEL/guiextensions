@@ -37,6 +37,10 @@ class ScatterPositionModel(BaseWidgetObjectData):
     psize = Float(7.0)
 
 
+class ScantoolBaseModel(BaseWidgetObjectData):
+    """ A model for the Scantool Base Widget """
+
+
 @register_scene_reader('IPM-Quadrant')
 def _bpm_position_reader(read_func, element):
     traits = read_base_widget_data(element)
@@ -71,4 +75,17 @@ def _scatter_position_writer(write_func, model, parent):
     write_range_set(model, element)
     element.set(NS_KARABO + 'maxlen', str(model.maxlen))
     element.set(NS_KARABO + 'psize', str(model.psize))
+    return element
+
+
+@register_scene_reader('Scantool-Base')
+def _scantool_base_reader(read_func, element):
+    traits = read_base_widget_data(element)
+    return ScantoolBaseModel(**traits)
+
+
+@register_scene_writer(ScantoolBaseModel)
+def _scantool_base_writer(write_func, model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_widget_data(model, element, 'Scantool-Base')
     return element
