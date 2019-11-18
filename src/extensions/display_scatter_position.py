@@ -7,8 +7,9 @@
 from collections import deque
 
 import numpy as np
-from PyQt4.QtCore import pyqtSlot
-from PyQt4.QtGui import QColor, QAction, QInputDialog
+from PyQt5.QtCore import pyqtSlot
+from PyQt5.QtGui import QColor
+from PyQt5.QtWidgets import QAction, QInputDialog
 from pyqtgraph import EllipseROI, ROI
 from traits.api import Instance
 
