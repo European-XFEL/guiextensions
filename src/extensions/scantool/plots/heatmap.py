@@ -43,7 +43,7 @@ class HeatmapPlot(ImagePlot):
         if device is not self.config[Z_DATA]:
             return
 
-        if len(device.data) == 0:
+        if device.current_index is None:
             self.clear()
             return
 

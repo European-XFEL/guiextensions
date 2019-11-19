@@ -1,7 +1,9 @@
 from PyQt5.QtWidgets import QGridLayout, QVBoxLayout, QWidget
 
 
-def get_container(parent, layout=QVBoxLayout()):
+def get_container(parent, layout=None):
+    if layout is None:
+        layout = QVBoxLayout()
     widget = ContainerWidget(parent)
     widget.setLayout(layout)
     return widget

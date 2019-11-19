@@ -130,6 +130,8 @@ class ScanController(HasStrictTraits):
         """Generic class to remove and destroy existing plot and
            instantiate the requested plot class and add its widget to the
            base widget layout."""
+
+        # 1. Switch to selected plot
         if not isinstance(self._current_plot, klass):
             if self._current_plot is not None:
                 # Remove this unwanted plot
@@ -141,13 +143,15 @@ class ScanController(HasStrictTraits):
             # Reset!
             self._current_plot.clear()
 
-        configs = self._config[klass]
-        if configs is not None:
-            for config in configs:
-                self._current_plot.add(self._map_to_devices(config),
-                                       update=False)
+        config = self._config[klass]
+        for conf in config:
+            self._current_plot.add(self._map_to_devices(conf),
+                                   update=False)
 
-        # Finalize plot setup by informing listeners
+        # 2. Set axes labels based on plot config
+        self._set_axes_labels(config)
+
+        # 3, Finalize plot setup by informing listeners
         self._plot_refreshed = klass
 
         return self._current_plot
@@ -167,7 +171,6 @@ class ScanController(HasStrictTraits):
     @on_trait_change("_plot_refreshed")
     def _on_plot_refresh(self, plot_type):
         if self._data_selection is not None:
-
             if plot_type is HeatmapPlot:
                 self._data_selection.use_image_selection()
             elif plot_type is MultiCurvePlot:
@@ -208,3 +211,12 @@ class ScanController(HasStrictTraits):
             for added in changes[ADD]:
                 config.append(added)
                 self._current_plot.add(self._map_to_devices(added))
+
+            self._set_axes_labels(config)
+
+    def _set_axes_labels(self, config):
+        # Change labels if necessary
+        for axis, data in enumerate([X_DATA, Y_DATA]):
+            name = set([device[data] for device in config])
+            if len(name) == 1:
+                self._current_plot.widget.set_label(axis, next(iter(name)))

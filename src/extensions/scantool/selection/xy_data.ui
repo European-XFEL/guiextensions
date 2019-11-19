@@ -41,7 +41,7 @@
       </size>
      </property>
      <property name="title">
-      <string>X-axis</string>
+      <string>X-data</string>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout">
       <item>
@@ -78,7 +78,7 @@
       </size>
      </property>
      <property name="title">
-      <string>Y-axis</string>
+      <string>Y-data</string>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_2"/>
     </widget>
