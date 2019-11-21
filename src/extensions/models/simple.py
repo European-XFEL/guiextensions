@@ -21,7 +21,8 @@ class ScatterPositionModel(BaseWidgetObjectData):
     y_label = String
     x_units = String
     y_units = String
-    autorange = Bool(True)
+    x_autorange = Bool(True)
+    y_autorange = Bool(True)
     x_grid = Bool(False)
     y_grid = Bool(False)
     x_log = Bool(False)

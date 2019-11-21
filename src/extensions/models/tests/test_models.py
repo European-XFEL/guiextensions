@@ -19,7 +19,8 @@ def test_vector_position_model():
     traits['y_label'] = 'Y'
     traits['x_units'] = 'XUNIT'
     traits['y_units'] = 'YUNIT'
-    traits['autorange'] = False
+    traits['x_autorange'] = False
+    traits['y_autorange'] = False
     traits['x_grid'] = True
     traits['y_grid'] = False
     traits['x_log'] = True
@@ -41,7 +42,8 @@ def test_vector_position_model():
     assert read_model.y_label == 'Y'
     assert read_model.x_units == 'XUNIT'
     assert read_model.y_units == 'YUNIT'
-    assert read_model.autorange is False
+    assert read_model.x_autorange is False
+    assert read_model.y_autorange is False
     assert read_model.x_grid is True
     assert read_model.y_grid is False
     assert read_model.x_log is True
