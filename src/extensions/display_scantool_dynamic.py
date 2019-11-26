@@ -3,6 +3,7 @@
 # Created on September 2019
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
+import numpy as np
 from traits.api import Bool, Instance, Int
 
 from karabo.common.states import State
@@ -13,8 +14,8 @@ from karabogui.controllers.api import (
 from .models.simple import ScantoolBaseModel
 
 from .scantool.const import (
-    ACTUAL_STEP, ASCANS, CSCANS, CURRENT_INDEX, DSCANS, NUM_DATA_SOURCES,
-    SCAN_TYPE, START_POSITIONS, STEPS, STOP_POSITIONS)
+    ACTUAL_STEP, ASCANS, CSCANS, CURRENT_INDEX, DSCANS, MOTORS, MOTOR_NAMES,
+    SCAN_TYPE, SOURCE_NAMES, SOURCES, START_POSITIONS, STEPS, STOP_POSITIONS)
 from .scantool.controller import ScanController
 from .scantool.data.scan import Scan
 
@@ -80,9 +81,18 @@ class ScantoolDynamicWidget(BaseBindingController):
         # Setup new scan object
         proxies = proxy.value
         config = {}
-        for prop in [SCAN_TYPE, NUM_DATA_SOURCES, STEPS, ACTUAL_STEP,
-                     START_POSITIONS, STOP_POSITIONS, CURRENT_INDEX]:
-            config.update({prop: get_binding_value(getattr(proxies, prop))})
+
+        # Get scan parameters
+        for prop in [SCAN_TYPE, STEPS, ACTUAL_STEP, START_POSITIONS,
+                     STOP_POSITIONS, CURRENT_INDEX]:
+            config.update({prop: self._get_value(proxies, prop)})
+
+        # Get active motor and data sources
+        motors = [motor for motor in MOTOR_NAMES
+                  if not np.isnan(self._get_value(proxies, motor))]
+        sources = [source for source in SOURCE_NAMES
+                   if not np.isnan(self._get_value(proxies, source))]
+        config.update({MOTORS: motors, SOURCES: sources})
 
         scan = self._controller.new_scan(config)
 
@@ -101,6 +111,9 @@ class ScantoolDynamicWidget(BaseBindingController):
             return
 
         if state == State.ON.value:
+            # # Try to plot last value
+            # if self._is_scanning:
+            #     self.value_update(proxy)
             # Scan is done or not started yet.
             self._scan = None
             self._is_scanning = False
@@ -116,3 +129,6 @@ class ScantoolDynamicWidget(BaseBindingController):
 
     def _is_node_proxy_valid(self, proxy):
         return get_binding_value(getattr(proxy.value, SCAN_TYPE)) is not None
+
+    def _get_value(self, proxy, prop):
+        return get_binding_value(getattr(proxy, prop))

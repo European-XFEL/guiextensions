@@ -4,8 +4,7 @@ from traits.api import (
     Property, Str)
 
 from .device import DataSource, Device, Motor
-from ..const import CSCANS, MESHES, MOTOR_NAMES, SOURCE_NAMES
-from ..utils import get_num_motors
+from ..const import CSCANS, MESHES
 
 
 class Scan(HasStrictTraits):
@@ -14,7 +13,6 @@ class Scan(HasStrictTraits):
        the number of data sources, respectively."""
 
     scan_type = Str
-    num_sources = Int
     actual_step = Int
     steps = Property(Array)
     current_index = Array
@@ -22,22 +20,13 @@ class Scan(HasStrictTraits):
     devices = Property(List(Instance(Device)),
                        depends_on=["_motors", "_data_sources"])
     motors = Property(ListStr, depends_on="_motors")
-    data_sources = Property(List(Instance(DataSource)),
-                            depends_on="_data_sources")
+    data_sources = Property(ListStr, depends_on="_data_sources")
 
     start_positions = Property(Array)
     stop_positions = Property(Array)
 
     _motors = List(Instance(Motor))
     _data_sources = List(Instance(DataSource))
-
-    def _scan_type_changed(self, scan_type):
-        self._motors = [Motor(name=name)
-                        for name in MOTOR_NAMES[:get_num_motors(scan_type)]]
-
-    def _num_sources_changed(self, num_sources):
-        self._data_sources = [DataSource(name=name)
-                              for name in SOURCE_NAMES[:num_sources]]
 
     @cached_property
     def _get_steps(self):
@@ -69,9 +58,15 @@ class Scan(HasStrictTraits):
     def _get_motors(self):
         return [motor.name for motor in self._motors]
 
+    def _set_motors(self, names):
+        self._motors = [Motor(name=name) for name in names]
+
     @cached_property
     def _get_data_sources(self):
         return [source.name for source in self._data_sources]
+
+    def _set_data_sources(self, names):
+        self._data_sources = [DataSource(name=name) for name in names]
 
     @cached_property
     def _get_start_positions(self):

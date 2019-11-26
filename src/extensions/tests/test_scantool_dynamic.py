@@ -11,13 +11,13 @@ from karabogui.testing import (
 
 from ..display_scantool_dynamic import ScantoolDynamicWidget
 from ..scantool.const import (
-    ACTUAL_STEP, CURRENT_INDEX, MESHES, NUM_DATA_SOURCES, SCAN_TYPE,
-    START_POSITIONS, STEPS, STOP_POSITIONS, X_DATA, Y_DATA, Z_DATA)
+    ACTUAL_STEP, CURRENT_INDEX, MESHES, MOTORS, MOTOR_NAMES, SCAN_TYPE,
+    SOURCES, SOURCE_NAMES, START_POSITIONS, STEPS, STOP_POSITIONS, X_DATA,
+    Y_DATA, Z_DATA)
 from ..scantool.plots.heatmap import HeatmapPlot
 from ..scantool.plots.multicurve import MultiCurvePlot
 from ..scantool.tests.confs import (
     ASCAN_CONFIG, A2SCAN_CONFIG, C2SCAN_CONFIG, MESH_CONFIG)
-from ..scantool.utils import get_num_motors
 
 
 class DataNode(Configurable):
@@ -200,6 +200,17 @@ class TestScantoolDynamicWidget(GuiTestCase):
     # Helper methods
 
     def _write_scan_config(self, config):
+        config = config.copy()
+        active_motors = config.pop(MOTORS)
+        for motor in MOTOR_NAMES:
+            value = 0 if motor in active_motors else np.nan
+            config[motor] = value
+
+        active_sources = config.pop(SOURCES)
+        for source in SOURCE_NAMES:
+            value = 0 if source in active_sources else np.nan
+            config[source] = value
+
         flat_config = [item for items in config.items() for item in items]
         config = Hash('data', Hash(*flat_config))
         apply_configuration(config, self.binding)
@@ -211,8 +222,6 @@ class TestScantoolDynamicWidget(GuiTestCase):
 
         # Now change the device to ACQUIRING, with 10 updates on the
         # device values
-        num_motors = get_num_motors(config[SCAN_TYPE])
-        num_sources = config[NUM_DATA_SOURCES]
         total_steps = np.prod(np.add(config[STEPS], 1))
         for index in range(total_steps):
             steps = divmod(index, config[STEPS][-1] + 1)
@@ -222,8 +231,8 @@ class TestScantoolDynamicWidget(GuiTestCase):
             hash = Hash('data', Hash(
                 ACTUAL_STEP, index,
                 CURRENT_INDEX, steps,
-                *self._motor_values(num_motors, index),
-                *self._source_values(num_sources, index))
+                *self._motor_values(len(config[MOTORS]), index),
+                *self._source_values(len(config[SOURCES]), index))
             )
             apply_configuration(hash, self.binding)
 
@@ -254,7 +263,6 @@ class TestScantoolDynamicWidget(GuiTestCase):
 
         # Check scan settings
         self.assertEqual(scan.scan_type, config[SCAN_TYPE])
-        self.assertEqual(scan.num_sources, config[NUM_DATA_SOURCES])
         self.assertEqual(scan.steps, config[STEPS])
         self.assertEqual(scan.actual_step, config[ACTUAL_STEP])
         self.assertEqual(scan.start_positions, config[START_POSITIONS])
@@ -270,12 +278,12 @@ class TestScantoolDynamicWidget(GuiTestCase):
         self.assertEqual(scan.actual_step, total_steps - 1)
 
         # Check devices
-        self.assertEqual(len(scan.motors), get_num_motors(config[SCAN_TYPE]))
+        self.assertEqual(len(scan.motors), len(config[MOTORS]))
         for index, motor in enumerate(scan._motors):
             data = (default_value + index).reshape(shape)
             np.testing.assert_array_equal(motor.data, data)
 
-        self.assertEqual(len(scan.data_sources), config[NUM_DATA_SOURCES])
+        self.assertEqual(len(scan.data_sources), len(config[SOURCES]))
         for index, source in enumerate(scan._data_sources):
             data = ((default_value + index) ** 2).reshape(shape)
             np.testing.assert_array_equal(source.data, data)
@@ -294,7 +302,7 @@ class TestScantoolDynamicWidget(GuiTestCase):
         # Check number of curves, this is equal to:
         # num_motors + num_sources - 1 (since one data is x_data)
         plot_items = controller._items._items
-        self.assertEqual(len(plot_items), config[NUM_DATA_SOURCES])
+        self.assertEqual(len(plot_items), len(config[SOURCES]))
 
         # Check if values are set in the PlotDataItem
         total_steps = config[STEPS][0] + 1

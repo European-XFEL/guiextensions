@@ -5,8 +5,8 @@ from traits.api import (
 from .plots.base import BasePlot
 
 from .const import (
-    ACTUAL_STEP, ADD, A4SCAN_CONFIG, CURRENT_INDEX, NUM_DATA_SOURCES, REMOVE,
-    SCAN_TYPE, START_POSITIONS, STEPS, STOP_POSITIONS, X_DATA, Y_DATA, Z_DATA)
+    ACTUAL_STEP, ADD, A4SCAN_CONFIG, CURRENT_INDEX, MOTORS, REMOVE, SCAN_TYPE,
+    SOURCES, START_POSITIONS, STEPS, STOP_POSITIONS, X_DATA, Y_DATA, Z_DATA)
 from .selection.controller import DataSelectionController
 from .plots.heatmap import HeatmapPlot
 from .plots.multicurve import MultiCurvePlot
@@ -42,7 +42,8 @@ class ScanController(HasStrictTraits):
         """Initializes a new scan object which stores the scan parameters and
            device objects"""
         self.scan = Scan(scan_type=config[SCAN_TYPE],
-                         num_sources=config[NUM_DATA_SOURCES],
+                         motors=config[MOTORS],
+                         data_sources=config[SOURCES],
                          actual_step=config[ACTUAL_STEP],
                          steps=config[STEPS],
                          current_index=config[CURRENT_INDEX],
