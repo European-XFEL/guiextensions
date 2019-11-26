@@ -15,6 +15,9 @@ Y = "y"
 MOTOR_NAMES = ["pos{}".format(index) for index in range(NR_MOTORS)]
 SOURCE_NAMES = ["y{}".format(index) for index in range(NR_VALUES)]
 
+MOTORS = "motors"
+SOURCES = "sources"
+
 # Scan types
 ASCANS = ["ascan", "a2scan", "a3scan", "a4scan"]
 DSCANS = ["dscan", "d2scan", "d3scan", "d4scan"]
@@ -42,10 +45,10 @@ for mesh in MESHES:
 # default scan
 A4SCAN_CONFIG = {
     SCAN_TYPE: "a4scan",
-    NUM_DATA_SOURCES: NR_VALUES,
+    MOTORS: MOTOR_NAMES,
+    SOURCES: SOURCE_NAMES,
     STEPS: [5],
     ACTUAL_STEP: 0,
     CURRENT_INDEX: [0],
     START_POSITIONS: [0],
-    STOP_POSITIONS: [10]
-}
+    STOP_POSITIONS: [10]}

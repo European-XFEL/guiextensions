@@ -28,8 +28,8 @@ class Device(HasStrictTraits):
                 current_index = np.array([0])
 
             # Adjust container length if the new size exceeds the current one.
-            size = current_index[0]
-            if size > self._data.size:
+            size = self.data.size
+            if size == self._data.size:
                 new_data = np.full(size * 2, np.nan)
                 new_data[:size] = self.data
                 self._data = new_data

@@ -4,10 +4,9 @@ import numpy as np
 
 from ..scan import Scan
 from ...const import (
-    ACTUAL_STEP, CURRENT_INDEX, NUM_DATA_SOURCES, SCAN_TYPE, START_POSITIONS,
+    ACTUAL_STEP, CURRENT_INDEX, MOTORS, SCAN_TYPE, SOURCES, START_POSITIONS,
     STEPS, STOP_POSITIONS)
 from ...tests.confs import ASCAN_CONFIG, A2SCAN_CONFIG, MESH_CONFIG
-from ...utils import get_num_motors
 
 
 class TestScan(TestCase):
@@ -19,7 +18,8 @@ class TestScan(TestCase):
 
     def _assert_scan_config(self, config):
         scan = Scan(scan_type=config[SCAN_TYPE],
-                    num_sources=config[NUM_DATA_SOURCES],
+                    motors=config[MOTORS],
+                    data_sources=config[SOURCES],
                     actual_step=config[ACTUAL_STEP],
                     steps=config[STEPS],
                     current_index=config[CURRENT_INDEX],
@@ -28,7 +28,6 @@ class TestScan(TestCase):
 
         # Check scan settings
         self.assertEqual(scan.scan_type, config[SCAN_TYPE])
-        self.assertEqual(scan.num_sources, config[NUM_DATA_SOURCES])
         self.assertEqual(scan.actual_step, config[ACTUAL_STEP])
         np.testing.assert_array_equal(scan.steps, config[STEPS])
         np.testing.assert_array_equal(scan.current_index,
@@ -39,11 +38,11 @@ class TestScan(TestCase):
                                       config[STOP_POSITIONS])
 
         # Check devices
-        self.assertEqual(len(scan.motors), get_num_motors(config[SCAN_TYPE]))
+        self.assertEqual(len(scan.motors), len(config[MOTORS]))
         expected_shape = np.add(config[STEPS], 1)
         for motor in scan._motors:
             np.testing.assert_array_equal(motor.data.shape, expected_shape)
 
-        self.assertEqual(len(scan.data_sources), config[NUM_DATA_SOURCES])
+        self.assertEqual(len(scan.data_sources), len(config[SOURCES]))
         for source in scan._data_sources:
             np.testing.assert_array_equal(source.data.shape, expected_shape)
