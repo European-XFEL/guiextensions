@@ -25,14 +25,13 @@ class ImageDataSelectionWidget(BaseSelectionWidget):
             self.z_groupbox.layout().addWidget(checkbox)
             button_group.addButton(checkbox)
 
-        # Initialize x_data
+        # Initialize axes data
         self.ui_x_combobox.addItems(self._motors)
         self.ui_y_combobox.addItems(self._motors)
         self.ui_y_combobox.setCurrentIndex(1)
 
-        # # Disable selection on default x_data
-        self.ui_x_combobox.setDisabled(True)
-        self.ui_y_combobox.setDisabled(True)
+        self.ui_x_combobox.currentIndexChanged.connect(self._x_axis_changed)
+        self.ui_y_combobox.currentIndexChanged.connect(self._y_axis_changed)
 
     # ---------------------------------------------------------------------
     # Public methods
@@ -90,3 +89,29 @@ class ImageDataSelectionWidget(BaseSelectionWidget):
 
         self._current_index = index
         self.changed.emit({REMOVE: removed, ADD: added})
+
+    @pyqtSlot(int)
+    def _x_axis_changed(self, x_index):
+        """Changes for the x- and y-axis are coupled, and this method contains
+           the logic for both changes."""
+
+        y_index = int(not x_index)
+        with SignalBlocker(self.ui_y_combobox):
+            self.ui_y_combobox.setCurrentIndex(y_index)
+
+        x_data = self._motors[x_index]
+        y_data = self._motors[y_index]
+        z_data = self._sources[self._current_index]
+
+        removed = [{X_DATA: y_data, Y_DATA: x_data, Z_DATA: z_data}]
+        added = [{X_DATA: x_data, Y_DATA: y_data, Z_DATA: z_data}]
+
+        self.changed.emit({REMOVE: removed, ADD: added})
+
+    @pyqtSlot(int)
+    def _y_axis_changed(self, index):
+        """Changes for the x- and y-axis are coupled, so when the y-axis is
+           changed, we just change the x-axis and let the logic there dictate
+           our fate."""
+
+        self.ui_x_combobox.setCurrentIndex(int(not index))
