@@ -4,7 +4,7 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 import numpy as np
-from traits.api import Bool, Instance, Int
+from traits.api import Bool, Instance
 
 from karabo.common.states import State
 from karabogui.binding.api import get_binding_value, WidgetNodeBinding
@@ -34,7 +34,7 @@ class ScantoolDynamicWidget(BaseBindingController):
     _scan = Instance(Scan)
 
     _is_scanning = Bool(False)
-    _num_received_proxy = Int(0)
+    _first_proxy_received = Bool(False)
 
     def create_widget(self, parent):
         self._controller = ScanController(parent=parent)
@@ -48,10 +48,10 @@ class ScantoolDynamicWidget(BaseBindingController):
 
         # TODO: Change default type in Karabacon
 
-        # Reject first two node proxy from first widget creation,
+        # Reject first node proxy from first widget creation,
         # This contains unwanted default values. Still thinking about this.
-        if self._num_received_proxy < 2:
-            self._num_received_proxy += 1
+        if not self._first_proxy_received:
+            self._first_proxy_received = True
             return
 
         if not self._is_scanning:

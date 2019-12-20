@@ -101,7 +101,7 @@ class TestScantoolDynamicWidget(GuiTestCase):
         # Create the controllers and initialize their widgets
         self.controller = ScantoolDynamicWidget(proxy=self.proxy)
         self.controller.create(None)
-        self.controller._num_received_proxy = True
+        self.controller._first_proxy_received = True
         self._scan = None
 
     def tearDown(self):

@@ -59,8 +59,12 @@ class TestMultiCurveController(GuiTestCase):
                 self.assertIsNotNone(item)
 
                 x_data = self._x_data.data[:index + 1]
-                np.testing.assert_array_equal(item.xData, x_data)
                 y_data = y_device.data[:index + 1]
+                # Account for mocked line plot for single point data
+                if index == 0:
+                    x_data = np.repeat(x_data, 2)
+                    y_data = np.repeat(y_data, 2)
+                np.testing.assert_array_equal(item.xData, x_data)
                 np.testing.assert_array_equal(item.yData, y_data)
 
     def test_clear(self):
