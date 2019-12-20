@@ -1,3 +1,4 @@
+import numpy as np
 from PyQt5.QtWidgets import QWidget
 from traits.api import Array, HasStrictTraits, Instance
 
@@ -46,7 +47,7 @@ class ImagePlot(BasePlot):
         super(ImagePlot, self).__init__()
         self.widget = KaraboImageView(parent)
         self.widget.add_colorbar()
-        self.widget.set_colormap("viridis")
+        self.widget.restore(IMAGE_CONFIG)
 
 
 class GraphPlot(BasePlot):
@@ -64,6 +65,8 @@ class GraphPlot(BasePlot):
     def __init__(self, parent=None):
         super(GraphPlot, self).__init__()
         self.widget = KaraboPlotView(parent)
+        self.widget.enable_data_toggle(True)
+        self.widget.restore(PLOT_CONFIG)
 
     def update(self, device):
         """Destroys the plot widget properly"""
@@ -75,11 +78,60 @@ class GraphPlot(BasePlot):
             self._plot_data(item, config)
 
     def _plot_data(self, item, config):
-        x_device = config[X_DATA]
-        y_device = config[Y_DATA]
+        x_data = config[X_DATA].data
+        y_data = config[Y_DATA].data
+
+        # Mask nans
+        x_data = x_data[~np.isnan(x_data)]
+        y_data = y_data[~np.isnan(y_data)]
 
         # Check if they have the current index. Avoid plotting if not.
-        if x_device.data.size != y_device.data.size:
+        if x_data.size != y_data.size:
             return
 
-        item.setData(x_device.data, y_device.data)
+        # Check if data has only one point. Make another point to mock a "line"
+        if len(x_data) == 1:
+            x_data = [x_data[0]] * 2
+            y_data = [y_data[0]] * 2
+
+        item.setData(x_data, y_data)
+
+
+# KaraboPlotView requires default configuration that comes from the model.
+# Since the Scantool widget does not have any model traits for now, we add
+# default traits for both the plot and image views
+PLOT_CONFIG = {
+    "x_label": "",
+    "y_label": "",
+    "x_units": "",
+    "y_units": "",
+    "x_autorange": True,
+    "y_autorange": True,
+    "x_grid": True,
+    "y_grid": True,
+    "x_log": False,
+    "y_log": False,
+    "x_invert": False,
+    "y_invert": False,
+    "x_min": 0.0,
+    "x_max": 0.0,
+    "y_min": 0.0,
+    "y_max": 0.0}
+
+
+IMAGE_CONFIG = {
+    "aux_plots": 0,
+    "colormap": "viridis",
+    "roi_items": [],
+    "roi_tool": 0,
+    "x_scale": 1.0,
+    "x_translate": 0.0,
+    "x_label": '',
+    "x_units": '',
+    "y_scale": 1.0,
+    "y_translate": 0.0,
+    "y_label": '',
+    "y_units": '',
+    "show_scale": False,
+    "aspect_ratio": 1
+}
