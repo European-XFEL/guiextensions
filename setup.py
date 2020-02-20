@@ -11,9 +11,10 @@ setup(
     packages=find_packages('src'),
     entry_points={
         'karabogui.gui_extensions': [
-            # 'IPMQuadrant = extensions.display_ipm_quadrant',
-            # 'ScatterPosition = extensions.display_scatter_position'
-            'ScantoolDynamic = extensions.display_scantool_dynamic'
+            'IPMQuadrant = extensions.display_ipm_quadrant',
+            'ScatterPosition = extensions.display_scatter_position',
+            'ScantoolDynamic = extensions.display_scantool_dynamic',
+            'DynamicDigitizer = extensions.display_dynamic_digitizer',
         ],
     },
     include_package_data=True,
