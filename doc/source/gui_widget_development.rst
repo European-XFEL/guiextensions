@@ -20,17 +20,16 @@ following elements need to be added:
 MODEL
 =====
 
-- add the MODEL to the `src/extensions/models/**DISPLAYTYPE**.py`
+- add the MODEL to the `src/extensions/models/**APPROPRIATE**.py`
   file.
 
 if the MODEL contains traits, the developer will add:
 
 - the Scene Model WRITER to
-  `src/extensions/models/**DISPLAYTYPE**.py`.
+  `src/extensions/models/**APPROPRIATE**.py`.
 - the Scene Model READER to
-  `src/extensions/models/**DISPLAYTYPE**.py`.
-  The READER's version should be the same as the value of
-  `SCENE_FILE_VERSION` in `src/pythonKarabo/karabo/common/scenemodel/const.py`.
+  `src/extensions/models/**APPROPRIATE**.py`.
+  The READER's version should be left **UNTOUCHED**.
 
 
 WIDGET CONTROLLER
