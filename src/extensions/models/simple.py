@@ -1,9 +1,10 @@
 from xml.etree.ElementTree import SubElement
 
-from traits.api import Bool, Float, Int, String
+from traits.api import Float, Int, List
 from karabo.common.scenemodel.api import (
     BaseWidgetObjectData, read_basic_label, read_axes_set, read_range_set,
-    write_basic_label, write_axes_set, write_range_set)
+    write_basic_label, write_axes_set, write_range_set, BaseROIData,
+    read_roi_info, write_roi_info, BasePlotModel)
 from karabo.common.scenemodel.const import NS_KARABO, WIDGET_ELEMENT_TAG
 from karabo.common.scenemodel.io_utils import (
     read_base_widget_data, write_base_widget_data)
@@ -15,27 +16,16 @@ class IPMQuadrantModel(BaseWidgetObjectData):
     """ A model for the Intensity Position Monitor"""
 
 
-class ScatterPositionModel(BaseWidgetObjectData):
+class ScatterPositionModel(BasePlotModel):
     """ A model for the Scatter Position"""
-    x_label = String
-    y_label = String
-    x_units = String
-    y_units = String
-    x_autorange = Bool(True)
-    y_autorange = Bool(True)
-    x_grid = Bool(False)
-    y_grid = Bool(False)
-    x_log = Bool(False)
-    y_log = Bool(False)
-    x_invert = Bool(False)
-    y_invert = Bool(False)
-    x_min = Float(0.0)
-    x_max = Float(0.0)
-    y_min = Float(0.0)
-    y_max = Float(0.0)
-
     maxlen = Int(100)
     psize = Float(7.0)
+
+
+class DynamicDigitizerModel(BasePlotModel):
+    """ A model for the dynamic digitizer"""
+    roi_items = List(BaseROIData)
+    roi_tool = Int(0)
 
 
 class ScantoolBaseModel(BaseWidgetObjectData):
@@ -76,6 +66,33 @@ def _scatter_position_writer(write_func, model, parent):
     write_range_set(model, element)
     element.set(NS_KARABO + 'maxlen', str(model.maxlen))
     element.set(NS_KARABO + 'psize', str(model.psize))
+    return element
+
+
+@register_scene_reader('DynamicDigitizer')
+def _dynamic_digitizer_reader(read_func, element):
+    traits = read_base_widget_data(element)
+    traits.update(read_basic_label(element))
+    traits.update(read_axes_set(element))
+    traits.update(read_range_set(element))
+    # roi information
+    traits['roi_items'] = read_roi_info(element)
+    traits['roi_tool'] = int(element.get(NS_KARABO + 'roi_tool', 0))
+
+    return DynamicDigitizerModel(**traits)
+
+
+@register_scene_writer(DynamicDigitizerModel)
+def _dynamic_digitizer_writer(write_func, model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_widget_data(model, element, 'DynamicDigitizer')
+    write_basic_label(model, element)
+    write_axes_set(model, element)
+    write_range_set(model, element)
+    # roi information
+    write_roi_info(model, element)
+    element.set(NS_KARABO + 'roi_tool', str(model.roi_tool))
+
     return element
 
 
