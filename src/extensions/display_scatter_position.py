@@ -7,7 +7,6 @@
 from collections import deque
 
 import numpy as np
-from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QAction, QInputDialog
 from pyqtgraph import EllipseROI, ROI
@@ -35,8 +34,10 @@ FIREBRICK = QColor(178, 34, 34)
 
 class Ellipse(EllipseROI):
     def __init__(self, pos, size, pen=make_pen('r'), ):
+        self.path = None
         ROI.__init__(self, pos, size, pen=pen, movable=False,
                      removable=False)
+        self.sigRegionChanged.connect(self._clearPath)
 
     def setValue(self, pos, size):
         self.setPos(pos, update=False)
@@ -125,11 +126,9 @@ class DisplayScatterPosition(BaseBindingController):
     # ----------------------------------------------------------------
     # Qt Slots
 
-    @pyqtSlot(object)
     def _change_model(self, content):
         self.model.trait_set(**content)
 
-    @pyqtSlot()
     def _reset_plot(self):
         self._x_values.clear()
         self._y_values.clear()
@@ -137,7 +136,6 @@ class DisplayScatterPosition(BaseBindingController):
         self._ysd_values.clear()
         self._plot.clear()
 
-    @pyqtSlot()
     def _configure_deque(self):
         maxlen, ok = QInputDialog.getInt(self.widget, 'Number of Values',
                                          'Maxlen:', self.model.maxlen, 5,
@@ -153,7 +151,6 @@ class DisplayScatterPosition(BaseBindingController):
 
             self.model.maxlen = maxlen
 
-    @pyqtSlot()
     def _configure_point_size(self):
         psize, ok = QInputDialog.getDouble(self.widget, 'Size of points',
                                            'Pointsize:', self.model.psize,
