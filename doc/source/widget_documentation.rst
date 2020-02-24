@@ -29,7 +29,7 @@ Please talk to controls development team if you want to have the intensity tailo
 
 .. note::
 
-   The widget is available since GUI Extension version **0.1.0**
+   The widget is available since GUI Extension version **0.1.0**.
 
 
 Scatter Position Widget
@@ -56,5 +56,35 @@ around the scatter cloud.
 
 .. note::
 
-   The widget is available since GUI Extension version **0.2.0**
+   The widget is available since GUI Extension version **0.2.0**.
    Known devices are: ``XGM`` and ``BeamPositionMonitor``
+
+
+Karabacon Widget
+================
+
+The ``Karabacon Widget`` is tailored for the scantool at the European XFEL.
+
+The widget automatically provides one-dimensional plots for spec-like scans
+absolute scans such as ascan, dscan and cscans. If multiple motors or data
+sources are selected for the scan, the plot can be configured respectively.
+
+.. figure:: images/scantool_1d.png
+   :alt: scantool_1d.png
+   :align: center
+
+If a new scan is started, the plot is reset accordingly. In case of two
+dimensional scans (mesh) a heatmap is provided where the axis and the data
+sources can be selected.
+
+.. figure:: images/scantool_2d.png
+   :alt: scantool_1d.png
+   :align: center
+
+
+- DisplayType: **WidgetNode|Scantool-Base**
+
+.. note::
+
+   The widget is available since GUI Extension version **0.3.0**.
+   Known devices are: ``Karabacon``
