@@ -1,5 +1,3 @@
 sphinx==1.4.5
-pip==20.0.2
-git+https://git.xfel.eu/gitlab/xfel-rtd/rtd-conf.git
 slumber
 breathe
