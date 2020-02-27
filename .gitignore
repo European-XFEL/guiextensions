@@ -5,3 +5,4 @@ __pycache__/
 *.org
 .idea/
 *.pyc
+src/extensions/_version.py
