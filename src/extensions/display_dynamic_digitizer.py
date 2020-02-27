@@ -62,9 +62,7 @@ class DisplayDynamicDigitizer(BaseBindingController):
         step = node.step.value
         x = generate_baseline(samples, offset=offset, step=step)
         rect = get_view_range(self._plot)
-        x, y = generate_down_sample(samples, rect=rect,
-                                    half_samples=DOWNSAMPLE,
-                                    deviation=True, base_line=x)
+        x, y = generate_down_sample(samples, x=x, rect=rect, deviation=True)
         self._plot.setData(x, y)
 
     # ----------------------------------------------------------------
