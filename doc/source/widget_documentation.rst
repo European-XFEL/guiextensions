@@ -88,3 +88,34 @@ sources can be selected.
 
    The widget is available since GUI Extension version **0.3.0**.
    Known devices are: ``Karabacon``
+
+
+
+Scatter Position Widget
+=======================
+
+The ``Dynamic Digitizer Widget`` is tailored to visualize the monitoring output
+of fast digitizers.
+
+The fast plot uses a `Largest Triangle Three Buckets` downsample algorithm to
+decrease the number of data points for visualization.
+In addition, the `Node` provides the correct start and step point of the x-axis
+trace.
+For threshold visualization, a horizontal **red** line can be alternatively
+toggled.
+
+.. figure:: images/digitizer_dynamic.png
+   :alt: digitizer_dynamic.png
+   :align: center
+
+- DisplayType: **WidgetNode|DynamicDigitizer**
+- The Node Schema MUST contain four (4) elements:
+    * **samples** (NumberVector)
+    * **offset** (Simple)
+    * **step** (Simple)
+    * **threshold** (Simple)
+
+.. note::
+
+   The widget is available since GUI Extension version **0.4.0**.
+   Known devices are: ``adqDigitizer``
