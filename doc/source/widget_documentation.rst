@@ -91,8 +91,8 @@ sources can be selected.
 
 
 
-Scatter Position Widget
-=======================
+Dynamic Digitizer Widget
+========================
 
 The ``Dynamic Digitizer Widget`` is tailored to visualize the monitoring output
 of fast digitizers.
