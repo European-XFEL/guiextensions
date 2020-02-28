@@ -6,6 +6,12 @@ This sections describes the different application widgets, important releases
 notes and bug fixes.
 
 
+Version 0.4.0 (Upcoming - March 2020)
+=====================================
+
+- Addition of dynamic digitizer widget
+
+
 Version 0.3.1 (20th December 2019)
 ==================================
 
