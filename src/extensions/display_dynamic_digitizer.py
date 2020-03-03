@@ -5,18 +5,21 @@
 #############################################################################
 
 import numpy as np
+from pyqtgraph import InfiniteLine
+from PyQt5.QtWidgets import QAction
 from traits.api import Instance, Undefined
+
 from karabo.common.scenemodel.api import (
     build_graph_config, restore_graph_config)
 from karabogui.binding.api import WidgetNodeBinding
 from karabogui.controllers.api import (
     with_display_type, BaseBindingController, register_binding_controller)
+from karabogui.graph.common.api import make_pen
 from karabogui.graph.plots.api import (
     KaraboPlotView, generate_down_sample, generate_baseline, get_view_range)
 
 from .models.simple import DynamicDigitizerModel
 
-DOWNSAMPLE = 40000
 
 
 @register_binding_controller(
@@ -29,6 +32,7 @@ class DisplayDynamicDigitizer(BaseBindingController):
     """The Dynamic display controller for the digitizer"""
     model = Instance(DynamicDigitizerModel, args=())
     _plot = Instance(object)
+    _threshold = Instance(InfiniteLine)
 
     def create_widget(self, parent):
         widget = KaraboPlotView(parent=parent)
@@ -39,6 +43,21 @@ class DisplayDynamicDigitizer(BaseBindingController):
         widget.add_toolbar()
         widget.enable_export()
         widget.enable_data_toggle()
+
+        # The threshold line!
+        plotItem = widget.plotItem
+        line_pen = make_pen('r')
+        self._threshold = InfiniteLine(pos=0, angle=0, name="threshold")
+        self._threshold.setPen(line_pen)
+        self._threshold.setVisible(False)
+        plotItem.addItem(self._threshold)
+
+        toggle_action = QAction("Show threshold line", widget)
+        toggle_action.setCheckable(True)
+        toggle_action.setChecked(False)
+        toggle_action.toggled.connect(self._threshold.setVisible)
+        viewbox = plotItem.vb
+        viewbox.add_action(toggle_action, separator=False)
 
         widget.restore(build_graph_config(self.model))
 
@@ -60,6 +79,13 @@ class DisplayDynamicDigitizer(BaseBindingController):
         # Generate the baseline for the x-axis
         offset = node.offset.value
         step = node.step.value
+
+        # Threshold might not be there!
+        threshold = getattr(node, 'threshold', None)
+        if threshold is not None:
+            threshold_value = threshold.value
+            self._threshold.setPos(threshold_value)
+
         x = generate_baseline(samples, offset=offset, step=step)
         rect = get_view_range(self._plot)
         x, y = generate_down_sample(samples, x=x, rect=rect, deviation=True)
