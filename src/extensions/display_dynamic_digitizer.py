@@ -21,7 +21,6 @@ from karabogui.graph.plots.api import (
 from .models.simple import DynamicDigitizerModel
 
 
-
 @register_binding_controller(
     ui_name='Dynamic Digitizer Widget',
     klassname='DynamicDigitizer',
