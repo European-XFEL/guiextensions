@@ -13,7 +13,7 @@ if [[ "$JOB_SCOPE" != "release" ]]; then
     exit
 fi
 
-SSH_USER_HOST=xdata@exflserv05
+SSH_USER_HOST=xkarabo@exflserv05
 CURL_PREFIX=http://exflserv05.desy.de/karabo
 
 COMMIT_TAG=$CI_COMMIT_REF_NAME
@@ -32,12 +32,12 @@ WHEEL_FILE=$CI_PROJECT_DIR/dist/GUIExtensions-*.whl
 SSH_KARABO_DIR=/var/www/html/karabo
 
 echo "Creating remote directories: $SSH_KARABO_DIR/$DESTINATION_PATH"
-sshpass -p "$XDATA_PWD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $SSH_USER_HOST "mkdir -p $SSH_KARABO_DIR/$DESTINATION_PATH"
+sshpass -p "$XKARABO_PWD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $SSH_USER_HOST "mkdir -p $SSH_KARABO_DIR/$DESTINATION_PATH"
 
 # Copy wheel to correct directory
 SSH_PREFIX=$SSH_USER_HOST:$SSH_KARABO_DIR
 
 echo "Moving $WHEEL_FILE to $SSH_PREFIX/$DESTINATION_PATH"
-sshpass -p "$XDATA_PWD" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $WHEEL_FILE $SSH_PREFIX/$DESTINATION_PATH
+sshpass -p "$XKARABO_PWD" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $WHEEL_FILE $SSH_PREFIX/$DESTINATION_PATH
 
 popd
