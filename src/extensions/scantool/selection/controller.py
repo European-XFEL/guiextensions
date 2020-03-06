@@ -16,6 +16,7 @@ class DataSelectionController(HasStrictTraits):
     def __init__(self, parent=None):
         super(DataSelectionController, self).__init__()
         self.widget = get_container(parent)
+        self.widget.setFixedWidth(150)
 
     # ---------------------------------------------------------------------
     # Public methods
