@@ -1,10 +1,6 @@
-before_script:
-  - source ci/prepare.sh "$CI_BUILD_NAME"
-
-.test_build_template: &test_build
+.unit_tests: &unit-tests-conda
   script:
-    - source ci/build.sh "$CI_BUILD_NAME"
-    - source ci/test.sh "$CI_BUILD_NAME"
+    - python ci/build.py extensions --clean --test
   only:
     - branches
   except:
@@ -12,12 +8,17 @@ before_script:
 
 .release_build: &release-build
   script:
-    - source ci/build.sh "$CI_BUILD_NAME"
-    - source ci/upload.sh "$CI_BUILD_NAME"
+    - python ci/build.py extensions --clean --test --upload-wheel karaboExtensions/tags/$COMMIT_TAG
   only:
     - /^(\d+\.)(\d+\.?)(\d+)$/
   except:
     - branches
+    - schedules
+
+.nightly_build_conda: &nightly-test-conda
+  script:
+    - python ci/build.py extensions --clean --test --nightly
+  only:
     - schedules
 
 ##### Release build #####
@@ -28,6 +29,24 @@ release build miniconda:
 
 ##### Test build #####
 
-test:miniconda:
+unit tests miniconda:
   image: europeanxfel/karabo-ci:miniconda-3
-  <<: *test_build
+  <<: *unit-tests-conda
+
+unit tests miniconda-osx64:
+  tags:
+    - macos
+  <<: *unit-tests-conda
+
+unit tests miniconda-win64:
+  before_script:
+    - ci/cleanup.cmd
+  tags:
+    - Win10
+  <<: *unit-tests-conda
+
+##### Nightly build ####
+
+nightly test miniconda:
+  image: europeanxfel/karabo-ci:miniconda-3
+  <<: *nightly-test-conda
