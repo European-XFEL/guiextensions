@@ -48,11 +48,9 @@ around the scatter cloud.
    :align: center
 
 - DisplayType: **WidgetNode|ScatterPosition**
-- The Node Schema MUST contain four (4) elements:
+- The Node Schema MUST contain two (2) elements:
     * **posX** (Float/Double)
     * **posY** (Float/Double)
-    * **xSD** (Float/Double)
-    * **ySD** (Float/Double)
 
 .. note::
 

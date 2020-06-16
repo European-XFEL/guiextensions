@@ -55,8 +55,6 @@ class DisplayScatterPosition(BaseBindingController):
 
     _x_values = Instance(deque)
     _y_values = Instance(deque)
-    _xsd_values = Instance(deque)
-    _ysd_values = Instance(deque)
 
     _plot = Instance(object)
     _ellipse = Instance(object)
@@ -72,15 +70,16 @@ class DisplayScatterPosition(BaseBindingController):
             icon=icons.reset,
             tooltip="Reset the plot",
             on_clicked=self._reset_plot)
-
-        toolbar.add_button(name="reset", button=_btn_reset)
+        try:
+            toolbar.add_button(name="reset", button=_btn_reset)
+            # GUI Changes
+        except Exception:
+            toolbar.add_button(button=_btn_reset)
         widget.stateChanged.connect(self._change_model)
 
         model = self.model
         self._x_values = deque(maxlen=model.maxlen)
         self._y_values = deque(maxlen=model.maxlen)
-        self._xsd_values = deque(maxlen=model.maxlen)
-        self._ysd_values = deque(maxlen=model.maxlen)
 
         self._plot = widget.add_scatter_item()
 
@@ -110,18 +109,13 @@ class DisplayScatterPosition(BaseBindingController):
         # NOTE: We utilize that all values are set at once in the pipeline!
         pos_x = proxy.value.posX.value
         pos_y = proxy.value.posY.value
-        x_sd = proxy.value.xSD.value
-        y_sd = proxy.value.ySD.value
 
         self._x_values.append(pos_x)
         self._y_values.append(pos_y)
-        self._xsd_values.append(abs(x_sd))
-        self._ysd_values.append(abs(y_sd))
+        pos = (float(np.mean(self._x_values)), float(np.mean(self._y_values)))
+        size = (float(np.std(self._x_values)), float(np.std(self._y_values)))
+        self._ellipse.setValue(pos, size)
         self._plot.setData(self._x_values, self._y_values)
-        self._ellipse.setValue((np.mean(self._x_values),
-                                np.mean(self._y_values)),
-                               (np.mean(self._xsd_values),
-                                np.mean(self._ysd_values)))
 
     # ----------------------------------------------------------------
     # Qt Slots
@@ -132,8 +126,6 @@ class DisplayScatterPosition(BaseBindingController):
     def _reset_plot(self):
         self._x_values.clear()
         self._y_values.clear()
-        self._xsd_values.clear()
-        self._ysd_values.clear()
         self._plot.clear()
 
     def _configure_deque(self):
@@ -143,11 +135,8 @@ class DisplayScatterPosition(BaseBindingController):
         if ok:
             self._last_x_value = None
             self._x_values, self._y_values = None, None
-            self._xsd_values, self._ysd_values = None, None
             self._x_values = deque(maxlen=maxlen)
             self._y_values = deque(maxlen=maxlen)
-            self._xsd_values = deque(maxlen=maxlen)
-            self._ysd_values = deque(maxlen=maxlen)
 
             self.model.maxlen = maxlen
 
