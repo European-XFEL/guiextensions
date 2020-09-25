@@ -3,6 +3,8 @@ import glob
 import os
 import os.path as op
 from platform import system as sys_name
+from stat import S_ISDIR
+from setuptools_scm import get_version
 import subprocess
 
 from conda.cli.python_api import Commands, run_command
@@ -44,6 +46,7 @@ class Builder:
         if platform is None:
             raise RuntimeError(f'Unsupported platform {sys_name()}')
         self.platform = platform
+        self.version = get_version(self.root_path)
 
     def run(self):
         # Assume that there's only one recipe
@@ -66,7 +69,7 @@ class Builder:
 
         # Create and upload wheel
         if self.args.upload_wheel:
-            filename = self.create()
+            filename = self.create_wheel()
             self.upload(filename)
 
     def adapt_platform(self):
@@ -150,7 +153,7 @@ class Builder:
 
         print('Tests successful')
 
-    def create(self):
+    def create_wheel(self):
         print(f"Creating wheel at {os.environ.get('CI_PROJECT_DIR')}")
         command_run(['python', 'setup.py', 'bdist_wheel'])
         filename = op.join(self.root_path, '**', WHEEL_FILENAME)
@@ -164,8 +167,8 @@ class Builder:
 
     def upload(self, local_file_path):
         """Uploads the local file to in the in specified remote path"""
-        remote_dir = '/'.join([REMOTE_KARABO_DIR, self.args.upload_wheel])
-        print("Creating remote directories:", self.args.upload_wheel)
+        remote_dir = '/'.join([self.args.remote_base_dir, str(self.version)])
+        print("Creating remote directories:", remote_dir)
 
         with SSHClient() as ssh_client:
             ssh_client.set_missing_host_key_policy(AutoAddPolicy())
@@ -173,15 +176,11 @@ class Builder:
                                password=os.environ.get("XKARABO_PWD"))
             with ssh_client.open_sftp() as sftp:
                 # Create directory
-                try:
-                    sftp.stat(remote_dir)
-                except FileNotFoundError:
-                    print(f"Creating missing directory {remote_dir}")
-                    sftp.mkdir(remote_dir)
+                mkdir(remote_dir, basedir=REMOTE_KARABO_DIR, sftp=sftp)
 
                 # Upload file
                 filename = op.basename(local_file_path)
-                remote_file_path = '/'.join([remote_dir, filename])
+                remote_file_path = '/'.join([REMOTE_KARABO_DIR, remote_dir, filename])
                 print(f'Uploading {local_file_path} to {remote_file_path}')
                 sftp.put(local_file_path, remote_file_path)
 
@@ -201,6 +200,20 @@ def command_run(cmd):
     except subprocess.CalledProcessError as e:
         print(f"Error in running command: {e.output}")
         raise e
+
+
+def mkdir(remote_path, basedir='', sftp=None):
+    rel_path = ''
+    for path in remote_path.split('/'):
+        rel_path = '/'.join([rel_path, path])
+        abs_path = '/'.join([basedir, rel_path])
+        try:
+            stat_ = sftp.stat(abs_path)
+            if not S_ISDIR(stat_.st_mode):
+                raise RuntimeError(f"{abs_path} exists and is not a directory.")
+        except FileNotFoundError:
+            print(f"Creating missing directory {abs_path}..")
+            sftp.mkdir(abs_path)
 
 
 def main(args):
@@ -225,7 +238,7 @@ if __name__ == '__main__':
 
     root_ap.add_argument(
         '-f', '--clean', action='store_true',
-        help='clean developement environment')
+        help='clean development environment')
 
     root_ap.add_argument(
         '-T', '--test', action='store_true',
@@ -236,8 +249,13 @@ if __name__ == '__main__':
         help='check if this is a nightly build')
 
     root_ap.add_argument(
-        '-U', '--upload-wheel', type=str,
+        '-U', '--upload-wheel', action='store_true',
         help='upload the wheel on remote host')
+
+    root_ap.add_argument(
+        '-P', '--remote-base-dir', type=str,
+        default='karaboExtensions/tags',
+        help='directory of the Extensions wheels on remote host.')
 
     args = root_ap.parse_args()
     main(args)

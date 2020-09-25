@@ -8,7 +8,7 @@
 
 .release_build: &release-build
   script:
-    - python ci/build.py extensions --clean --test --upload-wheel karaboExtensions/tags/$COMMIT_TAG
+    - python ci/build.py extensions --clean --test --upload-wheel -P karaboExtensions/tags
   only:
     - /^(\d+\.)(\d+\.?)(\d+)$/
   except:
@@ -34,6 +34,8 @@ unit tests miniconda:
   <<: *unit-tests-conda
 
 unit tests miniconda-osx64:
+  before_script:
+    - ci/cleanup.sh
   tags:
     - macos
   <<: *unit-tests-conda
