@@ -1,10 +1,10 @@
 from xml.etree.ElementTree import SubElement
 
-from traits.api import Float, Int, List
+from traits.api import Float, Int, List, Enum
 from karabo.common.scenemodel.api import (
-    BaseWidgetObjectData, read_basic_label, read_axes_set, read_range_set,
-    write_basic_label, write_axes_set, write_range_set, BaseROIData,
-    read_roi_info, write_roi_info, BasePlotModel)
+    BaseDisplayEditableWidget, BaseWidgetObjectData, read_basic_label,
+    read_axes_set, read_range_set, write_basic_label, write_axes_set,
+    write_range_set, BaseROIData, read_roi_info, write_roi_info, BasePlotModel)
 from karabo.common.scenemodel.const import NS_KARABO, WIDGET_ELEMENT_TAG
 from karabo.common.scenemodel.io_utils import (
     read_base_widget_data, write_base_widget_data)
@@ -30,6 +30,11 @@ class DynamicDigitizerModel(BasePlotModel):
 
 class ScantoolBaseModel(BaseWidgetObjectData):
     """ A model for the Scantool Base Widget """
+
+
+class PointAndClickModel(BaseDisplayEditableWidget):
+    """ A model for the Point-And-Click Widget"""
+    klass = Enum('DisplayPointAndClick', 'EditablePointAndClick')
 
 
 @register_scene_reader('IPM-Quadrant')
@@ -106,4 +111,23 @@ def _scantool_base_reader(read_func, element):
 def _scantool_base_writer(write_func, model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'Scantool-Base')
+    return element
+
+
+@register_scene_reader('DisplayPointAndClick')
+def _pac_ro_reader(read_func, element):
+    traits = read_base_widget_data(element)
+    return PointAndClickModel(klass='DisplayPointAndClick', **traits)
+
+
+@register_scene_reader('EditablePointAndClick')
+def _pac_edit_reader(read_func, element):
+    traits = read_base_widget_data(element)
+    return PointAndClickModel(klass='EditablePointAndClick', **traits)
+
+
+@register_scene_writer(PointAndClickModel)
+def _pac_writer(write_func, model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_widget_data(model, element, model.klass)
     return element

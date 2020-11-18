@@ -117,3 +117,18 @@ toggled.
 
    The widget is available since GUI Extension version **0.4.0**.
    Known devices are: ``adqDigitizer``
+
+Point-and-Click Widget
+======================
+
+This widget lets you show an image, show some crosses as markers, and let
+the user move one cross.
+
+The `DisplayType` is "WidgetNode|Point-and-Click", and its schema contains the
+following elements:
+  * **image** a `VectorChar` that contains the actual binary image, in a format
+    known to Qt (e.g. PNG or JPG)
+  * **x** and **y** are `VectorFloat`. They need to have the same length and
+    define the position of the crosses shown to the user.
+  * **cross_x** and **cross_y** are `Float` and receive the points the user
+    has set the editable cross to.
