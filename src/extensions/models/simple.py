@@ -16,6 +16,10 @@ class IPMQuadrantModel(BaseWidgetObjectData):
     """ A model for the Intensity Position Monitor"""
 
 
+class DoocsTableModel(BaseWidgetObjectData):
+    """ A model for the DoocsTable"""
+
+
 class ScatterPositionModel(BasePlotModel):
     """ A model for the Scatter Position"""
     maxlen = Int(100)
@@ -47,6 +51,19 @@ def _bpm_position_reader(read_func, element):
 def _bpm_position_writer(write_func, model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'IPM-Quadrant')
+    return element
+
+
+@register_scene_reader('DoocsTable')
+def _doocs_table_reader(read_func, element):
+    traits = read_base_widget_data(element)
+    return DoocsTableModel(**traits)
+
+
+@register_scene_writer(IPMQuadrantModel)
+def _doocs_table_writer(write_func, model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_widget_data(model, element, 'DoocsTable')
     return element
 
 
