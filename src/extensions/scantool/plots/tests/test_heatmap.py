@@ -153,7 +153,8 @@ class TestHeatmapSubplot(GuiTestCase):
         np.testing.assert_array_equal(image, data)
 
         # Get displayed xy values
-        x_array, y_array = self._get_xy_device_data(transpose, x_reverse, y_reverse)
+        x_array, y_array = self._get_xy_device_data(
+            transpose, x_reverse, y_reverse)
         x_array = np.sort(x_array[:image_shape[1]])
         y_array = np.sort(y_array[:image_shape[0]])
 

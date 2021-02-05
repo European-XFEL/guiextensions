@@ -1,4 +1,4 @@
-from karabo.middlelayer import (
+from karabo.native import (
     Configurable, Float, VectorFloat, VectorChar, Node, AccessMode, Hash)
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_hash)
@@ -14,8 +14,10 @@ class PnCNode(Configurable):
     cross_x = Float()
     cross_y = Float()
 
+
 class Object(Configurable):
     node = Node(PnCNode)
+
 
 class TestWidgetNode(GuiTestCase):
     def setUp(self):
