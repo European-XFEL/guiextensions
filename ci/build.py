@@ -148,7 +148,8 @@ class Builder:
                   'python', 'setup.py', 'install')
 
         # Run tests
-        cmd = [Commands.RUN, '-n', 'karabogui', 'pytest', '-v', '.']
+        cmd = [Commands.RUN, '-n', 'karabogui',  '--cwd', gui_root,
+               'python', '-m', 'pytest', '.']
         conda_run(*cmd)
 
         print('Tests successful')
