@@ -1,4 +1,4 @@
-from karabo.middlelayer import Configurable, Float, Hash, Node
+from karabo.native import Configurable, Float, Hash, Node
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_hash)
 

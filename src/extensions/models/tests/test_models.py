@@ -64,6 +64,7 @@ def test_ipm_quadrant_model():
     read_model = single_model_round_trip(model)
     _assert_geometry_traits(read_model)
 
+
 def test_pnc_model():
     model = api.PointAndClickModel(klass='EditablePointAndClick')
     read_model = single_model_round_trip(model)

@@ -6,7 +6,6 @@ from ..multicurve import MultiCurvePlot
 from ...const import X_DATA, Y_DATA
 from ...data.device import Device
 
-
 LENGTH = 10
 X_ARRAY = np.linspace(6, 15, 10)
 Y_ARRAY = np.random.randint(10, size=LENGTH)

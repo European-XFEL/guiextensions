@@ -128,7 +128,7 @@ class Builder:
         command_run(['git', 'clone', git_path, framework_dir])
 
         # Create environment with Karabo GUI
-        devenv_path = op.join('conda-recipes',  'karabogui',
+        devenv_path = op.join('conda-recipes', 'karabogui',
                               'environment.devenv.yml')
         conda_run(Commands.RUN, '-n', 'base', 'conda', 'devenv',
                   '--file', op.join(framework_dir, devenv_path))
@@ -148,7 +148,7 @@ class Builder:
                   'python', 'setup.py', 'install')
 
         # Run tests
-        cmd = [Commands.RUN, '-n', 'karabogui', 'nosetests', '-v', '.']
+        cmd = [Commands.RUN, '-n', 'karabogui', 'pytest', '-v', '.']
         conda_run(*cmd)
 
         print('Tests successful')
@@ -180,7 +180,8 @@ class Builder:
 
                 # Upload file
                 filename = op.basename(local_file_path)
-                remote_file_path = '/'.join([REMOTE_KARABO_DIR, remote_dir, filename])
+                remote_file_path = '/'.join(
+                    [REMOTE_KARABO_DIR, remote_dir, filename])
                 print(f'Uploading {local_file_path} to {remote_file_path}')
                 sftp.put(local_file_path, remote_file_path)
 
@@ -188,8 +189,8 @@ class Builder:
 def conda_run(command, *args, **kwargs):
     stdout, stderr, ret_code = run_command(command, *args, **kwargs)
     if ret_code != 0:
-        msg = f'Command {command} [{args}] '\
-            f'{kwargs} returned {ret_code}\n{stderr}'
+        msg = f'Command {command} [{args}] ' \
+              f'{kwargs} returned {ret_code}\n{stderr}'
         raise RuntimeError(msg)
     return stdout
 
@@ -210,7 +211,8 @@ def mkdir(remote_path, basedir='', sftp=None):
         try:
             stat_ = sftp.stat(abs_path)
             if not S_ISDIR(stat_.st_mode):
-                raise RuntimeError(f"{abs_path} exists and is not a directory.")
+                raise RuntimeError(
+                    f"{abs_path} exists and is not a directory.")
         except FileNotFoundError:
             print(f"Creating missing directory {abs_path}..")
             sftp.mkdir(abs_path)
@@ -228,9 +230,7 @@ This script will manage the running of tests and uploading of the build wheel
 to the desired destination.
 """
 
-
 if __name__ == '__main__':
-
     root_ap = argparse.ArgumentParser(
         description=DESCRIPTION)
 

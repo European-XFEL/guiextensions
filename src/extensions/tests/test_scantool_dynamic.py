@@ -1,7 +1,7 @@
 import numpy as np
 
 from karabo.common.api import ProxyStatus, State
-from karabo.middlelayer import (
+from karabo.native import (
     AccessMode, Configurable, Double, Hash, Node, String, UInt32, VectorDouble,
     VectorInt32)
 from karabogui.binding.api import (
@@ -233,7 +233,7 @@ class TestScantoolDynamicWidget(GuiTestCase):
                 CURRENT_INDEX, steps,
                 *self._motor_values(len(config[MOTORS]), index),
                 *self._source_values(len(config[SOURCES]), index))
-            )
+                        )
             apply_configuration(hash, self.binding)
 
         # Note that the scan has finished, thus change the state to ON
