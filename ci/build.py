@@ -16,7 +16,6 @@ PLATFORMS = {
     "Linux": "linux-64"
 }
 
-PROXY_SERVER = "exflwgs06.desy.de:3128"
 WHEEL_FILENAME = 'GUIExtensions-*.whl'
 REMOTE_KARABO_DIR = "/var/www/html/karabo"
 
@@ -77,11 +76,6 @@ class Builder:
         if self.platform == 'osx-64':
             os.environ['LANG'] = 'en_US.UTF-8'
         elif self.platform == 'linux-64':
-            # This is a CI specific setting
-            proxy_server = os.environ.get('PROXY_SERVER') or PROXY_SERVER
-            os.environ['http_proxy'] = f'http://{proxy_server}/'
-            os.environ['https_proxy'] = f'https://{proxy_server}/'
-
             # Setup XVFB
             os.environ['DISPLAY'] = XVFB_DISPLAY
             os.environ['XDG_RUNTIME_DIR'] = XDG_RUNTIME_DIR
@@ -116,13 +110,6 @@ class Builder:
         print(f"Running tests for {self.args.module}")
         token = os.environ.get('XFEL_TOKEN')
         git_path = f"https://{token}@git.xfel.eu/gitlab/Karabo/Framework.git"
-
-        # Set git proxy
-        http_proxy = os.environ.get('http_proxy') or f'http://{PROXY_SERVER}/'
-        https_proxy = (os.environ.get('https_proxy')
-                       or f'https://{PROXY_SERVER}/')
-        command_run(['git', 'config', '--global', 'http.proxy', http_proxy])
-        command_run(['git', 'config', '--global', 'https.proxy', https_proxy])
         # Clone Framework master
         framework_dir = op.join(self.root_path, 'Framework')
         command_run(['git', 'clone', git_path, framework_dir])
