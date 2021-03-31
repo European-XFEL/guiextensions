@@ -19,6 +19,9 @@ class IPMQuadrantModel(BaseWidgetObjectData):
 class DoocsTableModel(BaseWidgetObjectData):
     """ A model for the DoocsTable"""
 
+class DoocsManagerModel(BaseWidgetObjectData):
+    """ A model for the DoocsManager"""
+
 
 class ScatterPositionModel(BasePlotModel):
     """ A model for the Scatter Position"""
