@@ -37,16 +37,12 @@ MANAGER_ENTRY_LABELS = [text.lower() for column, text
 serviceEntry = namedtuple('serviceEntry', MANAGER_ENTRY_LABELS)
 
 
-def handle_manager_from_server(device_id, action, success, reply):
+def request_handler(device_id, action, success, reply):
     """Callback handler for a request to the DOOCS manager"""
     if not success or not reply.get('payload.success', False):
-        msg = (f"The command {action} for the device {device_id} was "
-               "not successful!")
+        msg = (f"Error: Properties could not be updated. "
+               "See the device server log for details.")
         messagebox.show_warning(msg, title='Manager Service Failed')
-        return
-    msg = (f"The command {action} for the device {device_id} was "
-           "successful!")
-    messagebox.show_information(msg, title='Manager Service Success!')
     return
 
 
@@ -131,7 +127,7 @@ class ButtonDelegate(QStyledItemDelegate):
 
     def _show_properties(self, server):
         """Show The custom context menu of a reconfigurable table element"""
-        handler = partial(handle_manager_from_server, self.device_id, server)
+        handler = partial(request_handler, self.device_id, server)
         call_device_slot(handler, self.device_id, 'requestManagerAction',
                          action=server)
 
