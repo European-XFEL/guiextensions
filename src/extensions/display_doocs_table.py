@@ -226,7 +226,7 @@ class DisplayDoocsTable(BaseBindingController):
     def create_widget(self, parent):
         widget = QTableView(parent=parent)
         layout = QVBoxLayout(widget)
-        # we do not want margins around the widgets
+        # we do not want margins around the widget (table)
         layout.setContentsMargins(0, 0, 0, 0)
         widget.setLayout(layout)
 
