@@ -28,7 +28,7 @@ MANAGER_COLUMN_TEXT = {
     1: "Properties",
 }
 
-MIRROR_SCENE_COLUMN = 2
+MIRROR_SCENE_COLUMN = 2  # for planned near future implementation
 
 MANAGER_HEADER_LABELS = [text for text in MANAGER_COLUMN_TEXT.values()]
 MANAGER_ENTRY_LABELS = [text.lower() for column, text
