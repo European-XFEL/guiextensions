@@ -13,10 +13,10 @@ from PyQt5.QtWidgets import (
 
 from traits.api import Instance, WeakRef
 
+from karabogui import messagebox
 from karabogui.binding.api import VectorHashBinding, get_editor_value
 from karabogui.controllers.api import (
     with_display_type, BaseBindingController, register_binding_controller)
-from karabogui import messagebox
 from karabogui.request import call_device_slot
 
 from .models.simple import DoocsTableModel
@@ -62,8 +62,9 @@ class ButtonDelegate(QStyledItemDelegate):
 
     def _is_relevant_column(self, index):
         """Return whether a column is relevant to trigger an action
-        upon clicking
+        upon clicking. 
         """
+        # NOTE: For future use (as for opening a mirror scene)
         column = index.column()
         relevant_list = []
         if column in relevant_list:
@@ -119,7 +120,7 @@ class ButtonDelegate(QStyledItemDelegate):
             label = self.parent.model().index(index.row(), 0).data()
             menu.addAction(label)
             menu.addSeparator()
-            show_properties_action = menu.addAction('Update Property List')
+            show_properties_action = menu.addAction('Show Available Properties')
             show_properties_action.triggered.connect(
                 partial(self._show_properties, label))
 
@@ -134,15 +135,12 @@ class ButtonDelegate(QStyledItemDelegate):
     @pyqtSlot(QModelIndex)
     def cellClicked(self, index):
         """Action to take when a cell is clicked."""
-        # NOTE: Prepared for future use
-        if not index.isValid() or not self.clickable:
-            return
         return
 
 
 class DoocsManagerTableModel(QAbstractTableModel):
     """ A class which describes the relevant data (model) of a doocs manager
-    device to show in a table view.
+    device to present in a table view.
     """
 
     def __init__(self, parent=None):
@@ -231,7 +229,6 @@ class DisplayDoocsTable(BaseBindingController):
 
         # The main table view!
         table_view = QTableView(widget)
-        table_view.setSortingEnabled(True)
         self.table_model = DoocsManagerTableModel(parent=table_view)
 
         # Set up the filter model!
