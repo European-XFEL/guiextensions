@@ -62,7 +62,7 @@ class ButtonDelegate(QStyledItemDelegate):
 
     def _is_relevant_column(self, index):
         """Return whether a column is relevant to trigger an action
-        upon clicking. 
+        upon clicking.
         """
         # NOTE: For future use (as for opening a mirror scene)
         column = index.column()
@@ -120,7 +120,8 @@ class ButtonDelegate(QStyledItemDelegate):
             label = self.parent.model().index(index.row(), 0).data()
             menu.addAction(label)
             menu.addSeparator()
-            show_properties_action = menu.addAction('Show Available Properties')
+            show_properties_action = menu.addAction(
+                'Show Available Properties')
             show_properties_action.triggered.connect(
                 partial(self._show_properties, label))
 
@@ -225,6 +226,8 @@ class DisplayDoocsTable(BaseBindingController):
     def create_widget(self, parent):
         widget = QTableView(parent=parent)
         layout = QVBoxLayout(widget)
+        # we do not want margins around the widgets
+        layout.setContentsMargins(0, 0, 0, 0)
         widget.setLayout(layout)
 
         # The main table view!
