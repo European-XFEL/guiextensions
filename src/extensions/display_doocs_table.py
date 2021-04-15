@@ -19,7 +19,7 @@ from karabogui.controllers.api import (
     with_display_type, BaseBindingController, register_binding_controller)
 from karabogui.request import call_device_slot
 
-from .models.simple import DoocsTableModel
+from .models.simple import DoocsManagerTableModel
 
 MANAGER_SERVER_COLUMN = 0
 MANAGER_PROPERTY_COLUMN = 1
@@ -139,13 +139,13 @@ class ButtonDelegate(QStyledItemDelegate):
         return
 
 
-class DoocsManagerTableModel(QAbstractTableModel):
+class DoocsManagerTable(QAbstractTableModel):
     """ A class which describes the relevant data (model) of a doocs manager
     device to present in a table view.
     """
 
     def __init__(self, parent=None):
-        super(DoocsManagerTableModel, self).__init__(parent)
+        super(DoocsManagerTable, self).__init__(parent)
         self._table_data = []
         self.parent = parent
 
@@ -219,7 +219,7 @@ class DoocsManagerTableModel(QAbstractTableModel):
     priority=-10, can_show_nothing=True)
 class DisplayDoocsTable(BaseBindingController):
     """The Dynamic display controller for the digitizer"""
-    model = Instance(DoocsTableModel, args=())
+    model = Instance(DoocsManagerTableModel, args=())
     table_model = WeakRef(QAbstractTableModel)
     delegate = WeakRef(ButtonDelegate)
 
@@ -232,7 +232,7 @@ class DisplayDoocsTable(BaseBindingController):
 
         # The main table view!
         table_view = QTableView(widget)
-        self.table_model = DoocsManagerTableModel(parent=table_view)
+        self.table_model = DoocsManagerTable(parent=table_view)
 
         # Set up the filter model!
         filter_model = QSortFilterProxyModel(parent=table_view)
