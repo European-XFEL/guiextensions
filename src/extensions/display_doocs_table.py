@@ -234,15 +234,8 @@ class DisplayDoocsTable(BaseBindingController):
         table_view = QTableView(widget)
         self.table_model = DoocsManagerTable(parent=table_view)
 
-        # Set up the filter model!
-        filter_model = QSortFilterProxyModel(parent=table_view)
-        filter_model.setSourceModel(self.table_model)
-        filter_model.setFilterRole(Qt.DisplayRole)
-        filter_model.setFilterCaseSensitivity(False)
-        filter_model.setFilterFixedString("")
-        filter_model.setFilterKeyColumn(0)
-
-        table_view.setModel(filter_model)
+        # here we set our model
+        table_view.setModel(self.table_model)
         btn_delegate = ButtonDelegate(
             parent=table_view, device_id=self.proxy.root_proxy.device_id)
         table_view.setItemDelegateForColumn(
