@@ -17,7 +17,8 @@ from karabogui import messagebox
 from karabogui.binding.api import VectorHashBinding, get_editor_value
 from karabogui.controllers.api import (
     with_display_type, BaseBindingController, register_binding_controller)
-from karabogui.request import call_device_slot#, get_scene_from_server
+from karabogui.request import call_device_slot
+from karabogui.util import get_scene_from_server
 
 from .models.simple import DoocsManagerTableModel, DoocsMirrorTableModel
 
@@ -113,9 +114,7 @@ class ButtonDelegate(QStyledItemDelegate):
         """Action to take when a cell is clicked."""        
         device_id = self.parent.model().index(index.row(), 0).data()
         print("CLICKED: ", device_id)
-        #get_scene_from_server(device_id, "overview")#, project=None,
-        #target_window=SceneTargetWindow.Dialog):
-
+        get_scene_from_server(device_id, "overview")
         return
 
 
