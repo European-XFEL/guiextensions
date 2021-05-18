@@ -17,21 +17,25 @@ from karabogui import messagebox
 from karabogui.binding.api import VectorHashBinding, get_editor_value
 from karabogui.controllers.api import (
     with_display_type, BaseBindingController, register_binding_controller)
-from karabogui.request import call_device_slot
+from karabogui.request import call_device_slot#, get_scene_from_server
 
-from .models.simple import DoocsManagerTableModel
+from .models.simple import DoocsManagerTableModel, DoocsMirrorTableModel
 
-MANAGER_SERVER_COLUMN = 0
-MANAGER_PROPERTY_COLUMN = 1
-MANAGER_COLUMN_TEXT = {
-    0: "Server",
-    1: "Properties",
+MIRROR_NAME_COLUMN = 0
+MIRROR_STATE_COLUMN = 1
+MIRROR_SCENELINK_COLUMN = 2
+MIRROR_STATUS_COLUMN = 3
+MIRROR_COLUMN_TEXT = {
+    MIRROR_NAME_COLUMN: "Name",
+    MIRROR_STATE_COLUMN: "State",
+    MIRROR_SCENELINK_COLUMN: "SceneLink",
+    MIRROR_STATUS_COLUMN: "Status",
 }
-MANAGER_HEADER_LABELS = [text for text in MANAGER_COLUMN_TEXT.values()]
-MANAGER_ENTRY_LABELS = [text.lower() for column, text
-                        in MANAGER_COLUMN_TEXT.items() if column < 5]
+MIRROR_HEADER_LABELS = [text for text in MIRROR_COLUMN_TEXT.values()]
+MIRROR_ENTRY_LABELS = [text[0].lower()+text[1:] for column, text
+                       in MIRROR_COLUMN_TEXT.items() if column < 5]
 
-serviceEntry = namedtuple('serviceEntry', MANAGER_ENTRY_LABELS)
+serviceEntry = namedtuple('serviceEntry', MIRROR_ENTRY_LABELS)
 
 
 def request_handler(device_id, action, success, reply):
@@ -39,7 +43,7 @@ def request_handler(device_id, action, success, reply):
     if not success or not reply.get('payload.success', False):
         msg = (f"Error: Properties could not be updated. "
                "See the device server log for details.")
-        messagebox.show_warning(msg, title='Manager Service Failed')
+        messagebox.show_warning(msg, title='Mirror Service Failed')
     return
 
 
@@ -63,9 +67,9 @@ class ButtonDelegate(QStyledItemDelegate):
         """
         # NOTE: For future use (as for opening a mirror scene)
         column = index.column()
-        relevant_list = []
+        relevant_list = [MIRROR_SCENELINK_COLUMN]
         if column in relevant_list:
-            return True, MANAGER_COLUMN_TEXT[column]
+            return True, MIRROR_COLUMN_TEXT[column]
 
         return False, ""
 
@@ -132,17 +136,22 @@ class ButtonDelegate(QStyledItemDelegate):
 
     @pyqtSlot(QModelIndex)
     def cellClicked(self, index):
-        """Action to take when a cell is clicked."""
+        """Action to take when a cell is clicked."""        
+        device_id = self.parent.model().index(index.row(), 0).data()
+        print("CLICKED: ", device_id)
+        #get_scene_from_server(device_id, "overview")#, project=None,
+        #target_window=SceneTargetWindow.Dialog):
+
         return
 
 
-class DoocsManagerTable(QAbstractTableModel):
+class DoocsMirrorTable(QAbstractTableModel):
     """ A class which describes the relevant data (model) of a doocs manager
     device to present in a table view.
     """
 
     def __init__(self, parent=None):
-        super(DoocsManagerTable, self).__init__(parent)
+        super(DoocsMirrorTable, self).__init__(parent)
         self._table_data = []
         self.parent = parent
 
@@ -184,39 +193,38 @@ class DoocsManagerTable(QAbstractTableModel):
 
     def headerData(self, section, orientation, role):
         if role == Qt.DisplayRole and orientation == Qt.Horizontal:
-            return MANAGER_HEADER_LABELS[section]
+            return MIRROR_HEADER_LABELS[section]
 
     def rowCount(self, parent=QModelIndex()):
         return len(self._table_data)
-
     def columnCount(self, parent=QModelIndex()):
-        return len(MANAGER_HEADER_LABELS)
+        return len(MIRROR_HEADER_LABELS)
 
     def data(self, index, role=Qt.DisplayRole):
         if not index.isValid():
             return None
         entry = self._table_data[index.row()]
         if role in (Qt.DisplayRole, Qt.ToolTipRole):
-            if index.column() < len(MANAGER_ENTRY_LABELS):
+            if index.column() < len(MIRROR_ENTRY_LABELS):
                 return str(entry[index.column()])
         elif role == Qt.BackgroundRole:
             column = index.column()
-            #if column == MIRROR_SCENE_COLUMN:
-            #    # provide a deviceSceneLink: to be implemented
-            #    pass
+            if column == MIRROR_SCENELINK_COLUMN:
+                #provide a deviceSceneLink: to be implemented
+                pass
 
         return None
 
 
 @register_binding_controller(
     ui_name='Doocs Device Table',
-    klassname='DoocsTable',
+    klassname='DoocsMirrorTable',
     binding_type=VectorHashBinding,
-    is_compatible=with_display_type('WidgetNode|DoocsTable'),
-    priority=-10, can_show_nothing=True)
-class DisplayDoocsTable(BaseBindingController):
+    is_compatible=with_display_type('WidgetNode|DoocsMirrorTable'),
+    priority=-10, can_show_nothing=False)
+class DisplayDoocsMirrorTable(BaseBindingController):
     """The Dynamic display controller for the digitizer"""
-    model = Instance(DoocsManagerTableModel, args=())
+    model = Instance(DoocsMirrorTableModel, args=())
     table_model = WeakRef(QAbstractTableModel)
     delegate = WeakRef(ButtonDelegate)
 
@@ -229,14 +237,14 @@ class DisplayDoocsTable(BaseBindingController):
 
         # The main table view!
         table_view = QTableView(widget)
-        self.table_model = DoocsManagerTable(parent=table_view)
+        self.table_model = DoocsMirrorTable(parent=table_view)
 
         # here we set our model
         table_view.setModel(self.table_model)
         btn_delegate = ButtonDelegate(
             parent=table_view, device_id=self.proxy.root_proxy.device_id)
         table_view.setItemDelegateForColumn(
-            MANAGER_SERVER_COLUMN, btn_delegate)
+            MIRROR_NAME_COLUMN, btn_delegate)
         self.delegate = btn_delegate
 
         header = table_view.horizontalHeader()
