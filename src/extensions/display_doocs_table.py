@@ -201,10 +201,6 @@ class DoocsManagerTable(QAbstractTableModel):
                 return str(entry[index.column()])
         elif role == Qt.BackgroundRole:
             column = index.column()
-            #if column == MIRROR_SCENE_COLUMN:
-            #    # provide a deviceSceneLink: to be implemented
-            #    pass
-
         return None
 
 

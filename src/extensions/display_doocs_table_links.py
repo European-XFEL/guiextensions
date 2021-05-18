@@ -55,9 +55,6 @@ class ButtonDelegate(QStyledItemDelegate):
         self._button = QPushButton("")
         self._button.hide()
         self.parent = parent
-        # show a context menu by right-clicking
-        parent.setContextMenuPolicy(Qt.CustomContextMenu)
-        parent.customContextMenuRequested.connect(self._context_menu)
         # Action to take when left-clicking
         parent.clicked.connect(self.cellClicked)
 
@@ -104,29 +101,6 @@ class ButtonDelegate(QStyledItemDelegate):
             painter.drawPixmap(option.rect.x(), option.rect.y(), pixmap)
         else:
             super(ButtonDelegate, self).paint(painter, option, index)
-
-    def _context_menu(self, pos):
-        """The custom context menu of a reconfigurable table element"""
-        selection_model = self.parent.selectionModel()
-        if selection_model is None:
-            # XXX: We did not yet receive a schema and thus have no table and
-            # selection model!
-            return
-
-        index = selection_model.currentIndex()
-        if index.isValid():
-
-            menu = QMenu(parent=self.parent)
-
-            label = self.parent.model().index(index.row(), 0).data()
-            menu.addAction(label)
-            menu.addSeparator()
-            show_properties_action = menu.addAction(
-                'Show Available Properties')
-            show_properties_action.triggered.connect(
-                partial(self._show_properties, label))
-
-            menu.exec_(self.parent.viewport().mapToGlobal(pos))
 
     def _show_properties(self, server):
         """Show The custom context menu of a reconfigurable table element"""
