@@ -20,6 +20,10 @@ class DoocsManagerTableModel(BaseWidgetObjectData):
     """ A model for the DoocsManager"""
 
 
+class DoocsMirrorTableModel(BaseWidgetObjectData):
+    """ A model for the DoocsMirror"""
+
+
 class ScatterPositionModel(BasePlotModel):
     """ A model for the Scatter Position"""
     maxlen = Int(100)
@@ -64,6 +68,19 @@ def _doocs_table_reader(read_func, element):
 def _doocs_table_writer(write_func, model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'DoocsTable')
+    return element
+
+
+@register_scene_reader('DoocsMirrorTable')
+def _doocs_mirror_table_reader(read_func, element):
+    traits = read_base_widget_data(element)
+    return DoocsMirrorTableModel(**traits)
+
+
+@register_scene_writer(DoocsMirrorTableModel)
+def _doocs_mirror_table_writer(write_func, model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_widget_data(model, element, 'DoocsMirrorTable')
     return element
 
 

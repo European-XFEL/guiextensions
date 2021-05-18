@@ -16,6 +16,7 @@ setup(
             'ScantoolDynamic = extensions.display_scantool_dynamic',
             'DynamicDigitizer = extensions.display_dynamic_digitizer',
             'PointAndClick = extensions.point_and_click',
+            'DoocsDeviceTableLinks = extensions.display_doocs_table_links',
             'DoocsDeviceTable = extensions.display_doocs_table'
         ],
     },
