@@ -54,8 +54,6 @@ class ButtonDelegate(QStyledItemDelegate):
         # show a context menu by right-clicking
         parent.setContextMenuPolicy(Qt.CustomContextMenu)
         parent.customContextMenuRequested.connect(self._context_menu)
-        # Action to take when left-clicking
-        parent.clicked.connect(self.cellClicked)
 
     def _is_relevant_column(self, index):
         """Return whether a column is relevant to trigger an action
@@ -69,38 +67,6 @@ class ButtonDelegate(QStyledItemDelegate):
 
         return False, ""
 
-    def updateEditorGeometry(self, button, option, index):
-        """Relevant cells are displayed as buttons."""
-        # NOTE: For future use (as for opening a mirror scene)
-        relevant, text = self._is_relevant_column(index)
-        if relevant:
-            button.setGeometry(option.rect)
-            button.setText(text)
-
-    def setEditorData(self, button, index):
-        """Relevant cells are displayed as buttons."""
-        # NOTE: For future use (as for opening a mirror scene)
-        relevant, text = self._is_relevant_column(index)
-        if relevant:
-            button.setText(text)
-        else:
-            super(ButtonDelegate, self).setEditorData(button, index)
-
-    def paint(self, painter, option, index):
-        """Relevant cells are displayed as buttons."""
-        # NOTE: For future use (as for opening a mirror scene)
-        relevant, text = self._is_relevant_column(index)
-        if relevant:
-            self._button.setGeometry(option.rect)
-            self._button.setText(text)
-            if option.state == QStyle.State_Selected:
-                painter.fillRect(option.rect, option.palette.highlight())
-            pixmap = self._button.grab()
-            self._button.setEnabled(self.clickable)
-            painter.drawPixmap(option.rect.x(), option.rect.y(), pixmap)
-        else:
-            super(ButtonDelegate, self).paint(painter, option, index)
-
     def _context_menu(self, pos):
         """The custom context menu of a reconfigurable table element"""
         selection_model = self.parent.selectionModel()
@@ -108,7 +74,6 @@ class ButtonDelegate(QStyledItemDelegate):
             # XXX: We did not yet receive a schema and thus have no table and
             # selection model!
             return
-
         index = selection_model.currentIndex()
         if index.isValid():
 
@@ -129,11 +94,6 @@ class ButtonDelegate(QStyledItemDelegate):
         handler = partial(request_handler, self.device_id, server)
         call_device_slot(handler, self.device_id, 'requestManagerAction',
                          action=server)
-
-    @pyqtSlot(QModelIndex)
-    def cellClicked(self, index):
-        """Action to take when a cell is clicked."""
-        return
 
 
 class DoocsManagerTable(QAbstractTableModel):
