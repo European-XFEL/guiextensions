@@ -2,13 +2,12 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from collections import namedtuple
-from functools import partial
 
 from PyQt5.QtCore import (
-    QAbstractTableModel, QModelIndex, QSortFilterProxyModel, Qt, pyqtSlot)
+    QAbstractTableModel, QModelIndex, Qt, pyqtSlot)
 
 from PyQt5.QtWidgets import (
-    QHeaderView, QMenu, QPushButton, QStyle, QStyledItemDelegate,
+    QHeaderView, QPushButton, QStyle, QStyledItemDelegate,
     QTableView, QVBoxLayout)
 
 from traits.api import Instance, WeakRef
@@ -17,10 +16,9 @@ from karabogui import messagebox
 from karabogui.binding.api import VectorHashBinding, get_editor_value
 from karabogui.controllers.api import (
     with_display_type, BaseBindingController, register_binding_controller)
-from karabogui.request import call_device_slot
 from karabogui.util import get_scene_from_server
 
-from .models.simple import DoocsManagerTableModel, DoocsMirrorTableModel
+from .models.simple import DoocsMirrorTableModel
 
 MIRROR_NAME_COLUMN = 0
 MIRROR_STATE_COLUMN = 1
@@ -35,6 +33,7 @@ MIRROR_COLUMN_TEXT = {
 MIRROR_HEADER_LABELS = [text for text in MIRROR_COLUMN_TEXT.values()]
 MIRROR_ENTRY_LABELS = [text[0].lower()+text[1:] for column, text
                        in MIRROR_COLUMN_TEXT.items() if column < 5]
+RELEVANT_LIST = [MIRROR_SCENELINK_COLUMN]
 
 serviceEntry = namedtuple('serviceEntry', MIRROR_ENTRY_LABELS)
 
@@ -63,34 +62,13 @@ class ButtonDelegate(QStyledItemDelegate):
         """Return whether a column is relevant to trigger an action
         upon clicking.
         """
-        # NOTE: For future use (as for opening a mirror scene)
         column = index.column()
-        relevant_list = [MIRROR_SCENELINK_COLUMN]
-        if column in relevant_list:
+        if column in RELEVANT_LIST:
             return True, MIRROR_COLUMN_TEXT[column]
-
         return False, ""
-
-    def updateEditorGeometry(self, button, option, index):
-        """Relevant cells are displayed as buttons."""
-        # NOTE: For future use (as for opening a mirror scene)
-        relevant, text = self._is_relevant_column(index)
-        if relevant:
-            button.setGeometry(option.rect)
-            button.setText(text)
-
-    def setEditorData(self, button, index):
-        """Relevant cells are displayed as buttons."""
-        # NOTE: For future use (as for opening a mirror scene)
-        relevant, text = self._is_relevant_column(index)
-        if relevant:
-            button.setText(text)
-        else:
-            super(ButtonDelegate, self).setEditorData(button, index)
 
     def paint(self, painter, option, index):
         """Relevant cells are displayed as buttons."""
-        # NOTE: For future use (as for opening a mirror scene)
         relevant, text = self._is_relevant_column(index)
         if relevant:
             self._button.setGeometry(option.rect)
@@ -103,18 +81,13 @@ class ButtonDelegate(QStyledItemDelegate):
         else:
             super(ButtonDelegate, self).paint(painter, option, index)
 
-    def _show_properties(self, server):
-        """Show The custom context menu of a reconfigurable table element"""
-        handler = partial(request_handler, self.device_id, server)
-        call_device_slot(handler, self.device_id, 'requestManagerAction',
-                         action=server)
-
     @pyqtSlot(QModelIndex)
     def cellClicked(self, index):
-        """Action to take when a cell is clicked."""        
+        """Action to take when a relevant cell is clicked."""
         device_id = self.parent.model().index(index.row(), 0).data()
-        print("CLICKED: ", device_id)
-        get_scene_from_server(device_id, "overview")
+        relevant, _ = self._is_relevant_column(index)
+        if relevant:
+            get_scene_from_server(device_id, "overview")
         return
 
 
@@ -170,6 +143,7 @@ class DoocsMirrorTable(QAbstractTableModel):
 
     def rowCount(self, parent=QModelIndex()):
         return len(self._table_data)
+
     def columnCount(self, parent=QModelIndex()):
         return len(MIRROR_HEADER_LABELS)
 
@@ -180,11 +154,6 @@ class DoocsMirrorTable(QAbstractTableModel):
         if role in (Qt.DisplayRole, Qt.ToolTipRole):
             if index.column() < len(MIRROR_ENTRY_LABELS):
                 return str(entry[index.column()])
-        elif role == Qt.BackgroundRole:
-            column = index.column()
-            if column == MIRROR_SCENELINK_COLUMN:
-                #provide a deviceSceneLink: to be implemented
-                pass
 
         return None
 
@@ -217,7 +186,7 @@ class DisplayDoocsMirrorTable(BaseBindingController):
         btn_delegate = ButtonDelegate(
             parent=table_view, device_id=self.proxy.root_proxy.device_id)
         table_view.setItemDelegateForColumn(
-            MIRROR_NAME_COLUMN, btn_delegate)
+            MIRROR_SCENELINK_COLUMN, btn_delegate)
         self.delegate = btn_delegate
 
         header = table_view.horizontalHeader()
