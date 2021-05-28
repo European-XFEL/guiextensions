@@ -37,7 +37,8 @@ MIRROR_ENTRY_LABELS = [text[0].lower()+text[1:] for column, text
                        in MIRROR_COLUMN_TEXT.items() if column < 5]
 RELEVANT_LIST = [MIRROR_SCENELINK_COLUMN]
 
-serviceEntry = namedtuple('serviceEntry', MIRROR_ENTRY_LABELS)
+#serviceEntry = namedtuple('serviceEntry', MIRROR_ENTRY_LABELS)
+serviceEntry = namedtuple('serviceEntry', ["name", "state", "sceneLink", "status"])#]MIRROR_ENTRY_LABELS)
 
 
 def get_state_brush(state):
@@ -214,8 +215,8 @@ class DisplayDoocsMirrorTable(BaseBindingController):
         header.setDefaultSectionSize(50)
         header.setSectionResizeMode(QHeaderView.ResizeToContents)
         header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(1, QHeaderView.Stretch)
-        header.setSectionResizeMode(2, QHeaderView.Stretch)
+        header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
         header.setSectionResizeMode(3, QHeaderView.ResizeToContents)
         header.setDefaultAlignment(Qt.AlignLeft)
         layout.addWidget(table_view)
