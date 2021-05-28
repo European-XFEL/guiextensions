@@ -190,10 +190,19 @@ class DisplayDoocsMirrorTable(BaseBindingController):
 
         # The main table view!
         table_view = QTableView(widget)
+        table_view.setSortingEnabled(True)
         self.table_model = DoocsMirrorTable(parent=table_view)
 
+        # ==>Set up the filter model
+        filter_model = QSortFilterProxyModel(parent=table_view)
+        filter_model.setSourceModel(self.table_model)
+        filter_model.setFilterRole(Qt.DisplayRole)
+        filter_model.setFilterCaseSensitivity(False)
+        filter_model.setFilterFixedString("")
+        filter_model.setFilterKeyColumn(0)
+
         # here we set our model
-        table_view.setModel(self.table_model)
+        table_view.setModel(filter_model)
         btn_delegate = ButtonDelegate(
             parent=table_view, device_id=self.proxy.root_proxy.device_id)
         table_view.setItemDelegateForColumn(
@@ -212,13 +221,6 @@ class DisplayDoocsMirrorTable(BaseBindingController):
         layout.addWidget(table_view)
 
         # search widget
-        # ==>Set up the filter model
-        filter_model = QSortFilterProxyModel(parent=table_view)
-        filter_model.setSourceModel(self.table_model)
-        filter_model.setFilterRole(Qt.DisplayRole)
-        filter_model.setFilterCaseSensitivity(False)
-        filter_model.setFilterFixedString("")
-        filter_model.setFilterKeyColumn(0)
         search_layout = QHBoxLayout()
         search_line = QLineEdit(parent=widget)
         search_line.textChanged.connect(filter_model.setFilterFixedString)
