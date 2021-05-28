@@ -6,17 +6,19 @@ from collections import namedtuple
 from PyQt5.QtCore import (
     QAbstractTableModel, QModelIndex, QSortFilterProxyModel, Qt, pyqtSlot)
 
+from PyQt5.QtGui import QBrush, QColor
+
 from PyQt5.QtWidgets import (
     QHBoxLayout, QHeaderView, QLineEdit, QPushButton, QStyle,
     QStyledItemDelegate, QTableView, QVBoxLayout)
 
 from traits.api import Instance, WeakRef
 
-from karabogui import messagebox
 from karabogui.binding.api import VectorHashBinding, get_editor_value
 from karabogui.controllers.api import (
     with_display_type, BaseBindingController, register_binding_controller)
-from karabogui.util import get_scene_from_server
+from karabogui.util import get_scene_from_server  # until karabo 2.10.x
+# from karabogui.request import get_scene_from_server  # from 2.11.0
 
 from .models.simple import DoocsMirrorTableModel
 
@@ -38,13 +40,16 @@ RELEVANT_LIST = [MIRROR_SCENELINK_COLUMN]
 serviceEntry = namedtuple('serviceEntry', MIRROR_ENTRY_LABELS)
 
 
-def request_handler(device_id, action, success, reply):
-    """Callback handler for a request to the DOOCS manager"""
-    if not success or not reply.get('payload.success', False):
-        msg = (f"Error: Properties could not be updated. "
-               "See the device server log for details.")
-        messagebox.show_warning(msg, title='Mirror Service Failed')
-    return
+def get_state_brush(state):
+    """Decorate a cell with proper color according to the input string."""
+    if state == "ON":
+        return QBrush(QColor(120, 255, 0))
+    elif state == "ERROR":
+        return QBrush(QColor(255, 0, 0))
+    elif state == "INIT":
+        return QBrush(QColor(180, 255, 255))
+    elif state == "UNKNOWN":
+        return QBrush(QColor(255, 140, 0))
 
 
 class ButtonDelegate(QStyledItemDelegate):
@@ -85,9 +90,10 @@ class ButtonDelegate(QStyledItemDelegate):
     def cellClicked(self, index):
         """Action to take when a relevant cell is clicked."""
         device_id = self.parent.model().index(index.row(), 0).data()
+        scene_id = self.parent.model().index(index.row(), 2).data()
         relevant, _ = self._is_relevant_column(index)
-        if relevant:
-            get_scene_from_server(device_id, "overview")
+        if relevant and scene_id is not None:
+            get_scene_from_server(device_id, scene_id)
         return
 
 
@@ -154,6 +160,11 @@ class DoocsMirrorTable(QAbstractTableModel):
         if role in (Qt.DisplayRole, Qt.ToolTipRole):
             if index.column() < len(MIRROR_ENTRY_LABELS):
                 return str(entry[index.column()])
+        elif role == Qt.BackgroundRole:
+            column = index.column()
+            if column == MIRROR_STATE_COLUMN:
+                # align the cell color with the displayed state
+                return get_state_brush(entry.state)
 
         return None
 
@@ -193,8 +204,11 @@ class DisplayDoocsMirrorTable(BaseBindingController):
         header = table_view.horizontalHeader()
         header.setDefaultSectionSize(50)
         header.setSectionResizeMode(QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(0, QHeaderView.Stretch)
+        header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
         header.setSectionResizeMode(1, QHeaderView.Stretch)
+        header.setSectionResizeMode(2, QHeaderView.Stretch)
+        header.setSectionResizeMode(3, QHeaderView.ResizeToContents)
+        header.setDefaultAlignment(Qt.AlignLeft)
         layout.addWidget(table_view)
 
         # search widget
