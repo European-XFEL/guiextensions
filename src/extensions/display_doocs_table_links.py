@@ -4,11 +4,11 @@
 from collections import namedtuple
 
 from PyQt5.QtCore import (
-    QAbstractTableModel, QModelIndex, Qt, pyqtSlot)
+    QAbstractTableModel, QModelIndex, QSortFilterProxyModel, Qt, pyqtSlot)
 
 from PyQt5.QtWidgets import (
-    QHeaderView, QPushButton, QStyle, QStyledItemDelegate,
-    QTableView, QVBoxLayout)
+    QHBoxLayout, QHeaderView, QLineEdit, QPushButton, QStyle,
+    QStyledItemDelegate, QTableView, QVBoxLayout)
 
 from traits.api import Instance, WeakRef
 
@@ -189,13 +189,27 @@ class DisplayDoocsMirrorTable(BaseBindingController):
             MIRROR_SCENELINK_COLUMN, btn_delegate)
         self.delegate = btn_delegate
 
+        # table header config
         header = table_view.horizontalHeader()
         header.setDefaultSectionSize(50)
         header.setSectionResizeMode(QHeaderView.ResizeToContents)
         header.setSectionResizeMode(0, QHeaderView.Stretch)
         header.setSectionResizeMode(1, QHeaderView.Stretch)
-
         layout.addWidget(table_view)
+
+        # search widget
+        # ==>Set up the filter model
+        filter_model = QSortFilterProxyModel(parent=table_view)
+        filter_model.setSourceModel(self.table_model)
+        filter_model.setFilterRole(Qt.DisplayRole)
+        filter_model.setFilterCaseSensitivity(False)
+        filter_model.setFilterFixedString("")
+        filter_model.setFilterKeyColumn(0)
+        search_layout = QHBoxLayout()
+        search_line = QLineEdit(parent=widget)
+        search_line.textChanged.connect(filter_model.setFilterFixedString)
+        search_layout.addWidget(search_line)
+        layout.addLayout(search_layout)
 
         return widget
 
