@@ -198,8 +198,8 @@ class DisplayDoocsTable(BaseBindingController):
         header = table_view.horizontalHeader()
         header.setDefaultSectionSize(50)
         header.setSectionResizeMode(QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(0, QHeaderView.Stretch)
-        header.setSectionResizeMode(1, QHeaderView.Stretch)
+        header.setSectionResizeMode(0, QHeaderView.ResizeToContents))
+        header.setSectionResizeMode(1, QHeaderView.ResizeToContents))
 
         layout.addWidget(table_view)
 
