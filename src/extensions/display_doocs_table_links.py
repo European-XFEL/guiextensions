@@ -17,8 +17,8 @@ from traits.api import Instance, WeakRef
 from karabogui.binding.api import VectorHashBinding, get_editor_value
 from karabogui.controllers.api import (
     with_display_type, BaseBindingController, register_binding_controller)
-from karabogui.util import get_scene_from_server  # until karabo 2.10.x
-# from karabogui.request import get_scene_from_server  # from 2.11.0
+# from karabogui.util import get_scene_from_server  # until karabo 2.10.x
+from karabogui.request import get_scene_from_server  # from 2.11.0
 
 from .models.simple import DoocsMirrorTableModel
 
