@@ -5,10 +5,10 @@ from collections import namedtuple
 from functools import partial
 
 from PyQt5.QtCore import (
-    QAbstractTableModel, QModelIndex, QSortFilterProxyModel, Qt, pyqtSlot)
+    QAbstractTableModel, QModelIndex, Qt)
 
 from PyQt5.QtWidgets import (
-    QHeaderView, QMenu, QPushButton, QStyle, QStyledItemDelegate,
+    QHeaderView, QMenu, QPushButton, QStyledItemDelegate,
     QTableView, QVBoxLayout)
 
 from traits.api import Instance, WeakRef
@@ -21,23 +21,25 @@ from karabogui.request import call_device_slot
 
 from .models.simple import DoocsManagerTableModel
 
-MANAGER_SERVER_COLUMN = 0
-MANAGER_PROPERTY_COLUMN = 1
-MANAGER_COLUMN_TEXT = {
-    0: "Server",
-    1: "Properties",
+MANAGER_DIKT = {
+    "server": {"label": "Server", "column": 0},
+    "properties": {"label": "Properties", "column": 1},
 }
-MANAGER_HEADER_LABELS = [text for text in MANAGER_COLUMN_TEXT.values()]
-MANAGER_ENTRY_LABELS = [text.lower() for column, text
-                        in MANAGER_COLUMN_TEXT.items() if column < 5]
-
-serviceEntry = namedtuple('serviceEntry', MANAGER_ENTRY_LABELS)
+MANAGER_SERVER_COLUMN = [
+    MANAGER_DIKT[key]["column"] for key in MANAGER_DIKT
+    if key == "properties"][0]
+MANAGER_PROPERTY_COLUMN = [
+    MANAGER_DIKT[key]["column"] for key in MANAGER_DIKT
+    if key == "properties"][0]
+MANAGER_HEADER_LABELS = [MANAGER_DIKT[key]["label"] for key in MANAGER_DIKT]
+MANAGER_ENTRY_KEYS = [key for key in MANAGER_DIKT]
+serviceEntry = namedtuple('serviceEntry', MANAGER_ENTRY_KEYS)
 
 
 def request_handler(device_id, action, success, reply):
     """Callback handler for a request to the DOOCS manager"""
     if not success or not reply.get('payload.success', False):
-        msg = (f"Error: Properties could not be updated. "
+        msg = ("Error: Properties could not be updated. "
                "See the device server log for details.")
         messagebox.show_warning(msg, title='Manager Service Failed')
     return
@@ -54,18 +56,6 @@ class ButtonDelegate(QStyledItemDelegate):
         # show a context menu by right-clicking
         parent.setContextMenuPolicy(Qt.CustomContextMenu)
         parent.customContextMenuRequested.connect(self._context_menu)
-
-    def _is_relevant_column(self, index):
-        """Return whether a column is relevant to trigger an action
-        upon clicking.
-        """
-        # NOTE: For future use (as for opening a mirror scene)
-        column = index.column()
-        relevant_list = []
-        if column in relevant_list:
-            return True, MANAGER_COLUMN_TEXT[column]
-
-        return False, ""
 
     def _context_menu(self, pos):
         """The custom context menu of a reconfigurable table element"""
@@ -157,10 +147,8 @@ class DoocsManagerTable(QAbstractTableModel):
             return None
         entry = self._table_data[index.row()]
         if role in (Qt.DisplayRole, Qt.ToolTipRole):
-            if index.column() < len(MANAGER_ENTRY_LABELS):
+            if index.column() < len(MANAGER_DIKT):
                 return str(entry[index.column()])
-        elif role == Qt.BackgroundRole:
-            column = index.column()
         return None
 
 

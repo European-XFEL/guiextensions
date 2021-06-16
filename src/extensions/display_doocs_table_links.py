@@ -22,23 +22,23 @@ from karabogui.request import get_scene_from_server  # from 2.11.0
 
 from .models.simple import DoocsMirrorTableModel
 
-MIRROR_NAME_COLUMN = 0
-MIRROR_STATE_COLUMN = 1
-MIRROR_SCENELINK_COLUMN = 2
-MIRROR_STATUS_COLUMN = 3
-MIRROR_COLUMN_TEXT = {
-    MIRROR_NAME_COLUMN: "Name",
-    MIRROR_STATE_COLUMN: "Connection Status",
-    MIRROR_SCENELINK_COLUMN: "SceneLink",
-    MIRROR_STATUS_COLUMN: "Status",
+MIRROR_DIKT = {
+    "name": {"label": "Name", "column": 0, "isRelevant": False},
+    "state": {
+        "label": "Mirror Connection", "column": 1, "isRelevant": False},
+    "sceneLink": {"label": "Scene Link", "column": 2, "isRelevant": True},
+    "status": {"label": "Status", "column": 3, "isRelevant": False},
 }
-MIRROR_HEADER_LABELS = [text for text in MIRROR_COLUMN_TEXT.values()]
-MIRROR_ENTRY_LABELS = [text[0].lower()+text[1:] for column, text
-                       in MIRROR_COLUMN_TEXT.items() if column < 5]
-RELEVANT_LIST = [MIRROR_SCENELINK_COLUMN]
-
-#serviceEntry = namedtuple('serviceEntry', MIRROR_ENTRY_LABELS)
-serviceEntry = namedtuple('serviceEntry', ["name", "state", "sceneLink", "status"])#]MIRROR_ENTRY_LABELS)
+MIRROR_STATE_COLUMN = [MIRROR_DIKT[key]["column"] for key in MIRROR_DIKT
+                       if key == "state"][0]
+MIRROR_SCENELINK_COLUMN = [MIRROR_DIKT[key]["column"] for key in MIRROR_DIKT
+                           if key == "sceneLink"][0]
+MIRROR_HEADER_LABELS = [MIRROR_DIKT[key]["label"] for key in MIRROR_DIKT]
+MIRROR_ENTRY_KEYS = [key for key in MIRROR_DIKT]
+RELEVANT_COLUMNS_LIST = [MIRROR_DIKT[key]["column"] for key in MIRROR_DIKT
+                         if MIRROR_DIKT[key]["isRelevant"]]
+# these are keys received from the device
+serviceEntry = namedtuple('serviceEntry', MIRROR_ENTRY_KEYS)
 
 
 def get_state_brush(state):
@@ -69,8 +69,8 @@ class ButtonDelegate(QStyledItemDelegate):
         upon clicking.
         """
         column = index.column()
-        if column in RELEVANT_LIST:
-            return True, MIRROR_COLUMN_TEXT[column]
+        if column in RELEVANT_COLUMNS_LIST:
+            return True, MIRROR_HEADER_LABELS[column]
         return False, ""
 
     def paint(self, painter, option, index):
@@ -159,14 +159,13 @@ class DoocsMirrorTable(QAbstractTableModel):
             return None
         entry = self._table_data[index.row()]
         if role in (Qt.DisplayRole, Qt.ToolTipRole):
-            if index.column() < len(MIRROR_ENTRY_LABELS):
+            if index.column() < len(MIRROR_DIKT):
                 return str(entry[index.column()])
         elif role == Qt.BackgroundRole:
             column = index.column()
             if column == MIRROR_STATE_COLUMN:
                 # align the cell color with the displayed state
                 return get_state_brush(entry.state)
-
         return None
 
 
