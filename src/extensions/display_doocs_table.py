@@ -1,39 +1,20 @@
 #############################################################################
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from collections import namedtuple
 from functools import partial
 
-from PyQt5.QtCore import (
-    QAbstractTableModel, QModelIndex, Qt)
+from PyQt5.QtWidgets import QMenu
 
-from PyQt5.QtWidgets import (
-    QHeaderView, QMenu, QPushButton, QStyledItemDelegate,
-    QTableView, QVBoxLayout)
-
-from traits.api import Instance, WeakRef
+from traits.api import Bool, Instance
 
 from karabogui import messagebox
-from karabogui.binding.api import VectorHashBinding, get_editor_value
+from karabogui.binding.api import VectorHashBinding
 from karabogui.controllers.api import (
-    with_display_type, BaseBindingController, register_binding_controller)
+    with_display_type, register_binding_controller)
+from karabogui.controllers.table.api import BaseTableController
 from karabogui.request import call_device_slot
 
 from .models.simple import DoocsManagerTableModel
-
-MANAGER_DIKT = {
-    "server": {"label": "Server", "column": 0},
-    "properties": {"label": "Properties", "column": 1},
-}
-MANAGER_SERVER_COLUMN = [
-    MANAGER_DIKT[key]["column"] for key in MANAGER_DIKT
-    if key == "properties"][0]
-MANAGER_PROPERTY_COLUMN = [
-    MANAGER_DIKT[key]["column"] for key in MANAGER_DIKT
-    if key == "properties"][0]
-MANAGER_HEADER_LABELS = [MANAGER_DIKT[key]["label"] for key in MANAGER_DIKT]
-MANAGER_ENTRY_KEYS = [key for key in MANAGER_DIKT]
-serviceEntry = namedtuple('serviceEntry', MANAGER_ENTRY_KEYS)
 
 
 def request_handler(device_id, action, success, reply):
@@ -45,160 +26,37 @@ def request_handler(device_id, action, success, reply):
     return
 
 
-class ButtonDelegate(QStyledItemDelegate):
-    def __init__(self, parent=None, device_id=None):
-        super(ButtonDelegate, self).__init__(parent)
-        self.clickable = True
-        self.device_id = device_id
-        self._button = QPushButton("")
-        self._button.hide()
-        self.parent = parent
-        # show a context menu by right-clicking
-        parent.setContextMenuPolicy(Qt.CustomContextMenu)
-        parent.customContextMenuRequested.connect(self._context_menu)
-
-    def _context_menu(self, pos):
-        """The custom context menu of a reconfigurable table element"""
-        selection_model = self.parent.selectionModel()
-        if selection_model is None:
-            # XXX: We did not yet receive a schema and thus have no table and
-            # selection model!
-            return
-        index = selection_model.currentIndex()
-        if index.isValid():
-
-            menu = QMenu(parent=self.parent)
-
-            label = self.parent.model().index(index.row(), 0).data()
-            menu.addAction(label)
-            menu.addSeparator()
-            show_properties_action = menu.addAction(
-                'Show Available Properties')
-            show_properties_action.triggered.connect(
-                partial(self._show_properties, label))
-
-            menu.exec_(self.parent.viewport().mapToGlobal(pos))
-
-    def _show_properties(self, server):
-        """Show The custom context menu of a reconfigurable table element"""
-        handler = partial(request_handler, self.device_id, server)
-        call_device_slot(handler, self.device_id, 'requestManagerAction',
-                         action=server)
-
-
-class DoocsManagerTable(QAbstractTableModel):
-    """ A class which describes the relevant data (model) of a doocs manager
-    device to present in a table view.
-    """
-
-    def __init__(self, parent=None):
-        super(DoocsManagerTable, self).__init__(parent)
-        self._table_data = []
-        self.parent = parent
-
-    def initialize(self, value):
-        self.beginResetModel()
-        for index, row_data in enumerate(value):
-            self._table_data[index] = serviceEntry(**row_data)
-        self.endResetModel()
-
-    def update_model(self, value):
-        num_rows = self.rowCount()
-        new_rows = len(value)
-        difference = new_rows - num_rows
-
-        # Update our book keeping Hash first before proceeding!
-        for index, row_data in enumerate(value):
-            if index < num_rows:
-                self._table_data[index] = serviceEntry(**row_data)
-            else:
-                row = self.rowCount()
-                self.beginInsertRows(QModelIndex(), row, row)
-                self._table_data.append(serviceEntry(**row_data))
-                self.endInsertRows()
-
-        if difference < 0:
-            for _ in range(abs(difference)):
-                # NOTE: We can safely pop the data, since the update
-                # overwrites! The rows start at 0!
-                row = self.rowCount()
-                self.beginRemoveRows(QModelIndex(), row - 1, row)
-                self._table_data.pop()
-                self.endRemoveRows()
-
-        # XXX: We are nifty here and simply announce a complete layoutChange
-        # This turns out to be several times faster than doing a dataChange
-        # for every item. Avoid races by doing this close together...
-        self.layoutAboutToBeChanged.emit()
-        self.layoutChanged.emit()
-
-    def headerData(self, section, orientation, role):
-        if role == Qt.DisplayRole and orientation == Qt.Horizontal:
-            return MANAGER_HEADER_LABELS[section]
-
-    def rowCount(self, parent=QModelIndex()):
-        return len(self._table_data)
-
-    def columnCount(self, parent=QModelIndex()):
-        return len(MANAGER_HEADER_LABELS)
-
-    def data(self, index, role=Qt.DisplayRole):
-        if not index.isValid():
-            return None
-        entry = self._table_data[index.row()]
-        if role in (Qt.DisplayRole, Qt.ToolTipRole):
-            if index.column() < len(MANAGER_DIKT):
-                return str(entry[index.column()])
-        return None
-
-
 @register_binding_controller(
     ui_name='Doocs Device Table',
     klassname='DoocsTable',
     binding_type=VectorHashBinding,
     is_compatible=with_display_type('WidgetNode|DoocsTable'),
     priority=-10, can_show_nothing=True)
-class DisplayDoocsTable(BaseBindingController):
-    """The Dynamic display controller for the digitizer"""
+class DisplayDoocsTable(BaseTableController):
+    """A table version for the DoocsML"""
     model = Instance(DoocsManagerTableModel, args=())
-    table_model = WeakRef(QAbstractTableModel)
-    delegate = WeakRef(ButtonDelegate)
+    hasCustomMenu = Bool(True)
 
-    def create_widget(self, parent):
-        widget = QTableView(parent=parent)
-        layout = QVBoxLayout(widget)
-        # we do not want margins around the widget (table)
-        layout.setContentsMargins(0, 0, 0, 0)
-        widget.setLayout(layout)
+    def custom_menu(self, pos):
+        """The custom context menu of a reconfigurable table element"""
+        index = self.currentIndex()
+        if not index.isValid():
+            return
 
-        # The main table view!
-        table_view = QTableView(widget)
-        self.table_model = DoocsManagerTable(parent=table_view)
+        menu = QMenu(parent=self.widget)
+        label = self.widget.model().index(index.row(), 0).data()
+        menu.addAction(label)
+        menu.addSeparator()
+        show_properties_action = menu.addAction(
+            'Show Available Properties')
+        show_properties_action.triggered.connect(
+            partial(self._show_properties, label))
 
-        # here we set our model
-        table_view.setModel(self.table_model)
-        btn_delegate = ButtonDelegate(
-            parent=table_view, device_id=self.proxy.root_proxy.device_id)
-        table_view.setItemDelegateForColumn(
-            MANAGER_SERVER_COLUMN, btn_delegate)
-        self.delegate = btn_delegate
+        menu.exec_(self.widget.viewport().mapToGlobal(pos))
 
-        header = table_view.horizontalHeader()
-        header.setDefaultSectionSize(50)
-        header.setSectionResizeMode(QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
-
-        layout.addWidget(table_view)
-
-        return widget
-
-    def binding_update(self, proxy):
-        """This method is executed after a schema update of the device"""
-        pass
-
-    def value_update(self, proxy):
-        """This method is executed with a value update of the table"""
-        value = get_editor_value(proxy, [])
-        self.table_model.update_model(value)
-        value = proxy.value
+    def _show_properties(self, server):
+        """Show The custom context menu of a reconfigurable table element"""
+        device_id = self.proxy.root_proxy.device_id
+        handler = partial(request_handler, device_id, server)
+        call_device_slot(handler, device_id, 'requestManagerAction',
+                         action=server)
