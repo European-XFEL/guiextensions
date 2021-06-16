@@ -9,7 +9,7 @@ from PyQt5.QtCore import (
 from PyQt5.QtGui import QBrush, QColor
 
 from PyQt5.QtWidgets import (
-    QHBoxLayout, QHeaderView, QLineEdit, QPushButton, QStyle,
+    QHBoxLayout, QHeaderView, QLabel, QLineEdit, QPushButton, QStyle,
     QStyledItemDelegate, QTableView, QVBoxLayout)
 
 from traits.api import Instance, WeakRef
@@ -222,9 +222,11 @@ class DisplayDoocsMirrorTable(BaseBindingController):
 
         # search widget
         search_layout = QHBoxLayout()
-        search_line = QLineEdit(parent=widget)
-        search_line.textChanged.connect(filter_model.setFilterFixedString)
-        search_layout.addWidget(search_line)
+        search_label = QLabel("Search")
+        search_layout.addWidget(search_label)
+        search_edit = QLineEdit(parent=widget)
+        search_edit.textChanged.connect(filter_model.setFilterFixedString)
+        search_layout.addWidget(search_edit)
         layout.addLayout(search_layout)
 
         return widget
