@@ -67,7 +67,12 @@ def test_ipm_quadrant_model():
 
 def test_doocs_table_model():
     traits = _geometry_traits()
-    model = api.DoocsManagerTableModel(**traits)
+
+    model = api.DoocsLocationTableModel(**traits)
+    read_model = single_model_round_trip(model)
+    _assert_geometry_traits(read_model)
+
+    model = api.DoocsMirrorTableModel(**traits)
     read_model = single_model_round_trip(model)
     _assert_geometry_traits(read_model)
 
