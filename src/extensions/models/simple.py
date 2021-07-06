@@ -16,12 +16,12 @@ class IPMQuadrantModel(BaseWidgetObjectData):
     """ A model for the Intensity Position Monitor"""
 
 
-class DoocsManagerTableModel(BaseWidgetObjectData):
-    """ A model for the DoocsManager"""
+class DoocsLocationTableModel(BaseWidgetObjectData):
+    """ A model for the Doocs Location"""
 
 
 class DoocsMirrorTableModel(BaseWidgetObjectData):
-    """ A model for the DoocsMirror"""
+    """ A model for the Doocs Mirror"""
 
 
 class ScatterPositionModel(BasePlotModel):
@@ -61,10 +61,10 @@ def _bpm_position_writer(write_func, model, parent):
 @register_scene_reader('DoocsTable')
 def _doocs_table_reader(read_func, element):
     traits = read_base_widget_data(element)
-    return DoocsManagerTableModel(**traits)
+    return DoocsLocationTableModel(**traits)
 
 
-@register_scene_writer(DoocsManagerTableModel)
+@register_scene_writer(DoocsLocationTableModel)
 def _doocs_table_writer(write_func, model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'DoocsTable')
