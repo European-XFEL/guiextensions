@@ -1,7 +1,7 @@
 #############################################################################
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from traits.api import Instance, WeakRef
+from traits.api import Instance
 
 from karabogui.binding.api import VectorHashBinding
 from karabogui.controllers.api import (
@@ -30,7 +30,6 @@ class ButtonDelegate(TableButtonDelegate):
         scene_id = index.model().index(index.row(), 2).data()
         if scene_id is not None:
             get_scene_from_server(device_id, scene_id)
-        return
 
 
 @register_binding_controller(
@@ -42,7 +41,6 @@ class ButtonDelegate(TableButtonDelegate):
 class DisplayDoocsMirrorTable(BaseTableController):
     """The Dynamic display controller for the digitizer"""
     model = Instance(DoocsMirrorTableModel, args=())
-    delegate = WeakRef(ButtonDelegate)
 
     def create_widget(self, parent):
 
