@@ -1,10 +1,12 @@
 from xml.etree.ElementTree import SubElement
 
-from traits.api import Float, Int, List, Enum
+from traits.api import Bool, Float, Int, List, Enum
 from karabo.common.scenemodel.api import (
-    BaseDisplayEditableWidget, BaseWidgetObjectData, read_basic_label,
-    read_axes_set, read_range_set, write_basic_label, write_axes_set,
-    write_range_set, BaseROIData, read_roi_info, write_roi_info, BasePlotModel)
+    BaseDisplayEditableWidget, BasePlotModel, BaseROIData,
+    BaseWidgetObjectData, ImageGraphModel, read_axes_set,
+    read_base_karabo_image_model, read_basic_label, read_range_set,
+    read_roi_info, write_axes_set, write_base_karabo_image_model,
+    write_basic_label, write_range_set, write_roi_info)
 from karabo.common.scenemodel.const import NS_KARABO, WIDGET_ELEMENT_TAG
 from karabo.common.scenemodel.io_utils import (
     read_base_widget_data, write_base_widget_data)
@@ -30,6 +32,11 @@ class DynamicDigitizerModel(BasePlotModel):
 
 class ScantoolBaseModel(BaseWidgetObjectData):
     """ A model for the Scantool Base Widget """
+
+
+class MetroRoiGraphModel(ImageGraphModel):
+    """ A model for the metro ROI graph """
+    show_scale = Bool(False)
 
 
 class PointAndClickModel(BaseDisplayEditableWidget):
@@ -98,6 +105,20 @@ def _dynamic_digitizer_writer(write_func, model, parent):
     write_roi_info(model, element)
     element.set(NS_KARABO + 'roi_tool', str(model.roi_tool))
 
+    return element
+
+
+@register_scene_reader('MetroRoiGraph')
+def _metro_roi_graph_reader(element):
+    traits = read_base_karabo_image_model(element)
+    return MetroRoiGraphModel(**traits)
+
+
+@register_scene_writer(MetroRoiGraphModel)
+def _metro_roi_graph_writer(model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_widget_data(model, element, 'MetroRoiGraph')
+    write_base_karabo_image_model(model, element)
     return element
 
 

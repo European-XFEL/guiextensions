@@ -16,6 +16,7 @@ setup(
             'ScantoolDynamic = extensions.display_scantool_dynamic',
             'DynamicDigitizer = extensions.display_dynamic_digitizer',
             'PointAndClick = extensions.point_and_click',
+            'MetroRoiGraph = extensions.metro.roi_graph',
         ],
     },
     include_package_data=True,
