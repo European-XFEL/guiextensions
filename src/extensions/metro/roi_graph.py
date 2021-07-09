@@ -20,7 +20,7 @@ from karabogui.graph.image.api import (
     KaraboImageNode, KaraboImagePlot, KaraboImageView)
 from karabogui.request import send_property_changes
 
-from ..models.simple import MetroBeamstopGraphModel
+from ..models.simple import MetroRoiGraphModel
 
 
 class RoiController(HasStrictTraits):
@@ -80,7 +80,7 @@ class RoiController(HasStrictTraits):
     priority=0, can_show_nothing=False)
 class MetroROIGraph(BaseBindingController):
     # Our Image Graph Model
-    model = Instance(MetroBeamstopGraphModel, args=())
+    model = Instance(MetroRoiGraphModel, args=())
     grayscale = Bool(True)
 
     _plot = WeakRef(KaraboImagePlot)
