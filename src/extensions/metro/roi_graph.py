@@ -88,6 +88,7 @@ class MetroROIGraph(BaseBindingController):
     _roi = Instance(RoiController, args=())
 
     # Proxies
+    _image_path = Constant("preprocessing/reconstructed/raw/imag")
     _roi_path = Constant("preprocessing/roi")
     _roi_proxy = Instance(PropertyProxy)
 
@@ -149,7 +150,8 @@ class MetroROIGraph(BaseBindingController):
         # Sometimes the image_data.pixels.data.value is Undefined.
         # We catch and ignore that exception.
         try:
-            image_data = get_binding_value(proxy.value.output0.value.image)
+            node = get_binding_value(getattr(proxy.value, self._image_path))
+            image_data = get_binding_value(node.image)
             if image_data is None:
                 return
             self._image_node.set_value(image_data)
