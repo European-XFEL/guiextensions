@@ -30,7 +30,7 @@ def request_handler(device_id, action, success, reply):
     ui_name='Doocs Device Table',
     klassname='DoocsTable',
     binding_type=VectorHashBinding,
-    is_compatible=with_display_type('WidgetNode|DoocsTable'),
+    is_compatible=with_display_type('WidgetNode|DoocsLocationTable'),
     priority=-10, can_show_nothing=True)
 class DisplayDoocsLocationTable(BaseTableController):
     """A table version for the DoocsML"""

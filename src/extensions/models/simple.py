@@ -58,7 +58,7 @@ def _bpm_position_writer(write_func, model, parent):
     return element
 
 
-@register_scene_reader('DoocsTable')
+@register_scene_reader('DoocsLocationTable')
 def _doocs_table_reader(read_func, element):
     traits = read_base_widget_data(element)
     return DoocsLocationTableModel(**traits)
@@ -67,7 +67,7 @@ def _doocs_table_reader(read_func, element):
 @register_scene_writer(DoocsLocationTableModel)
 def _doocs_table_writer(write_func, model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
-    write_base_widget_data(model, element, 'DoocsTable')
+    write_base_widget_data(model, element, 'DoocsLocationTable')
     return element
 
 
