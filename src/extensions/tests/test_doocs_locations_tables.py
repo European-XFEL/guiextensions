@@ -2,18 +2,20 @@ from unittest import main
 
 from qtpy.QtCore import QItemSelectionModel
 
-from extensions.display_doocs_location_table.py \
-    import DisplayDoocsLocationTable
+from ..display_doocs_location_table import DisplayDoocsLocationTable
 from karabo.native import (
     AccessMode, Configurable, Hash, String, VectorHash)
 from karabogui.testing import GuiTestCase, get_property_proxy, set_proxy_hash
 
 
-TABLE_DIKT = [
+INIT_TABLE_DIKT = [
     {"server": "EUXFEL.LASER/LASER.CONTROL/LASER2",
-     "properties": ["LOG", "NAME"]},
+     "properties": '["LOG", "NAME"]'},
     {"server": "EUXFEL.FEL/MCP.SA1/NAMES",
-     "properties": ["IDEXT"]}]
+     "properties": '["IDEXT"]'}]
+EXTRA_TABLE_ROW = {
+    "server": "EUXFEL.UTIL/CORRELATION/XFELCPUXGMXTD2._SVR",
+    "properties": '["MESSAGE"]'}
 
 
 class DoocsLocationsSchema(Configurable):
@@ -37,7 +39,7 @@ class Object(Configurable):
 def get_table_hash():
     h = Hash()
     hash_list = []
-    for table_row in TABLE_DIKT:
+    for table_row in INIT_TABLE_DIKT:
         server = table_row["server"]
         properties = table_row["properties"]
         row = Hash("server", server, "properties", properties)
@@ -65,13 +67,15 @@ class TestDoocsLocationTable(GuiTestCase):
         self.assertEqual(model.index(row, col).data(), result)
 
     def test_set_value(self):
+        # table empty at start-up
         self.assertEqual(self.controller._item_model.rowCount(None), 0)
+        # read input table
         set_proxy_hash(self.proxy, get_table_hash())
-        self.assertEqual(self.controller._item_model.rowCount(None), 1)
-        self.assertTableModel(0, 0, "config0")
-        self.assertTableModel(0, 1, "nodesc")
-        self.assertTableModel(0, 2, "1")
-        self.assertTableModel(0, 3, ".")
+        self.assertEqual(self.controller._item_model.rowCount(None), 2)
+        self.assertTableModel(0, 0, INIT_TABLE_DIKT[0]["server"])
+        self.assertTableModel(0, 1, INIT_TABLE_DIKT[0]["properties"])
+        self.assertTableModel(1, 0, INIT_TABLE_DIKT[1]["server"])
+        self.assertTableModel(1, 1, INIT_TABLE_DIKT[1]["properties"])
 
         set_proxy_hash(self.proxy, get_table_hash())
         self.assertEqual(self.controller._item_model.rowCount(None), 2)
