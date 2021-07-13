@@ -10,10 +10,7 @@
   script:
     - python ci/build.py extensions --clean --test --upload-wheel -P karaboExtensions/tags
   only:
-    - /^(\d+\.)(\d+\.?)(\d+)$/
-  except:
-    - branches
-    - schedules
+    - tags
 
 .nightly_build_conda: &nightly-test-conda
   script:
