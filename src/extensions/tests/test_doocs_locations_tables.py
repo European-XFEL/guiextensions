@@ -69,14 +69,12 @@ class TestDoocsLocationTable(GuiTestCase):
         self.assertEqual(self.controller._item_model.rowCount(None), 0)
         # read input table
         set_proxy_hash(self.proxy, get_table_hash())
-        self.assertEqual(self.controller._item_model.rowCount(None), 2)
+        self.assertEqual(self.controller._item_model.rowCount(None),
+                         len(INIT_TABLE_DIKT))
         self.assertTableModel(0, 0, INIT_TABLE_DIKT[0]["server"])
         self.assertTableModel(0, 1, INIT_TABLE_DIKT[0]["properties"])
         self.assertTableModel(1, 0, INIT_TABLE_DIKT[1]["server"])
         self.assertTableModel(1, 1, INIT_TABLE_DIKT[1]["properties"])
-
-        self.assertEqual(self.controller._item_model.rowCount(None),
-                         len(INIT_TABLE_DIKT))
 
         # Add one row to the table
         INIT_TABLE_DIKT.append(EXTRA_TABLE_ROW)
