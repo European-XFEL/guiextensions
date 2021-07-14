@@ -65,6 +65,22 @@ def test_ipm_quadrant_model():
     _assert_geometry_traits(read_model)
 
 
+def test_doocs_location_table_model():
+    traits = _geometry_traits()
+
+    model = api.DoocsLocationTableModel(**traits)
+    read_model = single_model_round_trip(model)
+    _assert_geometry_traits(read_model)
+
+
+def test_doocs_mirror_table_model():
+    traits = _geometry_traits()
+
+    model = api.DoocsMirrorTableModel(**traits)
+    read_model = single_model_round_trip(model)
+    _assert_geometry_traits(read_model)
+
+
 def test_pnc_model():
     model = api.PointAndClickModel(klass='EditablePointAndClick')
     read_model = single_model_round_trip(model)
