@@ -53,9 +53,8 @@ class DisplayDoocsMirrorTable(BaseTableController):
     def create_delegates(self):
         """Create all the table delegates in the table element"""
         bindings = self.getBindings()
-        keys = bindings.keys()
         # If we are readOnly, we erase all edit delegates
-        for column, key in enumerate(keys):
+        for column in range(len(bindings)):
             self.widget.setItemDelegateForColumn(column, None)
         button_delegate = ButtonDelegate()
         self.widget.setItemDelegateForColumn(MIRROR_SCENELINK_COLUMN,
