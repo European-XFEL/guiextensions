@@ -36,7 +36,7 @@ class ButtonDelegate(TableButtonDelegate):
     ui_name='Doocs Device Table',
     klassname='DoocsMirrorTable',
     binding_type=VectorHashBinding,
-    is_compatible=with_display_type('WidgetNode|DoocsMirrorTable'),
+    is_compatible=with_display_type('DoocsMirrorTable'),
     priority=-10, can_show_nothing=False)
 class DisplayDoocsMirrorTable(BaseTableController):
     """The Dynamic display controller for the digitizer"""
