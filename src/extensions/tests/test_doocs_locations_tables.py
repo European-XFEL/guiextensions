@@ -1,7 +1,5 @@
 from unittest import main
 
-from qtpy.QtCore import QItemSelectionModel
-
 from ..display_doocs_location_table import DisplayDoocsLocationTable
 from karabo.native import (
     AccessMode, Configurable, Hash, String, VectorHash)
@@ -77,14 +75,14 @@ class TestDoocsLocationTable(GuiTestCase):
         self.assertTableModel(1, 0, INIT_TABLE_DIKT[1]["server"])
         self.assertTableModel(1, 1, INIT_TABLE_DIKT[1]["properties"])
 
-        set_proxy_hash(self.proxy, get_table_hash())
-        self.assertEqual(self.controller._item_model.rowCount(None), 2)
+        self.assertEqual(self.controller._item_model.rowCount(None),
+                         len(INIT_TABLE_DIKT))
 
-        selection = self.controller.widget.selectionModel()
-        index = self.controller._item_model.index(0, 0)
-        selection.setCurrentIndex(index, QItemSelectionModel.ClearAndSelect)
-        self.assertEqual(self.controller.configName, "config0")
-        self.assertEqual(self.controller.instanceId, "TestDevice")
+        # Add one row to the table
+        INIT_TABLE_DIKT.append(EXTRA_TABLE_ROW)
+        set_proxy_hash(self.proxy, get_table_hash())
+        self.assertTableModel(2, 0, INIT_TABLE_DIKT[2]["server"])
+        self.assertTableModel(2, 1, INIT_TABLE_DIKT[2]["properties"])
 
 
 if __name__ == "__main__":
