@@ -1,6 +1,6 @@
 from xml.etree.ElementTree import SubElement
 
-from traits.api import Bool, Float, Int, List, Enum
+from traits.api import Bool, Enum, Float, Int, List, String
 from karabo.common.scenemodel.api import (
     BaseDisplayEditableWidget, BasePlotModel, BaseROIData,
     BaseWidgetObjectData, ImageGraphModel, read_axes_set,
@@ -30,13 +30,25 @@ class DynamicDigitizerModel(BasePlotModel):
     roi_tool = Int(0)
 
 
+class MetroRoiGraphModel(ImageGraphModel):
+    """ A model for the metro beamstop graph """
+    show_scale = Bool(False)
+    image_path = String
+
+
+class MetroCircleRoiGraphModel(MetroRoiGraphModel):
+    """ A model for the metro beamstop graph """
+    center_path = String
+    radius_path = String
+
+
+class MetroRectRoiGraphModel(MetroRoiGraphModel):
+    """ A model for the metro ROI graph """
+    roi_path = String
+
+
 class ScantoolBaseModel(BaseWidgetObjectData):
     """ A model for the Scantool Base Widget """
-
-
-class MetroRoiGraphModel(ImageGraphModel):
-    """ A model for the metro ROI graph """
-    show_scale = Bool(False)
 
 
 class PointAndClickModel(BaseDisplayEditableWidget):
@@ -108,16 +120,30 @@ def _dynamic_digitizer_writer(write_func, model, parent):
     return element
 
 
-@register_scene_reader('MetroRoiGraph')
-def _metro_roi_graph_reader(element):
+@register_scene_reader('MetroCircleRoiGraph')
+def _metro_circle_roi_graph_reader(element):
     traits = read_base_karabo_image_model(element)
-    return MetroRoiGraphModel(**traits)
+    return MetroCircleRoiGraphModel(**traits)
 
 
-@register_scene_writer(MetroRoiGraphModel)
-def _metro_roi_graph_writer(model, parent):
+@register_scene_writer(MetroCircleRoiGraphModel)
+def _metro_circle_roi_graph_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
-    write_base_widget_data(model, element, 'MetroRoiGraph')
+    write_base_widget_data(model, element, 'MetroCircleRoiGraph')
+    write_base_karabo_image_model(model, element)
+    return element
+
+
+@register_scene_reader('MetroRectRoiGraph')
+def _metro_rect_roi_graph_reader(element):
+    traits = read_base_karabo_image_model(element)
+    return MetroRectRoiGraphModel(**traits)
+
+
+@register_scene_writer(MetroRectRoiGraphModel)
+def _metro_rect_roi_graph_writer(model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_widget_data(model, element, 'MetroRectRoiGraph')
     write_base_karabo_image_model(model, element)
     return element
 
