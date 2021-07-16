@@ -3,10 +3,11 @@
 # Created on July 2021
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
+from contextlib import contextmanager
 from pyqtgraph import CircleROI, RectROI
 from traits.api import (
-    Bool, HasStrictTraits, Instance, Int, on_trait_change, Property, Tuple,
-    WeakRef)
+    Bool, cached_property, HasStrictTraits, Instance, Int, on_trait_change,
+    Property, Tuple, WeakRef)
 
 from karabo.common.scenemodel.api import (
     build_graph_config, restore_graph_config)
@@ -31,6 +32,8 @@ class BaseRoiController(HasStrictTraits):
 
     position = Tuple(0, 0)
     size = Tuple(0, 0)
+
+    _is_busy = Bool(False)
 
     def add_to(self, plotItem):
         plotItem.vb.addItem(self.roi_item, ignoreBounds=False)
@@ -60,6 +63,14 @@ class BaseRoiController(HasStrictTraits):
         size = self.roi_item.size()
         return (size[0], size[1])
 
+    @contextmanager
+    def busy(self):
+        self._is_busy = True
+        try:
+            yield
+        finally:
+            self._is_busy = False
+
 
 class CircleRoiController(BaseRoiController):
 
@@ -74,11 +85,11 @@ class CircleRoiController(BaseRoiController):
                         translateSnap=True,
                         pen=make_pen('r', width=3))
         roi.setVisible(False)
-        roi.sigRegionChangeFinished.connect(self._update)
+        roi.sigRegionChangeFinished.connect(self._finished_moving)
         return roi
 
-    def _update(self):
-        self.set_radius(self._item_radius, update=False, quiet=True)
+    def _finished_moving(self):
+        self.set_radius(self._item_radius, update=False)
         self.set_center(self._item_center, update=False)
 
     # Radius
@@ -86,12 +97,16 @@ class CircleRoiController(BaseRoiController):
     def _item_radius(self):
         return round(self._item_size[0] / 2)
 
+    @cached_property
     def _get_radius(self):
         return round(self.size[0] / 2)
 
     def set_radius(self, radius, update=True, quiet=False):
         # Only redraw if different
-        if radius != self.radius:
+        if self._is_busy or radius == self.radius:
+            return
+
+        with self.busy():
             diameter = radius * 2
             self.set_size((diameter, diameter), update=update, quiet=quiet)
 
@@ -102,6 +117,7 @@ class CircleRoiController(BaseRoiController):
         r = self._item_radius
         return (x0+r, y0+r)
 
+    @cached_property
     def _get_center(self):
         x0, y0 = self.position
         r = self.radius
@@ -109,7 +125,10 @@ class CircleRoiController(BaseRoiController):
 
     def set_center(self, center, update=True, quiet=False):
         # Only redraw if different
-        if tuple(center) != self.center:
+        if self._is_busy or tuple(center) == self.center:
+            return
+
+        with self.busy():
             xc, yc = center
             r = self.radius
             self.set_position((xc-r, yc-r), update=update, quiet=quiet)
@@ -118,7 +137,6 @@ class CircleRoiController(BaseRoiController):
 class RectRoiController(BaseRoiController):
 
     roi_item = Instance(RectROI)
-    # geometry = Tuple(0, 10, 0, 10)  # x0, x1, y0, y1
     geometry = Property(Tuple, depends_on="position,size")
 
     def _roi_item_default(self):
@@ -129,18 +147,19 @@ class RectRoiController(BaseRoiController):
                       translateSnap=True,
                       pen=make_pen('r', width=3))
         roi.setVisible(False)
-        roi.sigRegionChangeFinished.connect(self._update)
+        roi.sigRegionChangeFinished.connect(self._finished_moving)
         return roi
 
-    def _update(self):
+    def _finished_moving(self):
         self.set_geometry(self._item_geometry, update=False)
 
     @property
     def _item_geometry(self):
         x0, y0 = self._item_position
         w, h = self._item_size
-        return (x0, y0, x0+w, y0+h)
+        return (x0, x0+w, y0, y0+h)
 
+    @cached_property
     def _get_geometry(self):
         x0, y0 = int(self.position[0]), int(self.position[1])
         x1, y1 = x0 + int(self.size[0]), y0 + int(self.size[1])
@@ -148,15 +167,17 @@ class RectRoiController(BaseRoiController):
 
     def set_geometry(self, geometry, update=True, quiet=False):
         # Only redraw if different
-        if tuple(geometry) == self.geometry:
+        if self._is_busy or tuple(geometry) == self.geometry:
             return
-        has_geometry = bool(len(geometry))
-        width, height = 0, 0
-        if has_geometry:
-            x0, x1, y0, y1 = geometry
-            self.set_position((x0, y0), update=update, quiet=True)
-            width, height = x1-x0, y1-y0
-        self.set_size((width, height), update=update, quiet=quiet)
+
+        with self.busy():
+            has_geometry = bool(len(geometry))
+            width, height = 0, 0
+            if has_geometry:
+                x0, x1, y0, y1 = geometry
+                self.set_position((x0, y0), update=update, quiet=quiet)
+                width, height = x1-x0, y1-y0
+            self.set_size((width, height), update=update, quiet=quiet)
 
 
 # --------------------------------------------------------------------------
@@ -166,9 +187,11 @@ class BaseRoiGraph(BaseBindingController):
     grayscale = Bool(True)
     roi = Instance(BaseRoiController)
 
-    # Image plota
+    # Image plots
     _plot = WeakRef(KaraboImagePlot)
     _image_node = Instance(KaraboImageNode, args=())
+
+    _waiting = Bool(False)
 
     def create_widget(self, parent):
         widget = KaraboImageView(parent=parent)
@@ -270,10 +293,11 @@ class MetroRectRoiGraph(BaseRoiGraph):
             root_proxy=proxy.root_proxy,
             path=f"{proxy.path}.{path}")
 
-    @on_trait_change("roi:geometry")
+    @on_trait_change("roi.geometry")
     def _send_roi(self, value):
         self._roi_proxy.edit_value = value
         send_property_changes((self._roi_proxy,))
+        self._waiting = True
 
     # -----------------------------------------------------------------------
     # Qt Slots
@@ -285,6 +309,12 @@ class MetroRectRoiGraph(BaseRoiGraph):
                 raise AttributeError
         except AttributeError:
             self.roi.set_visible(False)
+            return
+
+        if self._waiting:
+            # Check
+            arrived = self.roi.geometry == tuple(roi)
+            self._waiting = not arrived
             return
 
         self.roi.set_geometry(roi, quiet=True)
@@ -329,11 +359,13 @@ class MetroCircleRoiGraph(BaseRoiGraph):
     def _send_radius(self, value):
         self._radius_proxy.edit_value = value
         send_property_changes((self._radius_proxy,))
+        self._waiting = True
 
     @on_trait_change("roi:center")
     def _send_center(self, value):
         self._center_proxy.edit_value = value
         send_property_changes((self._center_proxy,))
+        self._waiting = True
 
     # -----------------------------------------------------------------------
     # Qt Slots
@@ -346,6 +378,13 @@ class MetroCircleRoiGraph(BaseRoiGraph):
                 raise AttributeError
         except AttributeError:
             self.roi.set_visible(False)
+            return
+
+        if self._waiting:
+            # Check
+            arrived = (self.roi.radius == radius
+                       and self.roi.center == tuple(center))
+            self._waiting = not arrived
             return
 
         self.roi.set_radius(radius, quiet=True)
