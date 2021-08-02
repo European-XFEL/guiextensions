@@ -40,6 +40,12 @@ class ScantoolBaseModel(BaseWidgetObjectData):
     """ A model for the Scantool Base Widget """
 
 
+class StateAwareComponentManagerModel(BaseDisplayEditableWidget):
+    """ A model for the Component Manager Device Selection"""
+    klass = Enum('StateAwareComponentManager',
+                 'StateAwareComponentManager')
+
+
 class PointAndClickModel(BaseDisplayEditableWidget):
     """ A model for the Point-And-Click Widget"""
     klass = Enum('DisplayPointAndClick', 'EditablePointAndClick')
@@ -164,4 +170,17 @@ def _pac_edit_reader(read_func, element):
 def _pac_writer(write_func, model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, model.klass)
+    return element
+
+
+@register_scene_reader('StateAwareComponentManager')
+def _stateaware_manager_reader(read_func, element):
+    traits = read_base_widget_data(element)
+    return StateAwareComponentManagerModel(**traits)
+
+
+@register_scene_writer(StateAwareComponentManagerModel)
+def _stateaware_manager_writer(write_func, model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_widget_data(model, element, 'StateAwareComponentManager')
     return element
