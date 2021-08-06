@@ -55,7 +55,8 @@ class DisplayDoocsLocationTable(BaseTableController):
         remove_properties_action = menu.addAction(
             'Remove Mirror')
         remove_properties_action.triggered.connect(
-            partial(self._show_properties, label, "requestManagerRemoveAction"))
+            partial(self._show_properties, label,
+                    "requestManagerRemoveAction"))
 
         menu.exec_(self.widget.viewport().mapToGlobal(pos))
 
