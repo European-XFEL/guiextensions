@@ -17,11 +17,12 @@ from karabogui.request import call_device_slot
 from .models.simple import DoocsLocationTableModel
 
 
-def request_handler(device_id, action, success, reply):
+def request_handler(mirror_id, action, success, reply):
     """Callback handler for a request to the DOOCS manager"""
     if not success or not reply.get('payload.success', False):
         msg = ("Error: Properties could not be updated. "
-               "See the device server log for details.")
+               "See the device server log for additional details: "
+               f"{reply.get('payload.reason')}")
         messagebox.show_warning(msg, title='Manager Service Failed')
     return
 
@@ -50,13 +51,17 @@ class DisplayDoocsLocationTable(BaseTableController):
         show_properties_action = menu.addAction(
             'Show Available Properties')
         show_properties_action.triggered.connect(
-            partial(self._show_properties, label))
+            partial(self._show_properties, label, "requestManagerShowAction"))
+        remove_properties_action = menu.addAction(
+            'Remove Mirror')
+        remove_properties_action.triggered.connect(
+            partial(self._show_properties, label, "requestManagerRemoveAction"))
 
         menu.exec_(self.widget.viewport().mapToGlobal(pos))
 
-    def _show_properties(self, server):
-        """Show The custom context menu of a reconfigurable table element"""
+    def _show_properties(self, server, callback_func):
+        """Call the manager call back function callback_func to perform some
+        action in the device"""
         device_id = self.proxy.root_proxy.device_id
         handler = partial(request_handler, device_id, server)
-        call_device_slot(handler, device_id, 'requestManagerAction',
-                         action=server)
+        call_device_slot(handler, device_id, callback_func, action=server)
