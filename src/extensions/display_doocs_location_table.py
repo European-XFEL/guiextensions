@@ -53,7 +53,7 @@ class DisplayDoocsLocationTable(BaseTableController):
         show_properties_action.triggered.connect(
             partial(self._show_properties, label, "requestManagerShowAction"))
         remove_properties_action = menu.addAction(
-            'Remove Mirror')
+            'Remove Device')
         remove_properties_action.triggered.connect(
             partial(self._show_properties, label,
                     "requestManagerRemoveAction"))
