@@ -1,5 +1,5 @@
 from PyQt5.QtCore import Qt, pyqtSignal
-from PyQt5.QtGui import QImage, QPainter
+from PyQt5.QtGui import QImage, QPainter, QPen
 from PyQt5.QtWidgets import QWidget
 from traits.api import Bytes, Instance
 from numpy import exp
@@ -58,22 +58,24 @@ class CrossesWidget(QWidget):
             self.offset_x = self.offset_y = 0
             self.scale()
 
-        def draw_cross(x, y):
+        def draw_cross(x, y, color):
             x = x * self.scale_x - self.offset_x
             y = y * self.scale_y - self.offset_y
-            p.drawLine(x - 10, y, x + 10, y)
-            p.drawLine(x, y - 10, x, y + 10)
+            p.setPen(color)
+            p.setRenderHint(QPainter.Antialiasing, False)
+            p.drawLine(x - 30, y, x + 30, y)
+            p.drawLine(x, y - 30, x, y + 30)
+            p.setPen(QPen(color, 3))
+            p.setRenderHint(QPainter.Antialiasing)
+            p.drawEllipse(x - 20, y - 20, 40, 40)
 
         with QPainter(self) as p:
             p.drawImage(0, 0, self.scaled)
-            p.setPen(Qt.white)
             for x, y in self.crosses:
-                draw_cross(x, y)
+                draw_cross(x, y, Qt.white)
             if not self.readonly:
-                p.setPen(Qt.red)
-                draw_cross(self.cross_x, self.cross_y)
-                p.setPen(Qt.green)
-                draw_cross(self.edit_x, self.edit_y)
+                draw_cross(self.cross_x, self.cross_y, Qt.red)
+                draw_cross(self.edit_x, self.edit_y, Qt.green)
 
     def mouseReleaseEvent(self, event):
         self.edit_x = (event.x() + self.offset_x) / self.scale_x
