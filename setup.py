@@ -18,7 +18,8 @@ setup(
             'DynamicDigitizer = extensions.display_dynamic_digitizer',
             'PointAndClick = extensions.point_and_click',
             'DoocsMirrorTable = extensions.display_doocs_mirror_table',
-            'DoocsLocationTable = extensions.display_doocs_location_table'
+            'DoocsLocationTable = extensions.display_doocs_location_table',
+            'PulseIdMap = extensions.pulse_info',
         ],
     },
     include_package_data=True,

@@ -132,3 +132,22 @@ following elements:
     define the position of the crosses shown to the user.
   * **cross_x** and **cross_y** are `Float` and receive the points the user
     has set the editable cross to.
+
+Pulse Info Widget
+=================
+
+This widget shows absolute pulse information (FEL, PPL and Detector) at an instrument.
+
+.. figure:: images/pulseid_map.png
+   :alt: pulseid_map.png
+   :align: center
+
+The `DisplayType` is "WidgetNode|PulseId-Map" and its schema contains the following
+elements:
+   * **fel** a `VectorBool` that contains 2700 elements
+   * **ppl** a `VectorBool` that contains 2700 elements
+   * **det** a `VectorBool` that contains 2700 elements
+
+For each vector, a value `True` means this pulse ID (represented by the vector's index)
+has an event (fel bunch, ppl bunch, detector frame), a value `False` mean no event for
+the pulse ID.
