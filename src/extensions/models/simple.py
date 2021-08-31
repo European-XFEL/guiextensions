@@ -51,6 +51,10 @@ class PointAndClickModel(BaseDisplayEditableWidget):
     klass = Enum('DisplayPointAndClick', 'EditablePointAndClick')
 
 
+class PulseIdMapModel(BaseWidgetObjectData):
+    """A model for the AlignedPulse device"""
+
+
 @register_scene_reader('IPM-Quadrant')
 def _bpm_position_reader(read_func, element):
     traits = read_base_widget_data(element)
@@ -183,4 +187,17 @@ def _stateaware_manager_reader(read_func, element):
 def _stateaware_manager_writer(write_func, model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'StateAwareComponentManager')
+    return element
+
+
+@register_scene_reader('PulseId-Map')
+def _pulseid_map_reader(read_func, element):
+    traits = read_base_widget_data(element)
+    return PulseIdMapModel(**traits)
+
+
+@register_scene_writer(PulseIdMapModel)
+def _pulseid_map_writer(write_func, model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_widget_data(model, element, 'PulseId-Map')
     return element
