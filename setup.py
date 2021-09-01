@@ -20,6 +20,7 @@ setup(
             'DoocsMirrorTable = extensions.display_doocs_mirror_table',
             'DoocsLocationTable = extensions.display_doocs_location_table',
             'PulseIdMap = extensions.pulse_info',
+            'MetroZonePlate = extensions.metro.zone_plate',
         ],
     },
     include_package_data=True,

@@ -1,7 +1,7 @@
 import numpy as np
 from PyQt5.QtGui import QBrush, QPen
 
-from karabo.middlelayer import AccessMode, Configurable, Hash, Node, VectorBool
+from karabo.native import AccessMode, Configurable, Hash, Node, VectorBool
 from karabogui.testing import (
     get_class_property_proxy, GuiTestCase, set_proxy_hash
 )
