@@ -6,8 +6,35 @@ This sections describes the different application widgets, important releases
 notes and bug fixes.
 
 
-Version 0.4.0 (Upcoming - March 2020)
-=====================================
+Version 0.5.3 (23rd August 2021)
+================================
+
+- Option to delete server added to doocs widget
+
+
+Version 0.5.2 (14th July 2021)
+==============================
+
+A major extension for controlling the Karabo - DOOCS bridge with the addition
+of dedicated table elements for configuration of the inter communication between
+these control system.
+
+- Addition of DOOCS Manager / Requestor Widget
+
+
+Version 0.5.0 (18th November 2020)
+==================================
+
+SCS contributes a point and click widget to for actuator movement with visual
+control on a camera.
+
+- Addition of SCS Point and Click widget
+
+
+Version 0.4.0 (6th March 2020)
+==============================
+
+The digitizer receives a dedicated widget for offset control and base line shift.
 
 - Addition of dynamic digitizer widget
 
