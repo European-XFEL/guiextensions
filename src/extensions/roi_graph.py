@@ -239,8 +239,8 @@ class BaseRoiGraph(BaseBindingController):
         # Sometimes the image_data.pixels.data.value is Undefined.
         # We catch and ignore that exception.
         try:
-            node = get_node_value(proxy, self._image_path)
-            image_data = get_binding_value(node.image)
+            node = get_node_value(proxy, key=self._image_path)
+            image_data = get_binding_value(node.value.image)
             if image_data is None:
                 return
             self._image_node.set_value(image_data)

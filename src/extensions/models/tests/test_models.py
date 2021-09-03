@@ -85,3 +85,10 @@ def test_pnc_model():
     model = api.PointAndClickModel(klass='EditablePointAndClick')
     read_model = single_model_round_trip(model)
     assert read_model.klass == 'EditablePointAndClick'
+
+
+def test_metro_xas_graph_model():
+    traits = _geometry_traits()
+    model = api.MetroXasGraphModel(**traits)
+    read_model = single_model_round_trip(model)
+    _assert_geometry_traits(read_model)
