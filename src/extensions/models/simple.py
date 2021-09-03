@@ -1,6 +1,6 @@
 from xml.etree.ElementTree import SubElement
 
-from traits.api import Bool, Float, Int, List, Enum
+from traits.api import Bool, Enum, Float, Int, List, String
 from karabo.common.scenemodel.api import (
     BaseDisplayEditableWidget, BasePlotModel, BaseROIData,
     BaseWidgetObjectData, ImageGraphModel, read_axes_set,
@@ -60,6 +60,13 @@ class RoiGraphModel(ImageGraphModel):
 
 class PulseIdMapModel(BaseWidgetObjectData):
     """A model for the AlignedPulse device"""
+
+
+class MetroXasGraphModel(BasePlotModel):
+    """ A model for the metro XAS graph """
+    x_label = String('Energy')
+    x_units = String('eV')
+    y_label = String('XAS')
 
 
 @register_scene_reader('IPM-Quadrant')
@@ -222,3 +229,21 @@ def _roi_graph_writer(model, parent):
     write_base_widget_data(model, element, 'RoiGraph')
     write_base_karabo_image_model(model, element)
     return element
+
+
+@register_scene_reader('MetroXasGraph')
+def _metro_xas_graph_reader(element):
+    traits = read_base_widget_data(element)
+    traits.update(read_basic_label(element))
+    traits.update(read_axes_set(element))
+    traits.update(read_range_set(element))
+    return MetroXasGraphModel(**traits)
+
+
+@register_scene_writer(MetroXasGraphModel)
+def _metro_xas_graph_writer(write_func, model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_widget_data(model, element, 'MetroXasGraph')
+    write_basic_label(model, element)
+    write_axes_set(model, element)
+    write_range_set(model, element)
