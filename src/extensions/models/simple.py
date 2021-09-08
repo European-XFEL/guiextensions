@@ -73,6 +73,13 @@ class MetroXasGraphModel(BasePlotModel):
     y_label = String('XAS')
 
 
+class MetroTwinXGraphModel(BasePlotModel):
+    """ A model for the metro twin x-axis graph """
+    x_grid = Bool(True)
+    y_grid = Bool(True)
+    y_label = String('dXAS')
+
+
 class MetroSecAxisGraphModel(BasePlotModel):
     """ A model for the metro second x-axis graph """
     x_label = String('delay')
@@ -292,3 +299,21 @@ def _metro_secaxis_graph_writer(write_func, model, parent):
     element.set(NS_KARABO + 'x2_step', str(model.x2_step))
     element.set(NS_KARABO + 'vline_visible', str(model.vline_visible))
     element.set(NS_KARABO + 'vline_value', str(model.vline_value))
+
+
+@register_scene_reader('MetroTwinXGraph')
+def _metro_twinx_graph_reader(element):
+    traits = read_base_widget_data(element)
+    traits.update(read_basic_label(element))
+    traits.update(read_axes_set(element))
+    traits.update(read_range_set(element))
+    return MetroTwinXGraphModel(**traits)
+
+
+@register_scene_writer(MetroTwinXGraphModel)
+def _metro_twinx_graph_writer(write_func, model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_widget_data(model, element, 'MetroTwinXGraph')
+    write_basic_label(model, element)
+    write_axes_set(model, element)
+    write_range_set(model, element)

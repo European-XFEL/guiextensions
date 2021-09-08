@@ -115,3 +115,10 @@ def test_metro_secaxis_graph_model():
     read_model.x2_step == 6.667
     read_model.vline_visible is True
     read_model.vline_value == -7.5675
+
+
+def test_metro_twinx_graph_model():
+    traits = _geometry_traits()
+    model = api.MetroTwinXGraphModel(**traits)
+    read_model = single_model_round_trip(model)
+    _assert_geometry_traits(read_model)
