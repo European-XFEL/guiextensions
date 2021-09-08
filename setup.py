@@ -23,6 +23,7 @@ setup(
             'MetroZonePlate = extensions.metro.zone_plate',
             'MetroXasGraph = extensions.metro.xas_graph',
             'MetroSecAxisGraph = extensions.metro.secaxis_graph',
+            'MetroTwinXGraph = extensions.metro.twinx_graph',
         ],
     },
     include_package_data=True,

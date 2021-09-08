@@ -4,7 +4,7 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 import pyqtgraph as pg
-from qtpy.QtCore import Qt, Slot
+from qtpy.QtCore import Qt
 from qtpy.QtGui import QBrush, QColor, QPalette, QPen
 from traits.api import Instance
 
@@ -20,49 +20,9 @@ from karabogui.graph.plots.api import (
     KaraboPlotView, VectorBarGraphPlot, generate_down_sample,
     get_view_range)
 
-from .utils import PlotData
+from .utils import add_twinx, PlotData
 from ..models.simple import MetroXasGraphModel
 from ..utils import get_array_data, get_node_value, guess_path
-
-
-class TwinXViewBox(pg.ViewBox):
-    """ This is a non-reactive viewbox that is used to plot a second set of
-    data points in a twinx plot."""
-
-    def __init__(self, y_label=None, parent=None):
-        super().__init__(parent=parent, enableMenu=False)
-        self.setMouseEnabled(y=False)
-        # self.menu = None
-        self.setZValue(10000)
-        self.setAcceptedMouseButtons(Qt.NoButton)
-        self.y_label = y_label
-
-    def linkToPlotItem(self, plotItem):
-        # Add to plot item
-        plotItem.scene().addItem(self)
-        viewBox = plotItem.getViewBox()
-        viewBox.sigResized.connect(self._resize)
-
-        # Link to current axes
-        axis = plotItem.getAxis('right')
-        axis.linkToView(self)
-        self.setXLink(viewBox)
-
-        # Show y-axis ticks and labels
-        axis.style["showValues"] = True
-        axis.setStyle(**axis.axisStyle)
-        axis.setLabel(text=self.y_label)
-
-    @Slot(object)
-    def _resize(self, main_viewBox):
-        self.setGeometry(main_viewBox.sceneBoundingRect())
-
-
-def add_twinx(data_item, plotItem, y_label=None):
-    viewBox = TwinXViewBox(y_label=y_label)
-    viewBox.linkToPlotItem(plotItem)
-    viewBox.addItem(data_item)
-    return viewBox
 
 
 def add_auxplots(widget, orientation='top', row=1, col=0, shown_axes=None):
@@ -120,7 +80,7 @@ class MetroXasGraph(BaseBindingController):
         intensity_plot = VectorBarGraphPlot(width=DEFAULT_BAR_WIDTH,
                                             brush=GREY_BRUSH)
         intensity_plot.opts['pen'] = NO_PEN
-        add_twinx(intensity_plot, plotItem=widget.plotItem, y_label='Io')
+        add_twinx(widget.plotItem, data_item=intensity_plot, y_label='Io')
         self._intensity_plot.item = intensity_plot
 
         # Counts subplot
