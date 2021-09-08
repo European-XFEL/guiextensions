@@ -22,6 +22,7 @@ setup(
             'PulseIdMap = extensions.pulse_info',
             'MetroZonePlate = extensions.metro.zone_plate',
             'MetroXasGraph = extensions.metro.xas_graph',
+            'MetroSecAxisGraph = extensions.metro.secaxis_graph',
         ],
     },
     include_package_data=True,

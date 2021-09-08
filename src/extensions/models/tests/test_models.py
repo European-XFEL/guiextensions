@@ -87,8 +87,31 @@ def test_pnc_model():
     assert read_model.klass == 'EditablePointAndClick'
 
 
+def test_metro_zone_plate_model():
+    traits = _geometry_traits()
+    model = api.MetroZonePlateModel(**traits)
+    read_model = single_model_round_trip(model)
+    _assert_geometry_traits(read_model)
+
+
 def test_metro_xas_graph_model():
     traits = _geometry_traits()
     model = api.MetroXasGraphModel(**traits)
     read_model = single_model_round_trip(model)
     _assert_geometry_traits(read_model)
+
+
+def test_metro_secaxis_graph_model():
+    traits = _geometry_traits()
+    traits['x2_offset'] = 50.45
+    traits['x2_step'] = 6.667
+    traits['vline_visible'] = True
+    traits['vline_value'] = -7.5675
+
+    model = api.MetroSecAxisGraphModel(**traits)
+    read_model = single_model_round_trip(model)
+    _assert_geometry_traits(read_model)
+    read_model.x2_offset == 50.45
+    read_model.x2_step == 6.667
+    read_model.vline_visible is True
+    read_model.vline_value == -7.5675

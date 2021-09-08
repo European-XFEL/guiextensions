@@ -58,6 +58,10 @@ class RoiGraphModel(ImageGraphModel):
     show_scale = Bool(False)
 
 
+class MetroZonePlateModel(RoiGraphModel):
+    """ A model for the metro ROI graph """
+
+
 class PulseIdMapModel(BaseWidgetObjectData):
     """A model for the AlignedPulse device"""
 
@@ -67,6 +71,20 @@ class MetroXasGraphModel(BasePlotModel):
     x_label = String('Energy')
     x_units = String('eV')
     y_label = String('XAS')
+
+
+class MetroSecAxisGraphModel(BasePlotModel):
+    """ A model for the metro second x-axis graph """
+    x_label = String('delay')
+    x_units = String('mm')
+    x_grid = Bool(True)
+    y_grid = Bool(True)
+    # second axis properties
+    x2_offset = Float(50.45)
+    x2_step = Float(6.667)
+    # vertical line marker
+    vline_visible = Bool(False)
+    vline_value = Float(-7.5675)
 
 
 @register_scene_reader('IPM-Quadrant')
@@ -217,16 +235,16 @@ def _pulseid_map_writer(write_func, model, parent):
     return element
 
 
-@register_scene_reader('RoiGraph')
+@register_scene_reader('MetroZonePlate')
 def _roi_graph_reader(element):
     traits = read_base_karabo_image_model(element)
-    return RoiGraphModel(**traits)
+    return MetroZonePlateModel(**traits)
 
 
-@register_scene_writer(RoiGraphModel)
+@register_scene_writer(MetroZonePlateModel)
 def _roi_graph_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
-    write_base_widget_data(model, element, 'RoiGraph')
+    write_base_widget_data(model, element, 'MetroZonePlate')
     write_base_karabo_image_model(model, element)
     return element
 
@@ -247,3 +265,30 @@ def _metro_xas_graph_writer(write_func, model, parent):
     write_basic_label(model, element)
     write_axes_set(model, element)
     write_range_set(model, element)
+
+
+@register_scene_reader('MetroSecAxisGraph')
+def _metro_secaxis_graph_reader(element):
+    traits = read_base_widget_data(element)
+    traits.update(read_basic_label(element))
+    traits.update(read_axes_set(element))
+    traits.update(read_range_set(element))
+    traits['x2_offset'] = float(element.get(NS_KARABO + 'x2_offset', '0'))
+    traits['x2_step'] = float(element.get(NS_KARABO + 'x2_step', '1'))
+    traits['vline_visible'] = bool(element.get(NS_KARABO + 'vline_visible',
+                                               'False'))
+    traits['vline_value'] = float(element.get(NS_KARABO + 'vline_value', '0'))
+    return MetroSecAxisGraphModel(**traits)
+
+
+@register_scene_writer(MetroSecAxisGraphModel)
+def _metro_secaxis_graph_writer(write_func, model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_widget_data(model, element, 'MetroSecAxisGraph')
+    write_basic_label(model, element)
+    write_axes_set(model, element)
+    write_range_set(model, element)
+    element.set(NS_KARABO + 'x2_offset', str(model.x2_offset))
+    element.set(NS_KARABO + 'x2_step', str(model.x2_step))
+    element.set(NS_KARABO + 'vline_visible', str(model.vline_visible))
+    element.set(NS_KARABO + 'vline_value', str(model.vline_value))
