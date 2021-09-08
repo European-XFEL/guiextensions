@@ -6,8 +6,7 @@
 import pyqtgraph as pg
 from qtpy.QtCore import Qt, Slot
 from qtpy.QtGui import QBrush, QColor, QPalette, QPen
-from qtpy.QtWidgets import QGraphicsItem
-from traits.api import HasStrictTraits, Instance, String, WeakRef
+from traits.api import Instance
 
 from karabo.common.scenemodel.api import build_model_config
 from karabogui.binding.api import (
@@ -21,11 +20,9 @@ from karabogui.graph.plots.api import (
     KaraboPlotView, VectorBarGraphPlot, generate_down_sample,
     get_view_range)
 
+from .utils import PlotData
 from ..models.simple import MetroXasGraphModel
 from ..utils import get_array_data, get_node_value, guess_path
-
-MAX_WIDTH = 100
-MAX_BARS = 3000
 
 
 class TwinXViewBox(pg.ViewBox):
@@ -89,11 +86,6 @@ def add_auxplots(widget, orientation='top', row=1, col=0, shown_axes=None):
     grid.setRowStretch(row, 1)
     grid.setVerticalSpacing(10)
     return aux_plotItem
-
-
-class PlotData(HasStrictTraits):
-    path = String
-    item = WeakRef(QGraphicsItem)
 
 
 GREY_BRUSH = QBrush(QColor(192, 192, 192, 70))
