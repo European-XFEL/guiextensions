@@ -14,7 +14,7 @@ from karabogui.graph.common.api import AuxPlots, ImageRegion, make_pen
 from karabogui.graph.image.api import ProfileAggregator
 from karabogui.request import send_property_changes
 
-from ..models.simple import RoiGraphModel
+from ..models.simple import MetroZonePlateModel
 from ..roi_graph import BaseRoiGraph, RectRoiController
 from ..utils import guess_path
 
@@ -48,7 +48,7 @@ class RectRoiProperty(RectRoiController):
     priority=0, can_show_nothing=False)
 class MetroZonePlate(BaseRoiGraph):
     # Our Image Graph Model
-    model = Instance(RoiGraphModel, args=())
+    model = Instance(MetroZonePlateModel, args=())
 
     roi_n = Instance(RectRoiProperty, kw={'color': 'p', 'label': 'n'})
     roi_0 = Instance(RectRoiProperty, kw={'color': 'g', 'label': '0'})
