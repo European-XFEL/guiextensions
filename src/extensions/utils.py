@@ -3,7 +3,11 @@ from traits.api import Undefined
 
 from karabo.native import Timestamp
 from karabogui.binding.api import get_binding_value, NodeBinding
-from karabogui.controllers.api import REFERENCE_TYPENUM_TO_DTYPE
+
+try:
+    from karabogui.controllers.api import REFERENCE_TYPENUM_TO_DTYPE
+except ImportError:
+    from karabogui.binding.api import REFERENCE_TYPENUM_TO_DTYPE
 
 
 def get_array_data(binding, default=None):
