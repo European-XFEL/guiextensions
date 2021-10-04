@@ -5,8 +5,8 @@ from PyQt5.QtCore import pyqtSlot
 
 from karabogui.util import SignalBlocker
 
-from .base import BaseSelectionWidget
 from ..const import ADD, MOTOR_NAMES, REMOVE, X_DATA, Y_DATA
+from .base import BaseSelectionWidget
 
 
 class XYDataSelectionWidget(BaseSelectionWidget):

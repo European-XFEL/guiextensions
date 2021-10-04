@@ -1,6 +1,6 @@
+import pyqtgraph as pg
 from qtpy.QtCore import Qt, Slot
 from qtpy.QtWidgets import QGraphicsItem
-import pyqtgraph as pg
 from traits.api import HasStrictTraits, String, WeakRef
 
 

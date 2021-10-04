@@ -1,7 +1,5 @@
-from karabo.native import (
-    Configurable, VectorString, Node, Hash)
-from karabogui.testing import (
-    GuiTestCase, get_property_proxy, set_proxy_hash )
+from karabo.native import Configurable, Hash, Node, VectorString
+from karabogui.testing import GuiTestCase, get_property_proxy, set_proxy_hash
 
 from ..stateaware_component_manager import StateAwareComponentManager
 

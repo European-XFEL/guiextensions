@@ -3,15 +3,13 @@ from unittest import mock
 
 import numpy as np
 
+from extensions.metro.zone_plate import MetroZonePlate
 from karabo.native import (
     AccessMode, Configurable, EncodingType, Hash, Image, ImageData, Node,
     VectorUInt32)
-from karabogui.util import SignalBlocker
 from karabogui.testing import (
-    get_class_property_proxy, GuiTestCase, set_proxy_hash
-)
-
-from extensions.metro.zone_plate import MetroZonePlate
+    GuiTestCase, get_class_property_proxy, set_proxy_hash)
+from karabogui.util import SignalBlocker
 
 
 class ImageOutput(Configurable):

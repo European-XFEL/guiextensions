@@ -6,6 +6,13 @@
 from collections import OrderedDict
 from functools import partial
 
+from qtpy.QtCore import QModelIndex, Qt, QTimer
+from qtpy.QtGui import QStandardItem, QStandardItemModel
+from qtpy.QtWidgets import (
+    QAbstractItemView, QAction, QHBoxLayout, QHeaderView, QLabel, QSizePolicy,
+    QToolBar, QToolButton, QTreeView, QVBoxLayout, QWidget)
+from traits.api import Bool, Dict, Instance, List, String, WeakRef
+
 from karabo.common.states import State
 from karabo.native import Hash
 from karabogui.binding.api import (
@@ -14,12 +21,6 @@ from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller, with_display_type)
 from karabogui.request import call_device_slot, send_property_changes
 from karabogui.singletons.api import get_manager, get_network, get_topology
-from qtpy.QtCore import QModelIndex, Qt, QTimer
-from qtpy.QtGui import QStandardItem, QStandardItemModel
-from qtpy.QtWidgets import (
-    QAbstractItemView, QAction, QHBoxLayout, QHeaderView, QLabel, QSizePolicy,
-    QToolBar, QToolButton, QTreeView, QVBoxLayout, QWidget)
-from traits.api import Bool, Dict, Instance, List, String, WeakRef
 
 from .models.simple import StateAwareComponentManagerModel
 

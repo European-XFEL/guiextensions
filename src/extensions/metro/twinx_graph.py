@@ -13,14 +13,13 @@ from karabogui.binding.api import (
     NDArrayBinding, VectorNumberBinding, WidgetNodeBinding)
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller, with_display_type)
-from karabogui.graph.common.api import get_pen_cycler, KaraboLegend
+from karabogui.graph.common.api import KaraboLegend, get_pen_cycler
 from karabogui.graph.plots.api import (
-    KaraboPlotView, VectorBarGraphPlot, generate_down_sample,
-    get_view_range)
+    KaraboPlotView, VectorBarGraphPlot, generate_down_sample, get_view_range)
 
-from .utils import add_twinx, PlotData
 from ..models.simple import MetroTwinXGraphModel
 from ..utils import get_array_data, get_node_value, guess_path
+from .utils import PlotData, add_twinx
 
 
 @register_binding_controller(

@@ -2,11 +2,11 @@ from unittest import TestCase
 
 import numpy as np
 
-from ..scan import Scan
 from ...const import (
     ACTUAL_STEP, CURRENT_INDEX, MOTORS, SCAN_TYPE, SOURCES, START_POSITIONS,
     STEPS, STOP_POSITIONS)
-from ...tests.confs import ASCAN_CONFIG, A2SCAN_CONFIG, MESH_CONFIG
+from ...tests.confs import A2SCAN_CONFIG, ASCAN_CONFIG, MESH_CONFIG
+from ..scan import Scan
 
 
 class TestScan(TestCase):

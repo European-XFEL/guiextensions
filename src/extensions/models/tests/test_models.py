@@ -1,4 +1,5 @@
 from karabo.common.scenemodel.tests.utils import single_model_round_trip
+
 from .. import simple as api
 
 

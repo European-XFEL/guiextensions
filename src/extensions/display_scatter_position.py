@@ -9,14 +9,14 @@ from collections import deque
 import numpy as np
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QAction, QInputDialog
-from pyqtgraph import EllipseROI, ROI
+from pyqtgraph import ROI, EllipseROI
 from traits.api import Instance
 
 from karabo.common.scenemodel.api import build_model_config
 from karabogui import icons
 from karabogui.binding.api import WidgetNodeBinding
 from karabogui.controllers.api import (
-    with_display_type, BaseBindingController, register_binding_controller)
+    BaseBindingController, register_binding_controller, with_display_type)
 from karabogui.graph.common.api import create_tool_button, make_pen
 from karabogui.graph.plots.api import KaraboPlotView
 

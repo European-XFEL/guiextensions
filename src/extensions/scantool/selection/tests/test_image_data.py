@@ -1,8 +1,8 @@
 from karabogui.testing import GuiTestCase
 
-from ..image_data import ImageDataSelectionWidget
 from ...const import (
     ADD, MOTOR_NAMES, REMOVE, SOURCE_NAMES, X_DATA, Y_DATA, Z_DATA)
+from ..image_data import ImageDataSelectionWidget
 
 
 class TestImageDataSelectionController(GuiTestCase):

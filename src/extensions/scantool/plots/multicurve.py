@@ -7,10 +7,10 @@ from itertools import cycle
 
 from traits.api import DictStrAny, Instance, List, Property
 
-from karabogui.graph.common.api import get_pen_cycler, KaraboLegend
+from karabogui.graph.common.api import KaraboLegend, get_pen_cycler
 
-from .base import GraphPlot
 from ..const import Y_DATA
+from .base import GraphPlot
 
 
 class MultiCurvePlot(GraphPlot):

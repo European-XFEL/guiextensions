@@ -1,10 +1,10 @@
 import numpy as np
 from traits.api import (
-    Array, cached_property, HasStrictTraits, Instance, Int, List, ListStr,
-    Property, Str)
+    Array, HasStrictTraits, Instance, Int, List, ListStr, Property, Str,
+    cached_property)
 
-from .device import DataSource, Device, Motor
 from ..const import CSCANS, MESHES
+from .device import DataSource, Device, Motor
 
 
 class Scan(HasStrictTraits):

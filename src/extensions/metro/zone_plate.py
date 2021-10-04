@@ -3,11 +3,11 @@
 # Created on August 2021
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from traits.api import Bool, Instance, List, on_trait_change, String, Type
+from traits.api import Bool, Instance, List, String, Type, on_trait_change
 
 from karabogui.binding.api import (
-    FloatBinding, get_binding_value, IntBinding, PropertyProxy,
-    VectorNumberBinding, WidgetNodeBinding)
+    FloatBinding, IntBinding, PropertyProxy, VectorNumberBinding,
+    WidgetNodeBinding, get_binding_value)
 from karabogui.controllers.api import (
     register_binding_controller, with_display_type)
 from karabogui.graph.common.api import AuxPlots, ImageRegion, make_pen

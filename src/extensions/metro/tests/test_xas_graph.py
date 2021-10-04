@@ -2,10 +2,10 @@ from contextlib import contextmanager
 
 import numpy as np
 
+from extensions.metro.xas_graph import MetroXasGraph
 from karabo.native import Configurable, Hash, Node, VectorDouble
 from karabogui.testing import (
-    get_class_property_proxy, GuiTestCase, set_proxy_hash)
-from extensions.metro.xas_graph import MetroXasGraph
+    GuiTestCase, get_class_property_proxy, set_proxy_hash)
 
 
 class VectorOutput(Configurable):

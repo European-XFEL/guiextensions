@@ -6,8 +6,8 @@ from PyQt5.QtWidgets import QButtonGroup
 
 from karabogui.util import SignalBlocker
 
-from .base import BaseSelectionWidget
 from ..const import ADD, REMOVE, X_DATA, Y_DATA, Z_DATA
+from .base import BaseSelectionWidget
 
 
 class ImageDataSelectionWidget(BaseSelectionWidget):

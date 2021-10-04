@@ -1,9 +1,9 @@
 from PyQt5.QtWidgets import QWidget
 from traits.api import Event, HasStrictTraits, Instance
 
-from ..widget import get_container
 from ..selection.image_data import ImageDataSelectionWidget
 from ..selection.xy_data import XYDataSelectionWidget
+from ..widget import get_container
 
 
 class DataSelectionController(HasStrictTraits):

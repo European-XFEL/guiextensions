@@ -3,12 +3,9 @@ from PyQt5.QtGui import QBrush, QPen
 
 from karabo.native import AccessMode, Configurable, Hash, Node, VectorBool
 from karabogui.testing import (
-    get_class_property_proxy, GuiTestCase, set_proxy_hash
-)
+    GuiTestCase, get_class_property_proxy, set_proxy_hash)
 
-from ..pulse_info import (
-    BRUSH_EMPTY, BRUSH_FEL, PEN_EMPTY, PEN_DET, PulseIdMap
-)
+from ..pulse_info import BRUSH_EMPTY, BRUSH_FEL, PEN_DET, PEN_EMPTY, PulseIdMap
 
 
 class PINode(Configurable):

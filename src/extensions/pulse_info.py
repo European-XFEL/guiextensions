@@ -1,13 +1,12 @@
-from PyQt5.QtCore import Qt, QRectF
-from PyQt5.QtGui import QBrush, QColor, QFont, QPainter, QPen
-from PyQt5.QtWidgets import QWidget, QGridLayout, QGraphicsView, QGraphicsScene
-from traits.api import Instance
 import numpy as np
+from PyQt5.QtCore import QRectF, Qt
+from PyQt5.QtGui import QBrush, QColor, QFont, QPainter, QPen
+from PyQt5.QtWidgets import QGraphicsScene, QGraphicsView, QGridLayout, QWidget
+from traits.api import Instance
 
 from karabogui.binding.api import WidgetNodeBinding
 from karabogui.controllers.api import (
-    BaseBindingController, register_binding_controller, with_display_type
-)
+    BaseBindingController, register_binding_controller, with_display_type)
 from karabogui.fonts import get_font_size_from_dpi
 
 from .models.simple import PulseIdMapModel

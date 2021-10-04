@@ -6,10 +6,10 @@ from traits.api import Bool
 
 from karabogui.testing import GuiTestCase
 
+from ..const import SCAN_TYPE, X_DATA, Y_DATA
 from ..controller import ScanController
 from ..plots.base import BasePlot
 from ..plots.multicurve import MultiCurvePlot
-from ..const import SCAN_TYPE, X_DATA, Y_DATA
 from .confs import ASCAN_CONFIG
 
 
