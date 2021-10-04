@@ -4,13 +4,12 @@
 from functools import partial
 
 from PyQt5.QtWidgets import QMenu
-
 from traits.api import Bool, Instance
 
 from karabogui import messagebox
 from karabogui.binding.api import VectorHashBinding
 from karabogui.controllers.api import (
-    with_display_type, register_binding_controller)
+    register_binding_controller, with_display_type)
 from karabogui.controllers.table.api import BaseTableController
 from karabogui.request import call_device_slot
 

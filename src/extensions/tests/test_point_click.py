@@ -1,5 +1,5 @@
 from karabo.native import (
-    Configurable, Float, VectorFloat, VectorChar, Node, AccessMode, Hash)
+    AccessMode, Configurable, Float, Hash, Node, VectorChar, VectorFloat)
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_hash)
 

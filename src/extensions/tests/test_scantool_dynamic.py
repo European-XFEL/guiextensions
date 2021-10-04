@@ -6,18 +6,17 @@ from karabo.native import (
     VectorInt32)
 from karabogui.binding.api import (
     DeviceClassProxy, PropertyProxy, apply_configuration, build_binding)
-from karabogui.testing import (
-    GuiTestCase, set_proxy_value)
+from karabogui.testing import GuiTestCase, set_proxy_value
 
 from ..display_scantool_dynamic import ScantoolDynamicWidget
 from ..scantool.const import (
-    ACTUAL_STEP, CURRENT_INDEX, MESHES, MOTORS, MOTOR_NAMES, SCAN_TYPE,
-    SOURCES, SOURCE_NAMES, START_POSITIONS, STEPS, STOP_POSITIONS, X_DATA,
+    ACTUAL_STEP, CURRENT_INDEX, MESHES, MOTOR_NAMES, MOTORS, SCAN_TYPE,
+    SOURCE_NAMES, SOURCES, START_POSITIONS, STEPS, STOP_POSITIONS, X_DATA,
     Y_DATA, Z_DATA)
 from ..scantool.plots.heatmap import HeatmapPlot
 from ..scantool.plots.multicurve import MultiCurvePlot
 from ..scantool.tests.confs import (
-    ASCAN_CONFIG, A2SCAN_CONFIG, C2SCAN_CONFIG, MESH_CONFIG)
+    A2SCAN_CONFIG, ASCAN_CONFIG, C2SCAN_CONFIG, MESH_CONFIG)
 
 
 class DataNode(Configurable):

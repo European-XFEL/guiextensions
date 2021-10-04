@@ -2,9 +2,9 @@ import numpy as np
 
 from karabogui.testing import GuiTestCase
 
-from ..multicurve import MultiCurvePlot
 from ...const import X_DATA, Y_DATA
 from ...data.device import Device
+from ..multicurve import MultiCurvePlot
 
 LENGTH = 10
 X_ARRAY = np.linspace(6, 15, 10)

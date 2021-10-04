@@ -1,16 +1,14 @@
-from PyQt5.QtWidgets import QWidget, QGridLayout
-from traits.api import (
-    Dict, Event, HasStrictTraits, Instance, on_trait_change)
-
-from .plots.base import BasePlot
+from PyQt5.QtWidgets import QGridLayout, QWidget
+from traits.api import Dict, Event, HasStrictTraits, Instance, on_trait_change
 
 from .const import (
-    ACTUAL_STEP, ADD, A4SCAN_CONFIG, CURRENT_INDEX, MOTORS, REMOVE, SCAN_TYPE,
+    A4SCAN_CONFIG, ACTUAL_STEP, ADD, CURRENT_INDEX, MOTORS, REMOVE, SCAN_TYPE,
     SOURCES, START_POSITIONS, STEPS, STOP_POSITIONS, X_DATA, Y_DATA, Z_DATA)
-from .selection.controller import DataSelectionController
+from .data.scan import Scan
+from .plots.base import BasePlot
 from .plots.heatmap import HeatmapPlot
 from .plots.multicurve import MultiCurvePlot
-from .data.scan import Scan
+from .selection.controller import DataSelectionController
 from .widget import get_container
 
 

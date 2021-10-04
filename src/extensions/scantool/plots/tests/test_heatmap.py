@@ -2,9 +2,9 @@ import numpy as np
 
 from karabogui.testing import GuiTestCase
 
-from ..heatmap import HeatmapPlot
 from ...const import X_DATA, Y_DATA, Z_DATA
-from ...data.device import Motor, DataSource
+from ...data.device import DataSource, Motor
+from ..heatmap import HeatmapPlot
 
 START_POS = np.array([2, 3])
 STOP_POS = np.array([4, 6])

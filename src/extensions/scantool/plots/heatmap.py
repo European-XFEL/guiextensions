@@ -6,8 +6,8 @@
 import numpy as np
 from traits.api import ArrayOrNone, Bool, Dict, Int, ListBool, on_trait_change
 
-from .base import ImagePlot
 from ..const import MOTOR_NAMES, X_DATA, Y_DATA, Z_DATA
+from .base import ImagePlot
 
 
 class HeatmapPlot(ImagePlot):

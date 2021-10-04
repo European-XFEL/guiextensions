@@ -5,18 +5,18 @@
 #############################################################################
 
 import numpy as np
-from pyqtgraph import InfiniteLine
 from PyQt5.QtWidgets import QAction
+from pyqtgraph import InfiniteLine
 from traits.api import Instance, Undefined
 
 from karabo.common.scenemodel.api import (
     build_graph_config, restore_graph_config)
 from karabogui.binding.api import WidgetNodeBinding
 from karabogui.controllers.api import (
-    with_display_type, BaseBindingController, register_binding_controller)
+    BaseBindingController, register_binding_controller, with_display_type)
 from karabogui.graph.common.api import make_pen
 from karabogui.graph.plots.api import (
-    KaraboPlotView, generate_down_sample, generate_baseline, get_view_range)
+    KaraboPlotView, generate_baseline, generate_down_sample, get_view_range)
 
 from .models.simple import DynamicDigitizerModel
 

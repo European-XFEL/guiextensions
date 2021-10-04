@@ -1,7 +1,7 @@
 import numpy as np
 from traits.api import (
-    Array, ArrayOrNone, cached_property, Float, HasStrictTraits, Int,
-    Property, Str)
+    Array, ArrayOrNone, Float, HasStrictTraits, Int, Property, Str,
+    cached_property)
 
 DEFAULT_SHAPE = 10
 

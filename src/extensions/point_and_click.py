@@ -1,13 +1,13 @@
+from numpy import exp
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QImage, QPainter, QPen
 from PyQt5.QtWidgets import QWidget
 from traits.api import Bytes, Instance
-from numpy import exp
 
+from karabogui.binding.api import (
+    PropertyProxy, WidgetNodeBinding, get_binding_value)
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller, with_display_type)
-from karabogui.binding.api import (
-    WidgetNodeBinding, PropertyProxy, get_binding_value)
 from karabogui.request import send_property_changes
 
 from .models.simple import PointAndClickModel

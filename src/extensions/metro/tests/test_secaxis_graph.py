@@ -3,10 +3,10 @@ from unittest import mock
 
 import numpy as np
 
+from extensions.metro.secaxis_graph import MetroSecAxisGraph
 from karabo.native import Configurable, Hash, Node, VectorDouble
 from karabogui.testing import (
-    get_class_property_proxy, GuiTestCase, set_proxy_hash)
-from extensions.metro.secaxis_graph import MetroSecAxisGraph
+    GuiTestCase, get_class_property_proxy, set_proxy_hash)
 
 
 class VectorOutput(Configurable):

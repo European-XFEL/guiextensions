@@ -19,10 +19,9 @@ from karabogui.controllers.api import (
 from karabogui.graph.common.api import AxisItem
 from karabogui.graph.plots.api import KaraboPlotView, TransformDialog
 
-from .utils import PlotData
 from ..models.simple import MetroSecAxisGraphModel
 from ..utils import get_array_data, get_node_value, guess_path
-
+from .utils import PlotData
 
 NUMERICAL_BINDINGS = (BoolBinding, FloatBinding, IntBinding)
 VECTOR_NUMBER_BINDINGS = (NDArrayBinding, VectorNumberBinding)

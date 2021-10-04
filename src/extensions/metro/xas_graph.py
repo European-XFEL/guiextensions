@@ -15,14 +15,13 @@ from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller, with_display_type)
 from karabogui.graph.common.api import AxisType, create_axis_items, make_brush
 from karabogui.graph.common.const import DEFAULT_BAR_WIDTH
-from karabogui.graph.image.aux_plots.base.plot import AuxPlotItem, SHOWN_AXES
+from karabogui.graph.image.aux_plots.base.plot import SHOWN_AXES, AuxPlotItem
 from karabogui.graph.plots.api import (
-    KaraboPlotView, VectorBarGraphPlot, generate_down_sample,
-    get_view_range)
+    KaraboPlotView, VectorBarGraphPlot, generate_down_sample, get_view_range)
 
-from .utils import add_twinx, PlotData
 from ..models.simple import MetroXasGraphModel
 from ..utils import get_array_data, get_node_value, guess_path
+from .utils import PlotData, add_twinx
 
 
 def add_auxplots(widget, orientation='top', row=1, col=0, shown_axes=None):

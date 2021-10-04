@@ -5,7 +5,7 @@ from traits.api import Instance
 
 from karabogui.binding.api import VectorHashBinding
 from karabogui.controllers.api import (
-    with_display_type, register_binding_controller)
+    register_binding_controller, with_display_type)
 from karabogui.controllers.table.api import (
     BaseTableController, TableButtonDelegate)
 from karabogui.request import get_scene_from_server

@@ -1,7 +1,7 @@
 from karabogui.testing import GuiTestCase
 
-from ..xy_data import XYDataSelectionWidget
 from ...const import ADD, MOTOR_NAMES, REMOVE, SOURCE_NAMES, X_DATA, Y_DATA
+from ..xy_data import XYDataSelectionWidget
 
 
 class TestXYDataSelectionController(GuiTestCase):

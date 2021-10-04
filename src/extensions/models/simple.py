@@ -1,6 +1,7 @@
 from xml.etree.ElementTree import SubElement
 
 from traits.api import Bool, Enum, Float, Int, List, String
+
 from karabo.common.scenemodel.api import (
     BaseDisplayEditableWidget, BasePlotModel, BaseROIData,
     BaseWidgetObjectData, ImageGraphModel, read_axes_set,

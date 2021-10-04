@@ -2,7 +2,7 @@ import numpy as np
 from traits.api import Undefined
 
 from karabo.native import Timestamp
-from karabogui.binding.api import get_binding_value, NodeBinding
+from karabogui.binding.api import NodeBinding, get_binding_value
 
 try:
     from karabogui.controllers.api import REFERENCE_TYPENUM_TO_DTYPE

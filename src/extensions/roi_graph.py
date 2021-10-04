@@ -4,25 +4,24 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from contextlib import contextmanager
+
 import pyqtgraph as pg
 from traits.api import (
-    Bool, cached_property, Event, HasStrictTraits, Instance,
-    on_trait_change, Property, String, Tuple, WeakRef)
+    Bool, Event, HasStrictTraits, Instance, Property, String, Tuple, WeakRef,
+    cached_property, on_trait_change)
 
 from karabo.common.scenemodel.api import (
     build_graph_config, restore_graph_config)
 from karabo.native import EncodingType
 from karabogui.binding.api import (
-    FloatBinding, get_binding_value, ImageBinding, IntBinding)
-from karabogui.controllers.api import (
-    BaseBindingController)
+    FloatBinding, ImageBinding, IntBinding, get_binding_value)
+from karabogui.controllers.api import BaseBindingController
 from karabogui.graph.common.api import make_pen
 from karabogui.graph.image.api import (
     KaraboImageNode, KaraboImagePlot, KaraboImageView)
 from karabogui.util import SignalBlocker
 
 from .utils import get_node_value, guess_path
-
 
 NUMBER_BINDINGS = (IntBinding, FloatBinding)
 
