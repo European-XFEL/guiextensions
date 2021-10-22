@@ -90,7 +90,7 @@ class Quadrant(QLabel):
 
 @register_binding_controller(
     ui_name='Quadrant-IPM Widget',
-    klassname='IPM-Quadrant',
+    klassname='IPMQuadrant',
     binding_type=WidgetNodeBinding,
     is_compatible=with_display_type('WidgetNode|IPM-Quadrant'),
     priority=0, can_show_nothing=False)

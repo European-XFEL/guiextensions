@@ -11,7 +11,8 @@ from karabo.common.scenemodel.api import (
 from karabo.common.scenemodel.bases import BaseEditWidget
 from karabo.common.scenemodel.const import NS_KARABO, WIDGET_ELEMENT_TAG
 from karabo.common.scenemodel.io_utils import (
-    read_base_widget_data, write_base_widget_data)
+    read_base_widget_data, read_empty_display_editable_widget,
+    write_base_widget_data)
 from karabo.common.scenemodel.registry import (
     register_scene_reader, register_scene_writer)
 
@@ -51,8 +52,8 @@ class ScantoolBaseModel(BaseWidgetObjectData):
 
 class StateAwareComponentManagerModel(BaseDisplayEditableWidget):
     """ A model for the Component Manager Device Selection"""
-    klass = Enum('StateAwareComponentManager',
-                 'StateAwareComponentManager')
+    klass = Enum('DisplayStateAwareComponentManager',
+                 'EditableStateAwareComponentManager')
 
 
 class PointAndClickModel(BaseDisplayEditableWidget):
@@ -101,43 +102,14 @@ class MetroSecAxisGraphModel(BasePlotModel):
     vline_value = Float(-7.5675)
 
 
-@register_scene_reader('IPM-Quadrant')
-def _bpm_position_reader(read_func, element):
-    traits = read_base_widget_data(element)
-    return IPMQuadrantModel(**traits)
+# Reader and writers ...
+# --------------------------------------------------------------------------
 
+# Model must have __NAME__Model. Widget must have __NAME__ as class name
+_SIMPLE_WIDGET_MODELS = ("IPMQuadrantModel", "DoocsLocationTableModel",
+                         "DoocsMirrorTableModel",)
 
-@register_scene_writer(IPMQuadrantModel)
-def _bpm_position_writer(write_func, model, parent):
-    element = SubElement(parent, WIDGET_ELEMENT_TAG)
-    write_base_widget_data(model, element, 'IPM-Quadrant')
-    return element
-
-
-@register_scene_reader('DoocsLocationTable')
-def _doocs_table_reader(read_func, element):
-    traits = read_base_widget_data(element)
-    return DoocsLocationTableModel(**traits)
-
-
-@register_scene_writer(DoocsLocationTableModel)
-def _doocs_table_writer(write_func, model, parent):
-    element = SubElement(parent, WIDGET_ELEMENT_TAG)
-    write_base_widget_data(model, element, 'DoocsLocationTable')
-    return element
-
-
-@register_scene_reader('DoocsMirrorTable')
-def _doocs_mirror_table_reader(read_func, element):
-    traits = read_base_widget_data(element)
-    return DoocsMirrorTableModel(**traits)
-
-
-@register_scene_writer(DoocsMirrorTableModel)
-def _doocs_mirror_table_writer(write_func, model, parent):
-    element = SubElement(parent, WIDGET_ELEMENT_TAG)
-    write_base_widget_data(model, element, 'DoocsMirrorTable')
-    return element
+_SIMPLE_DISPLAY_EDIT_MODELS = ("StateAwareComponentManagerModel",)
 
 
 @register_scene_reader('ScatterPosition')
@@ -239,19 +211,6 @@ def _pac_writer(write_func, model, parent):
     return element
 
 
-@register_scene_reader('StateAwareComponentManager')
-def _stateaware_manager_reader(read_func, element):
-    traits = read_base_widget_data(element)
-    return StateAwareComponentManagerModel(**traits)
-
-
-@register_scene_writer(StateAwareComponentManagerModel)
-def _stateaware_manager_writer(write_func, model, parent):
-    element = SubElement(parent, WIDGET_ELEMENT_TAG)
-    write_base_widget_data(model, element, 'StateAwareComponentManager')
-    return element
-
-
 @register_scene_reader('PulseId-Map')
 def _pulseid_map_reader(read_func, element):
     traits = read_base_widget_data(element)
@@ -340,3 +299,66 @@ def _metro_twinx_graph_writer(write_func, model, parent):
     write_basic_label(model, element)
     write_axes_set(model, element)
     write_range_set(model, element)
+
+
+# ----------------------------------------------------------------------------
+# Private
+
+def _build_empty_widget_readers_and_writers():
+    """ Build readers and writers for the empty widget classes
+
+    The name of the model must have `__NAME__Model`. The __NAME__ is stripped
+    out for reading and writing the class name
+    """
+
+    def _build_reader_func(klass):
+        def reader(element):
+            traits = read_base_widget_data(element)
+            return klass(**traits)
+
+        return reader
+
+    def _build_writer_func(name):
+        def writer(model, parent):
+            element = SubElement(parent, WIDGET_ELEMENT_TAG)
+            write_base_widget_data(model, element, name)
+            return element
+
+        return writer
+
+    for model_name in _SIMPLE_WIDGET_MODELS:
+        klass = globals()[model_name]
+        file_name = model_name[:-len('Model')]
+        register_scene_reader(file_name)(_build_reader_func(klass))
+        register_scene_writer(klass)(_build_writer_func(file_name))
+
+
+def _build_empty_display_editable_readers_and_writers():
+    """ Build readers and writers for the empty widget classes which come in
+    Editable and Display types.
+    """
+
+    def _build_reader_func(klass):
+        def reader(element):
+            traits = read_empty_display_editable_widget(element)
+            return klass(**traits)
+
+        return reader
+
+    def _writer_func(model, parent):
+        element = SubElement(parent, WIDGET_ELEMENT_TAG)
+        write_base_widget_data(model, element, model.klass)
+        return element
+
+    for model_name in _SIMPLE_DISPLAY_EDIT_MODELS:
+        klass = globals()[model_name]
+        file_name = model_name[:-len('Model')]
+        reader = _build_reader_func(klass)
+        register_scene_reader('Display' + file_name)(reader)
+        register_scene_reader('Editable' + file_name)(reader)
+        register_scene_writer(klass)(_writer_func)
+
+
+# Call the builders to register all the readers and writers
+_build_empty_widget_readers_and_writers()
+_build_empty_display_editable_readers_and_writers()
