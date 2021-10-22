@@ -15,7 +15,7 @@ from karabogui.controllers.api import (
     with_display_type)
 from karabogui.util import SignalBlocker
 
-from .models.simple import EditDateTimeModel
+from .models.simple import EditableDateTimeModel
 
 
 @register_binding_controller(
@@ -31,7 +31,7 @@ class EditableDateTime(BaseBindingController):
     It provides the editable input line for date and time as
     well as popup calendar.
     """
-    model = Instance(EditDateTimeModel, args=())
+    model = Instance(EditableDateTimeModel, args=())
 
     def create_widget(self, parent):
         widget = QDateTimeEdit(parent)

@@ -21,7 +21,7 @@ class IPMQuadrantModel(BaseWidgetObjectData):
     """ A model for the Intensity Position Monitor"""
 
 
-class EditDateTimeModel(BaseEditWidget):
+class EditableDateTimeModel(BaseEditWidget):
     """ A model for the DateTime """
     time_format = String("yyyy-M-dThh:mm:ss")
 
@@ -181,10 +181,10 @@ def _date_time_edit_reader(read_func, element):
     traits = read_base_widget_data(element)
     time_format = element.get(NS_KARABO + 'time_format', '%H:%M:%S')
     traits['time_format'] = time_format
-    return EditDateTimeModel(**traits)
+    return EditableDateTimeModel(**traits)
 
 
-@register_scene_writer(EditDateTimeModel)
+@register_scene_writer(EditableDateTimeModel)
 def _date_time_edit_writer(write_func, model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'EditableDateTime')

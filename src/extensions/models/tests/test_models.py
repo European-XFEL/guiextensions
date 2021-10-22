@@ -128,7 +128,7 @@ def test_metro_twinx_graph_model():
 def test_editable_datetime():
     traits = _geometry_traits()
     traits['time_format'] = "%H:%M"
-    model = api.EditDateTimeModel(**traits)
+    model = api.EditableDateTimeModel(**traits)
     read_model = single_model_round_trip(model)
     _assert_geometry_traits(read_model)
     assert model.time_format == "%H:%M"
