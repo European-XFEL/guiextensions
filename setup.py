@@ -13,6 +13,7 @@ setup(
         'karabogui.gui_extensions': [
             'StateAwareComponentManager = extensions.stateaware_component_manager',
             'IPMQuadrant = extensions.display_ipm_quadrant',
+            'DateTimeEdit = extensions.edit_datetime_label',
             'ScatterPosition = extensions.display_scatter_position',
             'ScantoolDynamic = extensions.display_scantool_dynamic',
             'DynamicDigitizer = extensions.display_dynamic_digitizer',
