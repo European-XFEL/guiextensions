@@ -112,10 +112,10 @@ def test_metro_secaxis_graph_model():
     model = api.MetroSecAxisGraphModel(**traits)
     read_model = single_model_round_trip(model)
     _assert_geometry_traits(read_model)
-    read_model.x2_offset == 50.45
-    read_model.x2_step == 6.667
-    read_model.vline_visible is True
-    read_model.vline_value == -7.5675
+    assert read_model.x2_offset == 50.45
+    assert read_model.x2_step == 6.667
+    assert read_model.vline_visible is True
+    assert read_model.vline_value == -7.5675
 
 
 def test_metro_twinx_graph_model():
@@ -123,3 +123,12 @@ def test_metro_twinx_graph_model():
     model = api.MetroTwinXGraphModel(**traits)
     read_model = single_model_round_trip(model)
     _assert_geometry_traits(read_model)
+
+
+def test_editable_datetime():
+    traits = _geometry_traits()
+    traits['time_format'] = "%H:%M"
+    model = api.EditDateTimeModel(**traits)
+    read_model = single_model_round_trip(model)
+    _assert_geometry_traits(read_model)
+    assert model.time_format == "%H:%M"

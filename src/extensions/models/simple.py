@@ -8,6 +8,7 @@ from karabo.common.scenemodel.api import (
     read_base_karabo_image_model, read_basic_label, read_range_set,
     read_roi_info, write_axes_set, write_base_karabo_image_model,
     write_basic_label, write_range_set, write_roi_info)
+from karabo.common.scenemodel.bases import BaseEditWidget
 from karabo.common.scenemodel.const import NS_KARABO, WIDGET_ELEMENT_TAG
 from karabo.common.scenemodel.io_utils import (
     read_base_widget_data, write_base_widget_data)
@@ -17,6 +18,11 @@ from karabo.common.scenemodel.registry import (
 
 class IPMQuadrantModel(BaseWidgetObjectData):
     """ A model for the Intensity Position Monitor"""
+
+
+class EditDateTimeModel(BaseEditWidget):
+    """ A model for the DateTime """
+    time_format = String("yyyy-M-dThh:mm:ss")
 
 
 class DoocsLocationTableModel(BaseWidgetObjectData):
@@ -195,6 +201,22 @@ def _scantool_base_reader(read_func, element):
 def _scantool_base_writer(write_func, model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'Scantool-Base')
+    return element
+
+
+@register_scene_reader('EditableDateTime')
+def _date_time_edit_reader(read_func, element):
+    traits = read_base_widget_data(element)
+    time_format = element.get(NS_KARABO + 'time_format', '%H:%M:%S')
+    traits['time_format'] = time_format
+    return EditDateTimeModel(**traits)
+
+
+@register_scene_writer(EditDateTimeModel)
+def _date_time_edit_writer(write_func, model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_widget_data(model, element, 'EditableDateTime')
+    element.set(NS_KARABO + 'time_format', str(model.time_format))
     return element
 
 
