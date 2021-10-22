@@ -1,7 +1,7 @@
 import numpy as np
-from PyQt5.QtCore import QRectF, Qt
-from PyQt5.QtGui import QBrush, QColor, QFont, QPainter, QPen
-from PyQt5.QtWidgets import QGraphicsScene, QGraphicsView, QGridLayout, QWidget
+from qtpy.QtCore import QRectF, Qt
+from qtpy.QtGui import QBrush, QColor, QFont, QPainter, QPen
+from qtpy.QtWidgets import QGraphicsScene, QGraphicsView, QGridLayout, QWidget
 from traits.api import Instance
 
 from karabogui.binding.api import WidgetNodeBinding

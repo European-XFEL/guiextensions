@@ -5,8 +5,8 @@
 #############################################################################
 
 import numpy as np
-from PyQt5.QtWidgets import QAction
 from pyqtgraph import InfiniteLine
+from qtpy.QtWidgets import QAction
 from traits.api import Instance, Undefined
 
 from karabo.common.scenemodel.api import (
