@@ -74,6 +74,10 @@ class PulseIdMapModel(BaseWidgetObjectData):
     """A model for the AlignedPulse device"""
 
 
+class DynamicPulseIdMapModel(BaseWidgetObjectData):
+    """A model for the AlignedPulse device"""
+
+
 class MetroXasGraphModel(BasePlotModel):
     """ A model for the metro XAS graph """
     x_label = String('Energy')
@@ -106,8 +110,9 @@ class MetroSecAxisGraphModel(BasePlotModel):
 # --------------------------------------------------------------------------
 
 # Model must have __NAME__Model. Widget must have __NAME__ as class name
-_SIMPLE_WIDGET_MODELS = ("IPMQuadrantModel", "DoocsLocationTableModel",
-                         "DoocsMirrorTableModel",)
+_SIMPLE_WIDGET_MODELS = (
+    "IPMQuadrantModel", "DoocsLocationTableModel", "DoocsMirrorTableModel",
+    "PulseIdMapModel", "DynamicPulseIdMapModel")
 
 _SIMPLE_DISPLAY_EDIT_MODELS = ("StateAwareComponentManagerModel",)
 
@@ -208,19 +213,6 @@ def _pac_edit_reader(read_func, element):
 def _pac_writer(write_func, model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, model.klass)
-    return element
-
-
-@register_scene_reader('PulseId-Map')
-def _pulseid_map_reader(read_func, element):
-    traits = read_base_widget_data(element)
-    return PulseIdMapModel(**traits)
-
-
-@register_scene_writer(PulseIdMapModel)
-def _pulseid_map_writer(write_func, model, parent):
-    element = SubElement(parent, WIDGET_ELEMENT_TAG)
-    write_base_widget_data(model, element, 'PulseId-Map')
     return element
 
 
