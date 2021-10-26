@@ -6,7 +6,7 @@ from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_hash, set_proxy_value)
 
 from ..edit_datetime_label import EditableDateTime
-from ..models.simple import EditDateTimeModel
+from ..models.simple import EditableDateTimeModel
 
 
 class Object(Configurable):
@@ -22,7 +22,7 @@ class TestDateTimeEdit(GuiTestCase):
         self.proxy = get_class_property_proxy(schema, "prop")
 
         self.controller = EditableDateTime(proxy=self.proxy,
-                                           model=EditDateTimeModel())
+                                           model=EditableDateTimeModel())
         self.controller.create(None)
 
     def test_set_value(self):
@@ -36,7 +36,7 @@ class TestDateTimeEdit(GuiTestCase):
 
     def test_change_time_format(self):
         controller = EditableDateTime(proxy=self.proxy,
-                                      model=EditDateTimeModel())
+                                      model=EditableDateTimeModel())
         controller.create(None)
         tp = "2009-04-22T00:00:00"
         h = Hash("prop", tp)
