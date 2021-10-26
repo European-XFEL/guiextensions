@@ -1,9 +1,8 @@
 from unittest import main
 
+from extensions.display_doocs_mirror_table import DisplayDoocsMirrorTable
 from karabo.native import AccessMode, Configurable, Hash, String, VectorHash
 from karabogui.testing import GuiTestCase, get_property_proxy, set_proxy_hash
-
-from ..display_doocs_mirror_table import DisplayDoocsMirrorTable
 
 INIT_TABLE_DIKT = [
     {"name": "EUXFEL_LASER/LASER_CONTROL/LASER2",

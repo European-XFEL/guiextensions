@@ -1,8 +1,7 @@
+from extensions.display_ipm_quadrant import DisplayIPMQuadrant
 from karabo.native import Configurable, Float, Hash, Node
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_hash)
-
-from ..display_ipm_quadrant import DisplayIPMQuadrant
 
 
 class DataNode(Configurable):

@@ -1,5 +1,9 @@
 import numpy as np
 
+from extensions.scantool.plots.heatmap import HeatmapPlot
+from extensions.scantool.plots.multicurve import MultiCurvePlot
+from extensions.scantool.tests.confs import (
+    A2SCAN_CONFIG, ASCAN_CONFIG, C2SCAN_CONFIG, MESH_CONFIG)
 from karabo.common.api import ProxyStatus, State
 from karabo.native import (
     AccessMode, Configurable, Double, Hash, Node, String, UInt32, VectorDouble,
@@ -13,10 +17,6 @@ from ..scantool.const import (
     ACTUAL_STEP, CURRENT_INDEX, MESHES, MOTOR_NAMES, MOTORS, SCAN_TYPE,
     SOURCE_NAMES, SOURCES, START_POSITIONS, STEPS, STOP_POSITIONS, X_DATA,
     Y_DATA, Z_DATA)
-from ..scantool.plots.heatmap import HeatmapPlot
-from ..scantool.plots.multicurve import MultiCurvePlot
-from ..scantool.tests.confs import (
-    A2SCAN_CONFIG, ASCAN_CONFIG, C2SCAN_CONFIG, MESH_CONFIG)
 
 
 class DataNode(Configurable):

@@ -1,12 +1,13 @@
 from unittest.mock import patch
 
+from qtpy.QtCore import QLocale
+
+from extensions.edit_datetime_label import EditableDateTime
+from extensions.models.simple import EditableDateTimeModel
 from karabo.common.states import State
 from karabo.native import Configurable, Hash, String
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_hash, set_proxy_value)
-
-from ..edit_datetime_label import EditableDateTime
-from ..models.simple import EditableDateTimeModel
 
 
 class Object(Configurable):
@@ -18,6 +19,7 @@ class Object(Configurable):
 class TestDateTimeEdit(GuiTestCase):
     def setUp(self):
         super().setUp()
+        QLocale.setDefault(QLocale(QLocale.English, QLocale.UnitedStates))
         schema = Object.getClassSchema()
         self.proxy = get_class_property_proxy(schema, "prop")
 
@@ -50,7 +52,6 @@ class TestDateTimeEdit(GuiTestCase):
             new_format = "ddd MMMM d yy"
             QInputDialog.getText.return_value = new_format, True
             action.trigger()
-            self.assertEqual(controller.widget.text(), "Mi. April 22 09")
             self.assertEqual(controller.model.time_format, new_format)
 
     def test_state_update(self):
