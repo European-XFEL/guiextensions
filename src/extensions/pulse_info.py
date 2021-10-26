@@ -4,15 +4,15 @@ import numpy as np
 from qtpy.QtCore import QRectF, Qt
 from qtpy.QtGui import QBrush, QColor, QFont, QPainter, QPen
 from qtpy.QtWidgets import QGraphicsScene, QGraphicsView, QGridLayout, QWidget
-from traits.api import Array, HasStrictTraits, Instance, on_trait_change, Tuple
+from traits.api import Array, HasStrictTraits, Instance, Tuple, on_trait_change
 
-from karabogui.binding.api import get_binding_value, WidgetNodeBinding
+from karabogui.binding.api import WidgetNodeBinding, get_binding_value
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller, with_display_type)
 from karabogui.fonts import get_font_size_from_dpi
 from karabogui.util import generateObjectName
 
-from extensions.models.simple import DynamicPulseIdMapModel, PulseIdMapModel
+from .models.simple import DynamicPulseIdMapModel, PulseIdMapModel
 
 GRAY = QColor(178, 178, 178, 60)
 YELLOW = QColor(255, 194, 10, 200)

@@ -1,9 +1,8 @@
 from unittest import main
 
+from extensions.display_doocs_location_table import DisplayDoocsLocationTable
 from karabo.native import AccessMode, Configurable, Hash, String, VectorHash
 from karabogui.testing import GuiTestCase, get_property_proxy, set_proxy_hash
-
-from ..display_doocs_location_table import DisplayDoocsLocationTable
 
 INIT_TABLE_DIKT = [
     {"server": "EUXFEL.LASER/LASER.CONTROL/LASER2",

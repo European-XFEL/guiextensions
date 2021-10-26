@@ -2,13 +2,13 @@ import argparse
 import glob
 import os
 import os.path as op
+import subprocess
 from platform import system as sys_name
 from stat import S_ISDIR
-from setuptools_scm import get_version
-import subprocess
 
 from conda.cli.python_api import Commands, run_command
 from paramiko import AutoAddPolicy, SSHClient
+from setuptools_scm import get_version
 
 PLATFORMS = {
     "Windows": "win-64",
@@ -134,7 +134,14 @@ class Builder:
         conda_run(Commands.RUN, '-n', 'karabogui', '--cwd', self.root_path,
                   'python', 'setup.py', 'install')
 
-        # Run tests
+        # Run tests locally
+        extensions_path = op.join(self.root_path, "src")
+        cmd = [Commands.RUN, '-n', 'karabogui', '--cwd', extensions_path,
+               'python', '-m', 'pytest', '-v', '.']
+        conda_run(*cmd)
+
+        # When the tests are succesful, we make sure that we can run normal
+        # gui tests
         cmd = [Commands.RUN, '-n', 'karabogui',  '--cwd', gui_root,
                'python', '-m', 'pytest', '.']
         conda_run(*cmd)

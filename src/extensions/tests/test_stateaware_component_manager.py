@@ -1,7 +1,6 @@
+from extensions.stateaware_component_manager import StateAwareComponentManager
 from karabo.native import Configurable, Hash, Node, VectorString
 from karabogui.testing import GuiTestCase, get_property_proxy, set_proxy_hash
-
-from ..stateaware_component_manager import StateAwareComponentManager
 
 
 class SACNode(Configurable):

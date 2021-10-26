@@ -1,9 +1,8 @@
+from extensions.point_and_click import PointAndClick
 from karabo.native import (
     AccessMode, Configurable, Float, Hash, Node, VectorChar, VectorFloat)
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_hash)
-
-from ..point_and_click import PointAndClick
 
 
 class PnCNode(Configurable):
