@@ -3,7 +3,7 @@
 #############################################################################
 from functools import partial
 
-from PyQt5.QtWidgets import QMenu
+from qtpy.QtWidgets import QMenu
 from traits.api import Bool, Instance
 
 from karabogui import messagebox

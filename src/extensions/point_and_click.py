@@ -1,7 +1,7 @@
 from numpy import exp
-from PyQt5.QtCore import Qt, pyqtSignal
-from PyQt5.QtGui import QImage, QPainter, QPen
-from PyQt5.QtWidgets import QWidget
+from qtpy.QtCore import Qt, pyqtSignal
+from qtpy.QtGui import QImage, QPainter, QPen
+from qtpy.QtWidgets import QWidget
 from traits.api import Bytes, Instance
 
 from karabogui.binding.api import (

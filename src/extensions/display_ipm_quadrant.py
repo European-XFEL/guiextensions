@@ -4,9 +4,9 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from PyQt5.QtCore import QPoint, QRect, Qt
-from PyQt5.QtGui import QColor, QPainter, QPen
-from PyQt5.QtWidgets import QLabel
+from qtpy.QtCore import QPoint, QRect, Qt
+from qtpy.QtGui import QColor, QPainter, QPen
+from qtpy.QtWidgets import QLabel
 from traits.api import Instance
 
 from karabogui.binding.api import WidgetNodeBinding

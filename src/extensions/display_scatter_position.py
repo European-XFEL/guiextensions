@@ -7,9 +7,9 @@
 from collections import deque
 
 import numpy as np
-from PyQt5.QtGui import QColor
-from PyQt5.QtWidgets import QAction, QInputDialog
 from pyqtgraph import ROI, EllipseROI
+from qtpy.QtGui import QColor
+from qtpy.QtWidgets import QAction, QInputDialog
 from traits.api import Instance
 
 from karabo.common.scenemodel.api import build_model_config
