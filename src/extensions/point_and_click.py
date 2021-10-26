@@ -1,5 +1,5 @@
 from numpy import exp
-from qtpy.QtCore import Qt, pyqtSignal
+from qtpy.QtCore import Qt, Signal
 from qtpy.QtGui import QImage, QPainter, QPen
 from qtpy.QtWidgets import QWidget
 from traits.api import Bytes, Instance
@@ -30,7 +30,7 @@ class CrossesWidget(QWidget):
 
     Using the mouse wheel one may zoom into the image.
     """
-    crossMoved = pyqtSignal(float, float)
+    crossMoved = Signal(float, float)
 
     readonly = True
     image = None
