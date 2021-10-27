@@ -142,7 +142,7 @@ class Builder:
 
         # When the tests are succesful, we make sure that we can run normal
         # gui tests
-        cmd = [Commands.RUN, '-n', 'karabogui',  '--cwd', gui_root,
+        cmd = [Commands.RUN, '-n', 'karabogui', '--cwd', gui_root,
                'python', '-m', 'pytest', '.']
         conda_run(*cmd)
 
@@ -155,7 +155,7 @@ class Builder:
         filenames = glob.glob(filename)
         # Verify if a wheel is created
         if not filenames:
-            raise RuntimeError(f"GUIExtensions wheel is not found!")
+            raise RuntimeError("GUIExtensions wheel is not found!")
         # Return filename of the created wheel, which usually is the
         # first (and only) hit
         return filenames[0]
@@ -221,7 +221,7 @@ def main(args):
 DESCRIPTION = """
 GUI Extensions Test and Build Manager
 
-This script will manage the running of tests and uploading of the build wheel 
+This script will manage the running of tests and uploading of the build wheel
 to the desired destination.
 """
 

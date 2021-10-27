@@ -5,8 +5,7 @@ import numpy as np
 
 from extensions.metro.zone_plate import MetroZonePlate
 from karabo.native import (
-    AccessMode, Configurable, EncodingType, Hash, Image, ImageData, Node,
-    VectorUInt32)
+    Configurable, EncodingType, Hash, Image, ImageData, Node, VectorUInt32)
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_hash)
 from karabogui.util import SignalBlocker
