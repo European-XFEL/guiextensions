@@ -1,7 +1,4 @@
-from contextlib import contextmanager
 from unittest import mock
-
-import numpy as np
 
 from extensions.metro.secaxis_graph import MetroSecAxisGraph
 from karabo.native import Configurable, Hash, Node, VectorDouble

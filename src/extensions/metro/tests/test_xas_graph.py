@@ -1,5 +1,3 @@
-from contextlib import contextmanager
-
 import numpy as np
 
 from extensions.metro.xas_graph import MetroXasGraph

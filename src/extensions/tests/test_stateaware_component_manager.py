@@ -27,9 +27,12 @@ class TestWidgetNode(GuiTestCase):
         assert self.controller.widget is None
 
     def test_values(self):
-        groups = ['FooDevice:UNKNOWN:undefined:undefined:UNKNOWN:undefined:UNKNOWN:False',  # noqa
-                  'BarDevice:NORMAL:undefined:undefined:NORMAL:undefined:NORMAL:False'  # noqa
-                 ]
+        foo = ('FooDevice:UNKNOWN:undefined:undefined:UNKNOWN:'
+               'undefined:UNKNOWN:False')
+        bar = ('BarDevice:NORMAL:undefined:undefined:NORMAL:'
+               'undefined:NORMAL:False')
+
+        groups = [foo, bar]
         set_proxy_hash(
             self.proxy,
             Hash('selectionList.groups', groups))
@@ -37,4 +40,3 @@ class TestWidgetNode(GuiTestCase):
 
         self.assertEqual(model.data(model.index(0, 0)), "FooDevice")
         self.assertEqual(model.data(model.index(1, 0)), "BarDevice")
-

@@ -91,11 +91,13 @@ DET = np.array([1202, 1242, 1282, 1322, 1362, 1402, 1442, 1482, 1522, 1562,
 def test_pulse_pattern():
     # Setup mocks
     grid_calls = 0
+
     def grid_change(object, name, old, new):
         nonlocal grid_calls
         grid_calls += 1
 
     diff_calls = 0
+
     def diff_change():
         nonlocal diff_calls
         diff_calls += 1
@@ -137,7 +139,7 @@ def test_pulse_pattern():
                                     pattern.ppl_index,
                                     pattern.det_index)
     offset = 1
-    proxy = _create_proxy(fel=FEL+offset, ppl=PPL+offset, det=DET+offset)
+    proxy = _create_proxy(fel=FEL + offset, ppl=PPL + offset, det=DET + offset)
     pattern.set_node(proxy.value)
 
     grid = pattern.grid
@@ -156,7 +158,7 @@ def test_pulse_pattern():
                                     pattern.ppl_index,
                                     pattern.det_index)
     offset = -4
-    proxy = _create_proxy(fel=FEL+offset, ppl=PPL+offset, det=DET+offset)
+    proxy = _create_proxy(fel=FEL + offset, ppl=PPL + offset, det=DET + offset)
     pattern.set_node(proxy.value)
 
     grid = pattern.grid
