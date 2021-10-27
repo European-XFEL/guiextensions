@@ -1,4 +1,20 @@
+stages:
+  - lint
+  - build
+
+# static source code analysis
+lint:
+  stage: lint
+  image: europeanxfel/karabo-ci:miniconda-3lint
+  script:
+    - source ci/lint
+  only:
+    - branches
+  except:
+    - master
+
 .unit_tests: &unit-tests-conda
+  stage: build
   script:
     - python ci/build.py extensions --clean --test
   only:
@@ -7,6 +23,7 @@
     - master
 
 .release_build: &release-build
+  stage: build
   script:
     - python ci/build.py extensions --clean --test --upload-wheel -P karaboExtensions/tags
   only:
@@ -16,6 +33,7 @@
     - schedules
 
 .nightly_build_conda: &nightly-test-conda
+  stage: build
   script:
     - python ci/build.py extensions --clean --test --nightly
   only:
