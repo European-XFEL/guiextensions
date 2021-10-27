@@ -132,3 +132,12 @@ def test_editable_datetime():
     read_model = single_model_round_trip(model)
     _assert_geometry_traits(read_model)
     assert model.time_format == "%H:%M"
+
+
+def test_dynamic_graph():
+    traits = _geometry_traits()
+    traits['number'] = 30
+    model = api.DynamicGraphModel(**traits)
+    read_model = single_model_round_trip(model)
+    _assert_geometry_traits(read_model)
+    assert model.number == 30
