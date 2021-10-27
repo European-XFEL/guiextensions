@@ -1,0 +1,37 @@
+
+__run_lint_command() {
+    command="time $1"
+    echo $command
+    eval $command
+    local status=$?
+    if [[ $status != 0 ]]; then
+        echo "Exited with error:$status"
+        exit $status
+    fi
+}
+
+
+__lint_flake8() {
+    FLAKE8OPTIONS="--exclude=*tests* --tee"
+    __run_lint_command "flake8 $FLAKE8OPTIONS $CI_PROJECT_DIR/src/extensions"
+}
+
+__lint_isort() {
+    pushd $CI_PROJECT_DIR/
+    __run_lint_command "isort . --check"
+    popd
+}
+
+# -- main
+# if not run in the gitlab CI environment, one must set this env. variable.
+if [ "$CI_PROJECT_DIR" = "" ]; then
+    export CI_PROJECT_DIR=$(echo $(git rev-parse --show-toplevel))
+else
+    # call manually if not CI:
+    # if non-CI it causes a warning: Could not find conda environment
+    source activate && conda activate
+fi
+
+
+__lint_flake8
+__lint_isort
