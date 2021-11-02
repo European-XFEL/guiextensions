@@ -12,6 +12,7 @@ entries = {
         'DoocsMirrorTable = extensions.display_doocs_mirror_table',
         'DoocsLocationTable = extensions.display_doocs_location_table',
         'PulseIdMap = extensions.pulse_info',
+        'DynamicGraph = extensions.display_dynamic_graph',
         'MetroZonePlate = extensions.metro.zone_plate',
         'MetroXasGraph = extensions.metro.xas_graph',
         'MetroSecAxisGraph = extensions.metro.secaxis_graph',

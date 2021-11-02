@@ -106,6 +106,18 @@ class MetroSecAxisGraphModel(BasePlotModel):
     vline_value = Float(-7.5675)
 
 
+class DynamicGraphModel(BasePlotModel):
+    """ A model for the dynamic plot mode"""
+    half_samples = Int(6000)
+    roi_items = List(BaseROIData)
+    roi_tool = Int(0)
+    offset = Float(0.0)
+    step = Float(1.0)
+    x_grid = Bool(True)
+    y_grid = Bool(True)
+    number = Int(10)
+
+
 # Reader and writers ...
 # --------------------------------------------------------------------------
 
@@ -164,6 +176,35 @@ def _dynamic_digitizer_writer(write_func, model, parent):
     # roi information
     write_roi_info(model, element)
     element.set(NS_KARABO + 'roi_tool', str(model.roi_tool))
+
+    return element
+
+
+@register_scene_reader('DynamicGraph')
+def _dynamic_graph_reader(read_func, element):
+    traits = read_base_widget_data(element)
+    traits.update(read_basic_label(element))
+    traits.update(read_axes_set(element))
+    traits.update(read_range_set(element))
+    traits['roi_items'] = read_roi_info(element)
+    traits['roi_tool'] = int(element.get(NS_KARABO + 'roi_tool', 0))
+    # Number of curves
+    traits['number'] = int(element.get(NS_KARABO + 'number', 10))
+
+    return DynamicGraphModel(**traits)
+
+
+@register_scene_writer(DynamicGraphModel)
+def _dynamic_graph_writer(write_func, model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_widget_data(model, element, 'DynamicGraph')
+    write_basic_label(model, element)
+    write_axes_set(model, element)
+    write_range_set(model, element)
+    write_roi_info(model, element)
+    element.set(NS_KARABO + 'roi_tool', str(model.roi_tool))
+    # Number of curves
+    element.set(NS_KARABO + 'number', str(model.number))
 
     return element
 
