@@ -143,7 +143,7 @@ class PulseIdMapWidget(QWidget):
     klassname='PulseIdMap',
     binding_type=WidgetNodeBinding,
     is_compatible=with_display_type('WidgetNode|PulseId-Map'),
-    priority=0, can_show_nothing=False)
+    priority=0, can_show_nothing=True)
 class PulseIdMap(BaseBindingController):
     """Show a matrix representing the internal XFEL pulses
 
@@ -159,13 +159,14 @@ class PulseIdMap(BaseBindingController):
         return widget
 
     def value_update(self, proxy):
-        if proxy.value is None:
+        node = get_binding_value(proxy)
+        if node is None:
             return
 
         self.widget.set_parameter(
-            proxy.value.fel.value,
-            proxy.value.ppl.value,
-            proxy.value.det.value
+            node.fel.value,
+            node.ppl.value,
+            node.det.value
         )
 
 
@@ -400,7 +401,7 @@ class DynamicPulseIdMapWidget(QWidget):
     klassname='DynamicPulseIdMap',
     binding_type=WidgetNodeBinding,
     is_compatible=with_display_type('WidgetNode|PulseId-Map'),
-    priority=0, can_show_nothing=False)
+    priority=0, can_show_nothing=True)
 class DynamicPulseIdMap(BaseBindingController):
     """Show a matrix representing the internal XFEL pulses
 
@@ -417,9 +418,10 @@ class DynamicPulseIdMap(BaseBindingController):
         return widget
 
     def value_update(self, proxy):
-        if proxy.value is None:
+        node = get_binding_value(proxy)
+        if node is None:
             return
-        self._pulse_pattern.set_node(proxy.value)
+        self._pulse_pattern.set_node(node)
 
     @on_trait_change("_pulse_pattern.grid")
     def _update_grid(self, grid):
