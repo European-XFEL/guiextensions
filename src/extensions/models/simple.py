@@ -4,10 +4,8 @@ from traits.api import Bool, Enum, Float, Int, List, String
 
 from karabo.common.scenemodel.api import (
     BaseDisplayEditableWidget, BasePlotModel, BaseROIData,
-    BaseWidgetObjectData, ImageGraphModel, read_axes_set,
-    read_base_karabo_image_model, read_basic_label, read_range_set,
-    read_roi_info, write_axes_set, write_base_karabo_image_model,
-    write_basic_label, write_range_set, write_roi_info)
+    BaseWidgetObjectData, ImageGraphModel, read_base_karabo_image_model,
+    read_roi_info, write_base_karabo_image_model, write_roi_info)
 from karabo.common.scenemodel.bases import BaseEditWidget
 from karabo.common.scenemodel.const import NS_KARABO, WIDGET_ELEMENT_TAG
 from karabo.common.scenemodel.io_utils import (
@@ -15,6 +13,8 @@ from karabo.common.scenemodel.io_utils import (
     write_base_widget_data)
 from karabo.common.scenemodel.registry import (
     register_scene_reader, register_scene_writer)
+
+from .utils import read_base_plot, write_base_plot
 
 
 class IPMQuadrantModel(BaseWidgetObjectData):
@@ -143,10 +143,7 @@ _SIMPLE_DISPLAY_EDIT_MODELS = ("StateAwareComponentManagerModel",)
 
 @register_scene_reader('ScatterPosition')
 def _scatter_position_reader(read_func, element):
-    traits = read_base_widget_data(element)
-    traits.update(read_basic_label(element))
-    traits.update(read_axes_set(element))
-    traits.update(read_range_set(element))
+    traits = read_base_plot(element)
     traits['maxlen'] = int(element.get(NS_KARABO + 'maxlen', 100))
     traits['psize'] = float(element.get(NS_KARABO + 'psize', 7))
 
@@ -156,10 +153,7 @@ def _scatter_position_reader(read_func, element):
 @register_scene_writer(ScatterPositionModel)
 def _scatter_position_writer(write_func, model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
-    write_base_widget_data(model, element, 'ScatterPosition')
-    write_basic_label(model, element)
-    write_axes_set(model, element)
-    write_range_set(model, element)
+    write_base_plot(model, element, 'ScatterPosition')
     element.set(NS_KARABO + 'maxlen', str(model.maxlen))
     element.set(NS_KARABO + 'psize', str(model.psize))
     return element
@@ -167,10 +161,7 @@ def _scatter_position_writer(write_func, model, parent):
 
 @register_scene_reader('DynamicDigitizer')
 def _dynamic_digitizer_reader(read_func, element):
-    traits = read_base_widget_data(element)
-    traits.update(read_basic_label(element))
-    traits.update(read_axes_set(element))
-    traits.update(read_range_set(element))
+    traits = read_base_plot(element)
     # roi information
     traits['roi_items'] = read_roi_info(element)
     traits['roi_tool'] = int(element.get(NS_KARABO + 'roi_tool', 0))
@@ -181,10 +172,7 @@ def _dynamic_digitizer_reader(read_func, element):
 @register_scene_writer(DynamicDigitizerModel)
 def _dynamic_digitizer_writer(write_func, model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
-    write_base_widget_data(model, element, 'DynamicDigitizer')
-    write_basic_label(model, element)
-    write_axes_set(model, element)
-    write_range_set(model, element)
+    write_base_plot(model, element, 'DynamicDigitizer')
     # roi information
     write_roi_info(model, element)
     element.set(NS_KARABO + 'roi_tool', str(model.roi_tool))
@@ -194,10 +182,7 @@ def _dynamic_digitizer_writer(write_func, model, parent):
 
 @register_scene_reader('DynamicGraph')
 def _dynamic_graph_reader(read_func, element):
-    traits = read_base_widget_data(element)
-    traits.update(read_basic_label(element))
-    traits.update(read_axes_set(element))
-    traits.update(read_range_set(element))
+    traits = read_base_plot(element)
     traits['roi_items'] = read_roi_info(element)
     traits['roi_tool'] = int(element.get(NS_KARABO + 'roi_tool', 0))
     # Number of curves
@@ -209,10 +194,7 @@ def _dynamic_graph_reader(read_func, element):
 @register_scene_writer(DynamicGraphModel)
 def _dynamic_graph_writer(write_func, model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
-    write_base_widget_data(model, element, 'DynamicGraph')
-    write_basic_label(model, element)
-    write_axes_set(model, element)
-    write_range_set(model, element)
+    write_base_plot(model, element, 'DynamicGraph')
     write_roi_info(model, element)
     element.set(NS_KARABO + 'roi_tool', str(model.roi_tool))
     # Number of curves
@@ -285,11 +267,14 @@ def _roi_graph_writer(model, parent):
 
 @register_scene_reader('MetroXasGraph')
 def _metro_xas_graph_reader(element):
-    traits = read_base_widget_data(element)
-    traits.update(read_basic_label(element))
-    traits.update(read_axes_set(element))
-    traits.update(read_range_set(element))
+    traits = read_base_plot(element)
     return MetroXasGraphModel(**traits)
+
+
+@register_scene_writer(MetroXasGraphModel)
+def _metro_xas_graph_writer(write_func, model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_plot(model, element, 'MetroXasGraph')
 
 
 @register_scene_reader('BeamGraph')
@@ -306,21 +291,9 @@ def _beam_graph_writer(model, parent):
     return element
 
 
-@register_scene_writer(MetroXasGraphModel)
-def _metro_xas_graph_writer(write_func, model, parent):
-    element = SubElement(parent, WIDGET_ELEMENT_TAG)
-    write_base_widget_data(model, element, 'MetroXasGraph')
-    write_basic_label(model, element)
-    write_axes_set(model, element)
-    write_range_set(model, element)
-
-
 @register_scene_reader('MetroSecAxisGraph')
 def _metro_secaxis_graph_reader(element):
-    traits = read_base_widget_data(element)
-    traits.update(read_basic_label(element))
-    traits.update(read_axes_set(element))
-    traits.update(read_range_set(element))
+    traits = read_base_plot(element)
     traits['x2_offset'] = float(element.get(NS_KARABO + 'x2_offset', '0'))
     traits['x2_step'] = float(element.get(NS_KARABO + 'x2_step', '1'))
     traits['vline_visible'] = bool(element.get(NS_KARABO + 'vline_visible',
@@ -332,10 +305,7 @@ def _metro_secaxis_graph_reader(element):
 @register_scene_writer(MetroSecAxisGraphModel)
 def _metro_secaxis_graph_writer(write_func, model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
-    write_base_widget_data(model, element, 'MetroSecAxisGraph')
-    write_basic_label(model, element)
-    write_axes_set(model, element)
-    write_range_set(model, element)
+    write_base_plot(model, element, 'MetroSecAxisGraph')
     element.set(NS_KARABO + 'x2_offset', str(model.x2_offset))
     element.set(NS_KARABO + 'x2_step', str(model.x2_step))
     element.set(NS_KARABO + 'vline_visible', str(model.vline_visible))
@@ -344,28 +314,19 @@ def _metro_secaxis_graph_writer(write_func, model, parent):
 
 @register_scene_reader('MetroTwinXGraph')
 def _metro_twinx_graph_reader(element):
-    traits = read_base_widget_data(element)
-    traits.update(read_basic_label(element))
-    traits.update(read_axes_set(element))
-    traits.update(read_range_set(element))
+    traits = read_base_plot(element)
     return MetroTwinXGraphModel(**traits)
 
 
 @register_scene_writer(MetroTwinXGraphModel)
 def _metro_twinx_graph_writer(write_func, model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
-    write_base_widget_data(model, element, 'MetroTwinXGraph')
-    write_basic_label(model, element)
-    write_axes_set(model, element)
-    write_range_set(model, element)
+    write_base_plot(model, element, 'MetroTwinXGraph')
 
 
 @register_scene_reader('ExtendedVectorXYGraph')
 def _extended_vector_xy_reader(read_func, element):
-    traits = read_base_widget_data(element)
-    traits.update(read_basic_label(element))
-    traits.update(read_axes_set(element))
-    traits.update(read_range_set(element))
+    traits = read_base_plot(element)
     legends = element.get(NS_KARABO + 'legends', '')
     if len(legends):
         traits['legends'] = legends.split(',')
@@ -376,10 +337,7 @@ def _extended_vector_xy_reader(read_func, element):
 @register_scene_writer(ExtendedVectorXYGraph)
 def _extended_vector_xy_writer(write_func, model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
-    write_base_widget_data(model, element, 'ExtendedVectorXYGraph')
-    write_basic_label(model, element)
-    write_axes_set(model, element)
-    write_range_set(model, element)
+    write_base_plot(model, element, 'ExtendedVectorXYGraph')
     element.set(NS_KARABO + 'legends', ",".join(model.legends))
     return element
 
