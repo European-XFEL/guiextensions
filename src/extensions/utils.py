@@ -80,3 +80,13 @@ def guess_path(proxy, *, klass, output=False, excluded=tuple()):
                     return proxy_name
 
     return ''
+
+
+def rotate_points(points, origin, angle):
+    x_norm, y_norm = np.subtract(points, origin)
+    sin, cos = np.sin(angle), np.cos(angle)
+
+    x_rot = x_norm * cos - y_norm * sin
+    y_rot = x_norm * sin + y_norm * cos
+
+    return np.add((x_rot, y_rot), origin)
