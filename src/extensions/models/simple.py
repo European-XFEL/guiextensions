@@ -66,6 +66,11 @@ class RoiGraphModel(ImageGraphModel):
     show_scale = Bool(False)
 
 
+class BeamGraphModel(ImageGraphModel):
+    """ A model for the metro ROI graph """
+    show_scale = Bool(False)
+
+
 class MetroZonePlateModel(RoiGraphModel):
     """ A model for the metro ROI graph """
 
@@ -278,6 +283,20 @@ def _metro_xas_graph_reader(element):
     traits.update(read_axes_set(element))
     traits.update(read_range_set(element))
     return MetroXasGraphModel(**traits)
+
+
+@register_scene_reader('BeamGraph')
+def _beam_graph_reader(element):
+    traits = read_base_karabo_image_model(element)
+    return BeamGraphModel(**traits)
+
+
+@register_scene_writer(BeamGraphModel)
+def _beam_graph_writer(model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_widget_data(model, element, 'BeamGraph')
+    write_base_karabo_image_model(model, element)
+    return element
 
 
 @register_scene_writer(MetroXasGraphModel)
