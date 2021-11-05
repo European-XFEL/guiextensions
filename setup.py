@@ -14,6 +14,7 @@ entries = {
         'PulseIdMap = extensions.pulse_info',
         'BeamGraph = extensions.beam_graph',
         'DynamicGraph = extensions.display_dynamic_graph',
+        'RoiGraph = extensions.roi_graph',
         'MetroZonePlate = extensions.metro.zone_plate',
         'MetroXasGraph = extensions.metro.xas_graph',
         'MetroSecAxisGraph = extensions.metro.secaxis_graph',

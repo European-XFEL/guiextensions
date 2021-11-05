@@ -3,41 +3,20 @@
 # Created on August 2021
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from traits.api import Bool, Instance, List, String, Type, on_trait_change
+from traits.api import Instance, List, on_trait_change
 
 from karabogui.binding.api import (
-    FloatBinding, IntBinding, PropertyProxy, VectorNumberBinding,
-    WidgetNodeBinding, get_binding_value)
+    FloatBinding, IntBinding, WidgetNodeBinding, get_binding_value)
 from karabogui.controllers.api import (
     register_binding_controller, with_display_type)
 from karabogui.graph.common.api import AuxPlots, ImageRegion, make_pen
 from karabogui.graph.image.api import ProfileAggregator
-from karabogui.request import send_property_changes
 
 from ..models.simple import MetroZonePlateModel
-from ..roi_graph import BaseRoiGraph, RectRoiController
+from ..roi_graph import BaseRoiGraph, RectRoiProperty
 from ..utils import guess_path
 
 NUMBER_BINDINGS = (IntBinding, FloatBinding)
-
-
-class RectRoiProperty(RectRoiController):
-    path = String
-    proxy = Instance(PropertyProxy)
-    binding_type = Type(VectorNumberBinding)
-    is_waiting = Bool(False)
-
-    def set_proxy(self, path, proxy):
-        if self.path != path:
-            self.path = path
-            self.proxy = PropertyProxy(path=f"{proxy.path}.{path}",
-                                       root_proxy=proxy.root_proxy,)
-
-    @on_trait_change("geometry_updated")
-    def _send_roi(self, value):
-        self.proxy.edit_value = value
-        send_property_changes((self.proxy,))
-        self.is_waiting = True
 
 
 @register_binding_controller(
@@ -156,19 +135,6 @@ class MetroZonePlate(BaseRoiGraph):
                              x_slice=slice(image.shape[1]),
                              y_slice=slice(image.shape[0]))
         self._aux_plots.process(region)
-
-    def _update_roi(self, roi, geometry=None):
-        if geometry is None:
-            roi.is_visible = False
-            return
-
-        if roi.is_waiting:
-            # Check if property has arrived
-            arrived = roi.geometry == tuple(geometry)
-            roi.is_waiting = not arrived
-            return
-
-        roi.set_geometry(geometry, quiet=True)
 
     def _add_roi(self):
         for roi in (self.roi_n, self.roi_0, self.roi_p):
