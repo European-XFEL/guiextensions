@@ -71,6 +71,10 @@ class BeamGraphModel(ImageGraphModel):
     show_scale = Bool(False)
 
 
+class RectRoiGraphModel(RoiGraphModel):
+    """ A model for the Rect ROI graph """
+
+
 class MetroZonePlateModel(RoiGraphModel):
     """ A model for the metro ROI graph """
 
@@ -269,14 +273,28 @@ def _pac_writer(write_func, model, parent):
     return element
 
 
-@register_scene_reader('MetroZonePlate')
+@register_scene_reader('RectRoiGraph')
 def _roi_graph_reader(element):
+    traits = read_base_karabo_image_model(element)
+    return RectRoiGraphModel(**traits)
+
+
+@register_scene_writer(RectRoiGraphModel)
+def _roi_graph_writer(model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_widget_data(model, element, 'RectRoiGraph')
+    write_base_karabo_image_model(model, element)
+    return element
+
+
+@register_scene_reader('MetroZonePlate')
+def _metro_zone_plate_reader(element):
     traits = read_base_karabo_image_model(element)
     return MetroZonePlateModel(**traits)
 
 
 @register_scene_writer(MetroZonePlateModel)
-def _roi_graph_writer(model, parent):
+def _metro_zone_plate_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'MetroZonePlate')
     write_base_karabo_image_model(model, element)

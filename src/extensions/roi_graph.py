@@ -7,20 +7,24 @@ from contextlib import contextmanager
 
 import pyqtgraph as pg
 from traits.api import (
-    Bool, Event, HasStrictTraits, Instance, Property, String, Tuple, WeakRef,
-    cached_property, on_trait_change)
+    Bool, Event, HasStrictTraits, Instance, Property, String, Tuple, Type,
+    WeakRef, cached_property, on_trait_change)
 
 from karabo.common.scenemodel.api import (
     build_graph_config, restore_graph_config)
 from karabo.native import EncodingType
 from karabogui.binding.api import (
-    FloatBinding, ImageBinding, IntBinding, get_binding_value)
-from karabogui.controllers.api import BaseBindingController
+    FloatBinding, ImageBinding, IntBinding, PropertyProxy, VectorNumberBinding,
+    WidgetNodeBinding, get_binding_value)
+from karabogui.controllers.api import (
+    BaseBindingController, register_binding_controller, with_display_type)
 from karabogui.graph.common.api import make_pen
 from karabogui.graph.image.api import (
     KaraboImageNode, KaraboImagePlot, KaraboImageView)
+from karabogui.request import send_property_changes
 from karabogui.util import SignalBlocker
 
+from .models.simple import RectRoiGraphModel
 from .utils import get_node_value, guess_path
 
 NUMBER_BINDINGS = (IntBinding, FloatBinding)
@@ -178,6 +182,25 @@ class RectRoiController(BaseRoiController):
         with self.block_signals(self.roi_item, is_blocked=quiet):
             self.set_size((width, height), update=update)
 
+
+class RectRoiProperty(RectRoiController):
+    path = String
+    proxy = Instance(PropertyProxy)
+    binding_type = Type(VectorNumberBinding)
+    is_waiting = Bool(False)
+
+    def set_proxy(self, path, proxy):
+        if self.path != path:
+            self.path = path
+            self.proxy = PropertyProxy(path=f"{proxy.path}.{path}",
+                                       root_proxy=proxy.root_proxy,)
+
+    @on_trait_change("geometry_updated")
+    def _send_roi(self, value):
+        self.proxy.edit_value = value
+        send_property_changes((self.proxy,))
+        self.is_waiting = True
+
 # --------------------------------------------------------------------------
 
 
@@ -228,6 +251,19 @@ class BaseRoiGraph(BaseBindingController):
     def _set_roi(self, proxy):
         pass
 
+    def _update_roi(self, roi, geometry=None):
+        if geometry is None:
+            roi.is_visible = False
+            return
+
+        if roi.is_waiting:
+            # Check if property has arrived
+            arrived = roi.geometry == tuple(geometry)
+            roi.is_waiting = not arrived
+            return
+
+        roi.set_geometry(geometry, quiet=True)
+
     # ---------------------------------------------------------------------
     # Image changes
 
@@ -265,3 +301,37 @@ class BaseRoiGraph(BaseBindingController):
         else:
             self.widget.remove_colorbar()
             self.widget.disable_aux()
+
+
+@register_binding_controller(
+    ui_name='Rect ROI Graph',
+    klassname='RectRoiGraph',
+    binding_type=WidgetNodeBinding,
+    is_compatible=with_display_type('WidgetNode|RectRoiGraph'),
+    priority=0, can_show_nothing=False)
+class RectRoiGraph(BaseRoiGraph):
+    # Our Image Graph Model
+    model = Instance(RectRoiGraphModel, args=())
+    _roi = Instance(RectRoiProperty, kw={'color': 'r'})
+
+    # -----------------------------------------------------------------------
+    # Binding methods
+
+    def binding_update(self, proxy):
+        super(RectRoiGraph, self).binding_update(proxy)
+        path = guess_path(proxy, klass=self._roi.binding_type)
+        self._roi.set_proxy(path, proxy)
+
+    # -----------------------------------------------------------------------
+    # Qt Slots
+
+    def _set_roi(self, proxy):
+        try:
+            geometry = get_binding_value(getattr(proxy.value, self._roi.path))
+        except AttributeError:
+            geometry = None
+
+        self._update_roi(self._roi, geometry)
+
+    def _add_roi(self):
+        self._roi.add_to(self._plot)
