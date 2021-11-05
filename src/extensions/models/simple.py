@@ -123,6 +123,13 @@ class DynamicGraphModel(BasePlotModel):
     number = Int(10)
 
 
+class ExtendedVectorXYGraph(BasePlotModel):
+    """ A model for the ExtendedVectorXYGraph"""
+    x_grid = Bool(True)
+    y_grid = Bool(True)
+    legends = List(String)
+
+
 # Reader and writers ...
 # --------------------------------------------------------------------------
 
@@ -351,6 +358,30 @@ def _metro_twinx_graph_writer(write_func, model, parent):
     write_basic_label(model, element)
     write_axes_set(model, element)
     write_range_set(model, element)
+
+
+@register_scene_reader('ExtendedVectorXYGraph')
+def _extended_vector_xy_reader(read_func, element):
+    traits = read_base_widget_data(element)
+    traits.update(read_basic_label(element))
+    traits.update(read_axes_set(element))
+    traits.update(read_range_set(element))
+    legends = element.get(NS_KARABO + 'legends', '')
+    if len(legends):
+        traits['legends'] = legends.split(',')
+
+    return ExtendedVectorXYGraph(**traits)
+
+
+@register_scene_writer(ExtendedVectorXYGraph)
+def _extended_vector_xy_writer(write_func, model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_widget_data(model, element, 'ExtendedVectorXYGraph')
+    write_basic_label(model, element)
+    write_axes_set(model, element)
+    write_range_set(model, element)
+    element.set(NS_KARABO + 'legends', ",".join(model.legends))
+    return element
 
 
 # ----------------------------------------------------------------------------
