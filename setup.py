@@ -17,6 +17,7 @@ entries = {
         'MetroXasGraph = extensions.metro.xas_graph',
         'MetroSecAxisGraph = extensions.metro.secaxis_graph',
         'MetroTwinXGraph = extensions.metro.twinx_graph',
+        'ExtendedVectorXYGraph = extensions.extended_vector_xy_graph',
     ],
 }
 
