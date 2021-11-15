@@ -75,7 +75,7 @@ class DisplayDoocsMirrorTable(BaseTableController):
         bindings = self.getBindings()
         # If we are readOnly, we erase all edit delegates
         for column in range(len(bindings)):
-            self.widget.setItemDelegateForColumn(column, None)
+            self.tableWidget().setItemDelegateForColumn(column, None)
         button_delegate = ButtonDelegate()
-        self.widget.setItemDelegateForColumn(MIRROR_SCENELINK_COLUMN,
-                                             button_delegate)
+        self.tableWidget().setItemDelegateForColumn(MIRROR_SCENELINK_COLUMN,
+                                                    button_delegate)
