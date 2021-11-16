@@ -4,7 +4,6 @@
 from qtpy.QtCore import QSortFilterProxyModel, Qt
 from qtpy.QtWidgets import (
     QHBoxLayout, QLineEdit, QPushButton, QVBoxLayout, QWidget)
-
 from traits.api import Instance
 
 from karabogui.binding.api import VectorHashBinding
