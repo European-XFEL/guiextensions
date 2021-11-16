@@ -1,6 +1,9 @@
 #############################################################################
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
+from qtpy.QtCore import QSortFilterProxyModel, Qt
+from qtpy.QtWidgets import (
+    QHBoxLayout, QLineEdit, QPushButton, QVBoxLayout, QWidget)
 from traits.api import Instance
 
 from karabogui.binding.api import VectorHashBinding
@@ -42,12 +45,31 @@ class DisplayDoocsMirrorTable(BaseTableController):
     """The Dynamic display controller for the digitizer"""
     model = Instance(DoocsMirrorTableModel, args=())
 
+    # Other widgets
+    search_label = Instance(QLineEdit)
+
     def create_widget(self, parent):
 
         # get the QTableView
-        widget = super(DisplayDoocsMirrorTable, self).create_widget(parent)
+        table_widget = super(
+            DisplayDoocsMirrorTable, self).create_widget(parent)
 
-        # NOTE: In the future we need to add the widgets for filtering
+        widget = QWidget(parent)
+        widget_layout = QVBoxLayout()
+
+        # search-related widgets
+        search_layout = QHBoxLayout()
+        self.search_label = QLineEdit(widget)
+        clear_button = QPushButton("Clear", parent=widget)
+        clear_button.clicked.connect(self.search_label.clear)
+        search_layout.addWidget(self.search_label)
+        search_layout.addWidget(clear_button)
+
+        # Complete widget layout and return widget
+        widget_layout.addLayout(search_layout)
+        widget_layout.addWidget(table_widget)
+        widget.setLayout(widget_layout)
+
         return widget
 
     def create_delegates(self):
@@ -55,7 +77,19 @@ class DisplayDoocsMirrorTable(BaseTableController):
         bindings = self.getBindings()
         # If we are readOnly, we erase all edit delegates
         for column in range(len(bindings)):
-            self.widget.setItemDelegateForColumn(column, None)
+            self.tableWidget().setItemDelegateForColumn(column, None)
         button_delegate = ButtonDelegate()
-        self.widget.setItemDelegateForColumn(MIRROR_SCENELINK_COLUMN,
-                                             button_delegate)
+        self.tableWidget().setItemDelegateForColumn(MIRROR_SCENELINK_COLUMN,
+                                                    button_delegate)
+
+    def createModel(self, model):
+        """Create the filter model for the table"""
+        filter_model = QSortFilterProxyModel()
+        filter_model.setSourceModel(model)
+        filter_model.setFilterRole(Qt.DisplayRole)
+        filter_model.setFilterCaseSensitivity(False)
+        filter_model.setFilterFixedString("")
+        filter_model.setFilterKeyColumn(0)
+        self.search_label.textChanged.connect(
+            filter_model.setFilterFixedString)
+        return filter_model
