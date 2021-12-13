@@ -141,3 +141,13 @@ def test_dynamic_graph():
     read_model = single_model_round_trip(model)
     _assert_geometry_traits(read_model)
     assert model.number == 30
+
+
+def test_progress_table():
+    traits = {"show_value": True, "value_is_percent": True,
+              "color_by_value": False}
+    model = api.ProgressTableElementModel(**traits)
+    read_model = single_model_round_trip(model)
+    assert model.show_value is True
+    assert model.value_is_percent is True
+    assert model.color_by_value is False
