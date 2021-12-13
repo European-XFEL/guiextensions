@@ -134,6 +134,14 @@ class ExtendedVectorXYGraph(BasePlotModel):
     legends = List(String)
 
 
+class ProgressTableElementModel(BaseWidgetObjectData):
+    """ A model for ProgressTableElement
+    """
+    color_by_value = Bool(True)
+    show_value = Bool(True)
+    value_is_percent = Bool(False)
+
+
 # Reader and writers ...
 # --------------------------------------------------------------------------
 
@@ -357,6 +365,28 @@ def _extended_vector_xy_writer(write_func, model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_plot(model, element, 'ExtendedVectorXYGraph')
     element.set(NS_KARABO + 'legends', ",".join(model.legends))
+    return element
+
+
+@register_scene_reader('ProgressTable')
+def _progress_table_reader(read_func, element):
+    traits = read_base_widget_data(element)
+    show_value = element.get(NS_KARABO + 'show_value')
+    traits["show_value"] = show_value == "True"
+    value_is_percent = element.get(NS_KARABO + 'value_is_percent')
+    traits["value_is_percent"] = value_is_percent == "True"
+    color_by_value = element.get(NS_KARABO + 'color_by_value')
+    traits["color_by_value"] = color_by_value == "True"
+    return ProgressTableElementModel(**traits)
+
+
+@register_scene_writer(ProgressTableElementModel)
+def _progress_table_writer(write_func, model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_widget_data(model, element, 'ProgressTable')
+    element.set(NS_KARABO + 'show_value', str(model.show_value))
+    element.set(NS_KARABO + 'value_is_percent', str(model.value_is_percent))
+    element.set(NS_KARABO + 'color_by_value', str(model.color_by_value))
     return element
 
 
