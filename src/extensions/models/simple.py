@@ -26,6 +26,10 @@ class EditableDateTimeModel(BaseEditWidget):
     time_format = String("yyyy-M-dThh:mm:ss")
 
 
+class HistorianTableModel(BaseWidgetObjectData):
+    """ A model for the Operational Historian Table Element"""
+
+
 class DoocsLocationTableModel(BaseWidgetObjectData):
     """ A model for the Doocs Location"""
 
@@ -148,7 +152,7 @@ class ProgressTableElementModel(BaseWidgetObjectData):
 # Model must have __NAME__Model. Widget must have __NAME__ as class name
 _SIMPLE_WIDGET_MODELS = (
     "IPMQuadrantModel", "DoocsLocationTableModel", "DoocsMirrorTableModel",
-    "PulseIdMapModel", "DynamicPulseIdMapModel")
+    "PulseIdMapModel", "DynamicPulseIdMapModel", "HistorianTableModel")
 
 _SIMPLE_DISPLAY_EDIT_MODELS = ("StateAwareComponentManagerModel",)
 

@@ -151,3 +151,10 @@ def test_progress_table():
     assert model.show_value is True
     assert model.value_is_percent is True
     assert model.color_by_value is False
+
+
+def test_historian_table_model():
+    traits = _geometry_traits()
+    model = api.HistorianTableModel(**traits)
+    read_model = single_model_round_trip(model)
+    _assert_geometry_traits(read_model)
