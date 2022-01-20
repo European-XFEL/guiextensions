@@ -14,8 +14,7 @@ from karabo.common.api import (
     KARABO_SCHEMA_MIN_INC)
 from karabogui.binding.api import VectorHashBinding
 from karabogui.controllers.api import register_binding_controller
-from karabogui.controllers.edit.table import (
-    BaseTableController, _is_compatible)
+from karabogui.controllers.edit.table import BaseTableController
 from karabogui.controllers.table.model import TableModel
 
 from .models.simple import ProgressTableElementModel
@@ -112,7 +111,7 @@ class ProgressTableModel(TableModel):
 @register_binding_controller(ui_name='Progress Table',
                              klassname='ProgressTable', priority=90,
                              binding_type=VectorHashBinding,
-                             is_compatible=_is_compatible)
+                             is_compatible=is_progress_display_type)
 class ProgressTable(BaseTableController):
     """The display version of the table element"""
     model = Instance(ProgressTableElementModel, args=())
