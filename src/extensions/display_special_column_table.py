@@ -16,8 +16,9 @@ from karabogui.binding.api import VectorHashBinding
 from karabogui.controllers.api import register_binding_controller
 from karabogui.controllers.edit.table import BaseTableController
 from karabogui.controllers.table.model import TableModel
+from karabogui.indicators import get_state_color
 
-from .models.simple import ProgressTableElementModel
+from .models.simple import SpecialColumnTableElementModel
 
 BAR_COLOR_NEUTRAL = (112, 173, 255)
 BAR_COLOR_LOW = (173, 255, 175)
@@ -26,10 +27,26 @@ EVEN_ALPHA = 150
 ODD_ALPHA = 255
 EMPTY_COLOR = QColor(255, 255, 255)
 
+ONLINE_TEXT = "ONLINE"
+OFFLINE_TEXT = "OFFLINE"
+# we reuse state colors here for unified UI looks
+ONLINE_COLOR = QColor(*get_state_color("ON"))
+OFFLINE_COLOR = QColor(*get_state_color("ERROR"))
+UNKNOWN_COLOR = QColor(*get_state_color("UNKNOWN"))
+ON_OFF_MAP = {
+    ONLINE_TEXT: ONLINE_COLOR,
+    OFFLINE_TEXT: OFFLINE_COLOR
+}
+
 
 def is_progress_display_type(binding):
     """Return if the display type belongs to a state element"""
-    return binding.display_type == "DisplayProgressBar"
+    return binding.display_type == "TableProgressBar"
+
+
+def is_online_status_display_type(binding):
+    """Return if the display type belongs to a state element"""
+    return binding.display_type == "TableOnlineStatus"
 
 
 def _interpolate_color(value):
@@ -41,7 +58,7 @@ def _interpolate_color(value):
     return r, g, b
 
 
-class ProgressTableModel(TableModel):
+class SpecialColumnTableModel(TableModel):
 
     def __init__(self, binding, set_edit_value, show_value, value_is_percent,
                  color_by_value, parent=None):
@@ -86,6 +103,11 @@ class ProgressTableModel(TableModel):
 
                 gradiant.setColorAt(bar_high, EMPTY_COLOR)
                 return QBrush(gradiant)
+            elif is_online_status_display_type(binding):
+                value = self._data[row][key]
+                color = ON_OFF_MAP.get(value, UNKNOWN_COLOR)
+                return QBrush(color)
+
         elif role == Qt.DisplayRole:
             key = self._header[column]
             binding = self._bindings[key]
@@ -95,6 +117,9 @@ class ProgressTableModel(TableModel):
                     return ""
                 if self.value_is_percent:
                     return f"{value:0.1f} %"
+            elif is_online_status_display_type(binding):
+                # harmonize display to upper value
+                return self._data[row][key]
 
         return super().data(index, role=role)
 
@@ -108,14 +133,18 @@ class ProgressTableModel(TableModel):
         return min_val, max_val
 
 
-@register_binding_controller(ui_name='Progress Table',
-                             klassname='ProgressTable', priority=90,
+def is_table_compatible(binding):
+    return "SpecialColumnTable" == binding.display_type
+
+
+@register_binding_controller(ui_name='SpecialColumn Table',
+                             klassname='SpecialColumnTable', priority=90,
                              binding_type=VectorHashBinding,
-                             is_compatible=is_progress_display_type)
-class ProgressTable(BaseTableController):
+                             is_compatible=is_table_compatible)
+class SpecialColumnTable(BaseTableController):
     """The display version of the table element"""
-    model = Instance(ProgressTableElementModel, args=())
-    _item_model = WeakRef(ProgressTableModel, allow_none=True)
+    model = Instance(SpecialColumnTableElementModel, args=())
+    _item_model = WeakRef(SpecialColumnTableModel, allow_none=True)
 
     def create_widget(self, parent):
         widget = super().create_widget(parent)
@@ -168,7 +197,7 @@ class ProgressTable(BaseTableController):
             self._item_model = None
 
         self._bindings = binding.bindings
-        self._item_model = ProgressTableModel(
+        self._item_model = SpecialColumnTableModel(
             binding, self._on_user_edit, self.model.show_value,
             self.model.value_is_percent, self.model.color_by_value,
             parent=self._table_widget)
