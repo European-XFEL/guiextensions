@@ -143,10 +143,10 @@ def test_dynamic_graph():
     assert model.number == 30
 
 
-def test_progress_table():
+def test_special_column_table():
     traits = {"show_value": True, "value_is_percent": True,
               "color_by_value": False}
-    model = api.ProgressTableElementModel(**traits)
+    model = api.SpecialColumnTableElementModel(**traits)
     read_model = single_model_round_trip(model)
     assert model.show_value is True
     assert model.value_is_percent is True

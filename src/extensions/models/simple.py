@@ -138,8 +138,8 @@ class ExtendedVectorXYGraph(BasePlotModel):
     legends = List(String)
 
 
-class ProgressTableElementModel(BaseWidgetObjectData):
-    """ A model for ProgressTableElement
+class SpecialColumnTableElementModel(BaseWidgetObjectData):
+    """ A model for SpecialColumnTableElement
     """
     color_by_value = Bool(True)
     show_value = Bool(True)
@@ -372,8 +372,8 @@ def _extended_vector_xy_writer(write_func, model, parent):
     return element
 
 
-@register_scene_reader('ProgressTable')
-def _progress_table_reader(read_func, element):
+@register_scene_reader('SpecialColumnTable')
+def _special_column_table_reader(read_func, element):
     traits = read_base_widget_data(element)
     show_value = element.get(NS_KARABO + 'show_value')
     traits["show_value"] = show_value == "True"
@@ -381,13 +381,13 @@ def _progress_table_reader(read_func, element):
     traits["value_is_percent"] = value_is_percent == "True"
     color_by_value = element.get(NS_KARABO + 'color_by_value')
     traits["color_by_value"] = color_by_value == "True"
-    return ProgressTableElementModel(**traits)
+    return SpecialColumnTableElementModel(**traits)
 
 
-@register_scene_writer(ProgressTableElementModel)
-def _progress_table_writer(write_func, model, parent):
+@register_scene_writer(SpecialColumnTableElementModel)
+def _special_column_table_writer(write_func, model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
-    write_base_widget_data(model, element, 'ProgressTable')
+    write_base_widget_data(model, element, 'SpecialColumnTable')
     element.set(NS_KARABO + 'show_value', str(model.show_value))
     element.set(NS_KARABO + 'value_is_percent', str(model.value_is_percent))
     element.set(NS_KARABO + 'color_by_value', str(model.color_by_value))

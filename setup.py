@@ -20,7 +20,7 @@ entries = {
         'MetroSecAxisGraph = extensions.metro.secaxis_graph',
         'MetroTwinXGraph = extensions.metro.twinx_graph',
         'ExtendedVectorXYGraph = extensions.extended_vector_xy_graph',
-        'ProgressTable = extensions.display_progress_table',
+        'SpecialColumn = extensions.display_special_column_table',
         'HistorianTable = extensions.display_historian_table',
     ],
 }
