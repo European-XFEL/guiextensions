@@ -137,13 +137,7 @@ def is_table_compatible(binding):
     return "SpecialColumnTable" == binding.display_type
 
 
-@register_binding_controller(ui_name='SpecialColumn Table',
-                             klassname='SpecialColumnTable', priority=90,
-                             binding_type=VectorHashBinding,
-                             is_compatible=is_table_compatible)
-class SpecialColumnTable(BaseTableController):
-    """The display version of the table element"""
-    model = Instance(SpecialColumnTableElementModel, args=())
+class BaseSpecialColumnTable(BaseTableController):
     _item_model = WeakRef(SpecialColumnTableModel, allow_none=True)
 
     def create_widget(self, parent):
@@ -206,3 +200,13 @@ class SpecialColumnTable(BaseTableController):
         self._table_widget.setModel(model)
         self._table_widget.set_bindings(binding.bindings)
         self.create_delegates()
+
+
+# we cannot register on the Base class, as otherwise it cannot
+# be reused
+@register_binding_controller(ui_name='SpecialColumn Table',
+                             klassname='SpecialColumnTable', priority=90,
+                             binding_type=VectorHashBinding,
+                             is_compatible=is_table_compatible)
+class SpecialColumnTable(BaseSpecialColumnTable):
+    model = Instance(SpecialColumnTableElementModel, args=())

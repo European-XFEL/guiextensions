@@ -12,8 +12,8 @@ from traits.api import Instance
 from karabogui.binding.api import VectorHashBinding
 from karabogui.controllers.api import (
     register_binding_controller, with_display_type)
-from karabogui.controllers.table.api import BaseTableController
 
+from .display_special_column_table import BaseSpecialColumnTable
 from .models.simple import HistorianTableModel
 
 META_DATA_COLUMN = 3
@@ -75,7 +75,7 @@ class HistorianFilterModel(QSortFilterProxyModel):
     binding_type=VectorHashBinding,
     is_compatible=with_display_type("HistorianTable"),
     priority=-10, can_show_nothing=False)
-class DisplayHistorianTable(BaseTableController):
+class DisplayHistorianTable(BaseSpecialColumnTable):
     """The Dynamic display controller for the digitizer"""
     model = Instance(HistorianTableModel, args=())
     searchLabel = Instance(QLineEdit)

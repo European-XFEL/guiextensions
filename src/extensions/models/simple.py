@@ -26,10 +26,6 @@ class EditableDateTimeModel(BaseEditWidget):
     time_format = String("yyyy-M-dThh:mm:ss")
 
 
-class HistorianTableModel(BaseWidgetObjectData):
-    """ A model for the Operational Historian Table Element"""
-
-
 class DoocsLocationTableModel(BaseWidgetObjectData):
     """ A model for the Doocs Location"""
 
@@ -146,13 +142,17 @@ class SpecialColumnTableElementModel(BaseWidgetObjectData):
     value_is_percent = Bool(False)
 
 
+class HistorianTableModel(SpecialColumnTableElementModel):
+    """ A model for the Operational Historian Table Element"""
+
+
 # Reader and writers ...
 # --------------------------------------------------------------------------
 
 # Model must have __NAME__Model. Widget must have __NAME__ as class name
 _SIMPLE_WIDGET_MODELS = (
     "IPMQuadrantModel", "DoocsLocationTableModel", "DoocsMirrorTableModel",
-    "PulseIdMapModel", "DynamicPulseIdMapModel", "HistorianTableModel")
+    "PulseIdMapModel", "DynamicPulseIdMapModel")
 
 _SIMPLE_DISPLAY_EDIT_MODELS = ("StateAwareComponentManagerModel",)
 
@@ -392,6 +392,16 @@ def _special_column_table_writer(write_func, model, parent):
     element.set(NS_KARABO + 'value_is_percent', str(model.value_is_percent))
     element.set(NS_KARABO + 'color_by_value', str(model.color_by_value))
     return element
+
+
+@register_scene_reader('HistorianTableModel')
+def _historian_table_reader(read_func, element):
+    return _special_column_table_reader(read_func, element)
+
+
+@register_scene_writer(HistorianTableModel)
+def _historian_table_writer(write_func, model, parent):
+    return _special_column_table_writer(write_func, model, parent)
 
 
 # ----------------------------------------------------------------------------
