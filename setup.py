@@ -22,6 +22,7 @@ entries = {
         'ExtendedVectorXYGraph = extensions.extended_vector_xy_graph',
         'SpecialColumn = extensions.display_special_column_table',
         'HistorianTable = extensions.display_historian_table',
+        'CriticalCompareView = extensions.display_critical_compare_view',
     ],
 }
 
@@ -36,4 +37,7 @@ setup(
     packages=find_packages('src'),
     entry_points=entries,
     include_package_data=True,
+    package_data={
+        "extensions": ["ui/*.ui"],
+    }
 )
