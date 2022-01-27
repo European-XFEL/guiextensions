@@ -158,3 +158,10 @@ def test_historian_table_model():
     model = api.HistorianTableModel(**traits)
     read_model = single_model_round_trip(model)
     _assert_geometry_traits(read_model)
+
+
+def test_critical_compare_view():
+    traits = _geometry_traits()
+    model = api.CriticalCompareViewModel(**traits)
+    read_model = single_model_round_trip(model)
+    _assert_geometry_traits(read_model)
