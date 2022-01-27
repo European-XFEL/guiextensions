@@ -38,6 +38,6 @@ setup(
     entry_points=entries,
     include_package_data=True,
     package_data={
-        "extensions": ["ui/*.ui"],
+        "extensions": ["dialogs/ui/*.ui"],
     }
 )
