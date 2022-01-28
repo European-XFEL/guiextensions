@@ -18,7 +18,7 @@ from karabogui.graph.common.api import make_pen
 from karabogui.graph.plots.api import (
     KaraboPlotView, generate_baseline, generate_down_sample, get_view_range)
 
-from .models.simple import DynamicDigitizerModel
+from .models.api import DynamicDigitizerModel
 
 
 @register_binding_controller(

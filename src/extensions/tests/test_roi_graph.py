@@ -3,7 +3,7 @@ from unittest import mock
 
 import numpy as np
 
-from extensions.roi_graph import RectRoiGraph
+from extensions.display_roi_graph import RectRoiGraph
 from karabo.native import (
     Configurable, EncodingType, Hash, Image, ImageData, Node, VectorUInt32)
 from karabogui.testing import (
@@ -26,7 +26,7 @@ class Object(Configurable):
     node = Node(OutputNode)
 
 
-@mock.patch('extensions.roi_graph.send_property_changes')
+@mock.patch('extensions.display_roi_graph.send_property_changes')
 @mock.patch.object(RectRoiGraph, '_set_image')
 class TestRectRoiGraph(GuiTestCase):
     def setUp(self):

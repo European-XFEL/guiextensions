@@ -11,7 +11,7 @@ from karabogui.binding.api import WidgetNodeBinding, get_binding_value
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller, with_display_type)
 
-from .models.simple import ScantoolBaseModel
+from .models.api import ScantoolBaseModel
 from .scantool.const import (
     ACTUAL_STEP, ASCANS, CSCANS, CURRENT_INDEX, DSCANS, MOTOR_NAMES, MOTORS,
     SCAN_TYPE, SOURCE_NAMES, SOURCES, START_POSITIONS, STEPS, STOP_POSITIONS)

@@ -9,6 +9,8 @@ from qtpy.QtWidgets import (
     QGraphicsItem, QGroupBox, QVBoxLayout)
 from traits.api import Instance, WeakRef
 
+from extensions.models.metro import MetroSecAxisGraphModel
+from extensions.utils import get_array_data, get_node_value, guess_path
 from karabo.common.scenemodel.api import (
     build_graph_config, restore_graph_config)
 from karabogui.binding.api import (
@@ -19,8 +21,6 @@ from karabogui.controllers.api import (
 from karabogui.graph.common.api import AxisItem
 from karabogui.graph.plots.api import KaraboPlotView, TransformDialog
 
-from ..models.simple import MetroSecAxisGraphModel
-from ..utils import get_array_data, get_node_value, guess_path
 from .utils import PlotData
 
 NUMERICAL_BINDINGS = (BoolBinding, FloatBinding, IntBinding)

@@ -10,7 +10,7 @@ from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller, with_display_type)
 from karabogui.request import send_property_changes
 
-from .models.simple import PointAndClickModel
+from .models.api import PointAndClickModel
 
 
 class CrossesWidget(QWidget):

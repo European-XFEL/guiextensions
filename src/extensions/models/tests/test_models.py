@@ -1,6 +1,6 @@
 from karabo.common.scenemodel.tests.utils import single_model_round_trip
 
-from .. import simple as api
+from .. import api
 
 
 def _geometry_traits():
@@ -148,9 +148,11 @@ def test_special_column_table():
               "color_by_value": False}
     model = api.SpecialColumnTableElementModel(**traits)
     read_model = single_model_round_trip(model)
-    assert model.show_value is True
-    assert model.value_is_percent is True
-    assert model.color_by_value is False
+    # FIXME: The geometry is not preserved in this widget
+    # _assert_geometry_traits(read_model)
+    assert read_model.show_value is True
+    assert read_model.value_is_percent is True
+    assert read_model.color_by_value is False
 
 
 def test_historian_table_model():

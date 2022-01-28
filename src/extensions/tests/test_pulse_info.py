@@ -6,7 +6,7 @@ from karabo.native import AccessMode, Configurable, Hash, Node, VectorBool
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_hash)
 
-from ..pulse_info import (
+from ..display_pulse_info import (
     BRUSH_EMPTY, BRUSH_FEL, PEN_DET, PEN_EMPTY, PulseIdMap, PulsePattern)
 
 

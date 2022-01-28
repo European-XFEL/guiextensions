@@ -14,7 +14,7 @@ from qtpy.QtWidgets import (
     QVBoxLayout)
 from traits.api import Instance, Int, List
 
-from extensions.models.simple import ExtendedVectorXYGraph
+from extensions.models.api import ExtendedVectorXYGraph
 from karabo.common.scenemodel.api import build_model_config
 from karabogui import icons
 from karabogui.binding.api import (
@@ -38,7 +38,7 @@ def _is_compatible(binding):
                              is_compatible=_is_compatible,
                              can_show_nothing=True,
                              priority=-1000)
-class ExtendedVectorXYGraph(BaseBindingController):
+class DisplayExtendedVectorXYGraph(BaseBindingController):
     """The vector xy plot graph class
 
     - First property proxy (dragged) will declare the x axis

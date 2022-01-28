@@ -13,7 +13,7 @@ from karabogui.binding.api import WidgetNodeBinding
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller, with_display_type)
 
-from .models.simple import IPMQuadrantModel
+from .models.api import IPMQuadrantModel
 
 SILVER = QColor(192, 192, 192)
 FIREBRICK = QColor(178, 34, 34)
