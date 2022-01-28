@@ -20,7 +20,7 @@ from karabogui.controllers.api import (
 from karabogui.graph.common.api import create_tool_button, make_pen
 from karabogui.graph.plots.api import KaraboPlotView
 
-from .models.simple import ScatterPositionModel
+from .models.api import ScatterPositionModel
 
 BUTTON_SIZE = (52, 32)
 MAX_NUM_POINTS = 1000

@@ -20,8 +20,8 @@ from karabogui.graph.common.api import KaraboLegend, float_to_string, make_pen
 from karabogui.graph.image.api import (
     KaraboImageNode, KaraboImagePlot, KaraboImageView)
 
-from .models.simple import BeamGraphModel
-from .roi_graph import BaseRoiController
+from .display_roi_graph import BaseRoiController
+from .models.api import BeamGraphModel
 from .utils import get_node_value, rotate_points
 
 FONT_SIZE = get_font_size_from_dpi(8)

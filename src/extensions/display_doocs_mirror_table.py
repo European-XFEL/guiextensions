@@ -13,7 +13,7 @@ from karabogui.controllers.table.api import (
     BaseTableController, TableButtonDelegate)
 from karabogui.request import get_scene_from_server
 
-from .models.simple import DoocsMirrorTableModel
+from .models.api import DoocsMirrorTableModel
 
 MIRROR_SCENELINK_COLUMN = 2
 

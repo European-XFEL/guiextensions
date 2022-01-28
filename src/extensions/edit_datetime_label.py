@@ -15,7 +15,7 @@ from karabogui.controllers.api import (
     with_display_type)
 from karabogui.util import SignalBlocker
 
-from .models.simple import EditableDateTimeModel
+from .models.api import EditableDateTimeModel
 
 
 @register_binding_controller(

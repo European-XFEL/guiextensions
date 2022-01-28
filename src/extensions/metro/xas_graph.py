@@ -8,6 +8,8 @@ from qtpy.QtCore import Qt
 from qtpy.QtGui import QBrush, QColor, QPalette, QPen
 from traits.api import Instance
 
+from extensions.models.metro import MetroXasGraphModel
+from extensions.utils import get_array_data, get_node_value, guess_path
 from karabo.common.scenemodel.api import build_model_config
 from karabogui.binding.api import (
     NDArrayBinding, VectorNumberBinding, WidgetNodeBinding)
@@ -19,8 +21,6 @@ from karabogui.graph.image.aux_plots.base.plot import SHOWN_AXES, AuxPlotItem
 from karabogui.graph.plots.api import (
     KaraboPlotView, VectorBarGraphPlot, generate_down_sample, get_view_range)
 
-from ..models.simple import MetroXasGraphModel
-from ..utils import get_array_data, get_node_value, guess_path
 from .utils import PlotData, add_twinx
 
 

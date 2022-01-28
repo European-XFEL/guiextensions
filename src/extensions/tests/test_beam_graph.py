@@ -1,6 +1,6 @@
 import numpy as np
 
-from extensions.beam_graph import BeamGraph
+from extensions.display_beam_graph import BeamGraph
 from karabo.native import (
     Configurable, Double, EncodingType, Hash, Image, ImageData, Node)
 from karabogui.testing import (

@@ -28,7 +28,7 @@ class Object(Configurable):
     node = Node(AggregatorNode)
 
 
-@mock.patch('extensions.roi_graph.send_property_changes')
+@mock.patch('extensions.display_roi_graph.send_property_changes')
 @mock.patch.object(MetroZonePlate, '_set_image')
 class TestWidgetNode(GuiTestCase):
     def setUp(self):

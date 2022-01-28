@@ -14,7 +14,7 @@ from karabogui.controllers.api import (
     register_binding_controller, with_display_type)
 
 from .display_special_column_table import BaseSpecialColumnTable
-from .models.simple import HistorianTableModel
+from .models.api import HistorianTableModel
 
 META_DATA_COLUMN = 3
 ON_OFF_COLUMN = 2

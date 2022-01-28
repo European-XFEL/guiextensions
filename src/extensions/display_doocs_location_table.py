@@ -13,7 +13,7 @@ from karabogui.controllers.api import (
 from karabogui.controllers.table.api import BaseTableController
 from karabogui.request import call_device_slot
 
-from .models.simple import DoocsLocationTableModel
+from .models.api import DoocsLocationTableModel
 
 
 def request_handler(mirror_id, action, success, reply):

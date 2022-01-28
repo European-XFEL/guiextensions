@@ -18,7 +18,7 @@ from karabogui.controllers.edit.table import BaseTableController
 from karabogui.controllers.table.model import TableModel
 from karabogui.indicators import get_state_color
 
-from .models.simple import SpecialColumnTableElementModel
+from .models.api import SpecialColumnTableElementModel
 
 BAR_COLOR_NEUTRAL = (112, 173, 255)
 BAR_COLOR_LOW = (173, 255, 175)

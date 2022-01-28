@@ -21,7 +21,7 @@ from karabogui.controllers.arrays import get_array_data
 from karabogui.graph.plots.api import (
     KaraboPlotView, generate_baseline, generate_down_sample, get_view_range)
 
-from .models.simple import DynamicGraphModel
+from .models.api import DynamicGraphModel
 
 MAX_CURVES = 20
 START_COLOR = QColor(0, 51, 102)

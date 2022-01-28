@@ -24,7 +24,7 @@ from karabogui.graph.image.api import (
 from karabogui.request import send_property_changes
 from karabogui.util import SignalBlocker
 
-from .models.simple import RectRoiGraphModel
+from .models.api import RectRoiGraphModel
 from .utils import get_node_value, guess_path
 
 NUMBER_BINDINGS = (IntBinding, FloatBinding)

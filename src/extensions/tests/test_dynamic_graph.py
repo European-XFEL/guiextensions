@@ -1,7 +1,7 @@
 from unittest import main, mock
 
 from extensions.display_dynamic_graph import DisplayDynamicGraph
-from extensions.models.simple import DynamicGraphModel
+from extensions.models.plots import DynamicGraphModel
 from karabo.native import AccessMode, Configurable, VectorDouble
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_value)

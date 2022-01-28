@@ -5,6 +5,8 @@
 #############################################################################
 from traits.api import Instance, List, on_trait_change
 
+from extensions.display_roi_graph import BaseRoiGraph, RectRoiProperty
+from extensions.models.metro import MetroZonePlateModel
 from karabogui.binding.api import (
     FloatBinding, IntBinding, WidgetNodeBinding, get_binding_value)
 from karabogui.controllers.api import (
@@ -12,8 +14,6 @@ from karabogui.controllers.api import (
 from karabogui.graph.common.api import AuxPlots, ImageRegion, make_pen
 from karabogui.graph.image.api import ProfileAggregator
 
-from ..models.simple import MetroZonePlateModel
-from ..roi_graph import BaseRoiGraph, RectRoiProperty
 from ..utils import guess_path
 
 NUMBER_BINDINGS = (IntBinding, FloatBinding)

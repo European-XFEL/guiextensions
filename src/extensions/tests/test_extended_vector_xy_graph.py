@@ -2,10 +2,10 @@ from unittest import mock
 
 import numpy as np
 
+from extensions.display_extended_vector_xy_graph import (
+    DisplayExtendedVectorXYGraph)
 from karabo.native import Configurable, VectorUInt32
 from karabogui.testing import GuiTestCase, get_class_property_proxy
-
-from ..extended_vector_xy_graph import ExtendedVectorXYGraph
 
 
 class Object(Configurable):
@@ -23,7 +23,7 @@ class Base(GuiTestCase):
         self.y0_proxy = get_class_property_proxy(schema, 'y0')
         self.y1_proxy = get_class_property_proxy(schema, 'y1')
 
-        self.controller = ExtendedVectorXYGraph(proxy=self.x_proxy)
+        self.controller = DisplayExtendedVectorXYGraph(proxy=self.x_proxy)
         self.controller.create(None)
         self.controller.visualize_additional_property(self.y0_proxy)
         self.controller.visualize_additional_property(self.y1_proxy)
@@ -45,7 +45,7 @@ class Base(GuiTestCase):
         return self.plotItem.legend
 
 
-@mock.patch('extensions.extended_vector_xy_graph.LegendTableDialog')
+@mock.patch('extensions.display_extended_vector_xy_graph.LegendTableDialog')
 class TestLegends(Base):
 
     def test_basics(self, mocked_dialog):
@@ -93,7 +93,7 @@ FIRST_ARRAY = np.vstack((np.arange(10), np.arange(10) ** 2))
 SECOND_ARRAY = np.vstack((np.arange(10, 20), np.arange(10, 20) ** 2))
 
 
-@mock.patch('extensions.extended_vector_xy_graph.getOpenFileName')
+@mock.patch('extensions.display_extended_vector_xy_graph.getOpenFileName')
 class TestPersistentData(Base):
 
     def test_basics(self, mocked_dialog):

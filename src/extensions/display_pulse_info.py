@@ -12,7 +12,7 @@ from karabogui.controllers.api import (
 from karabogui.fonts import get_font_size_from_dpi
 from karabogui.util import generateObjectName
 
-from .models.simple import DynamicPulseIdMapModel, PulseIdMapModel
+from .models.api import DynamicPulseIdMapModel, PulseIdMapModel
 
 GRAY = QColor(178, 178, 178, 60)
 YELLOW = QColor(255, 194, 10, 200)
