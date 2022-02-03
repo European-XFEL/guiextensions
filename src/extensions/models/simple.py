@@ -1,6 +1,6 @@
 from xml.etree.ElementTree import SubElement
 
-from traits.api import Bool, Enum, String
+from traits.api import Enum, String
 
 from karabo.common.scenemodel.api import (
     BaseDisplayEditableWidget, BaseWidgetObjectData)
@@ -57,15 +57,7 @@ class DynamicPulseIdMapModel(BaseWidgetObjectData):
     """A model for the AlignedPulse device"""
 
 
-class SpecialColumnTableElementModel(BaseWidgetObjectData):
-    """ A model for SpecialColumnTableElement
-    """
-    color_by_value = Bool(True)
-    show_value = Bool(True)
-    value_is_percent = Bool(False)
-
-
-class HistorianTableModel(SpecialColumnTableElementModel):
+class HistorianTableModel(BaseWidgetObjectData):
     """ A model for the Operational Historian Table Element"""
 
 
@@ -75,7 +67,8 @@ class HistorianTableModel(SpecialColumnTableElementModel):
 # Model must have __NAME__Model. Widget must have __NAME__ as class name
 _SIMPLE_WIDGET_MODELS = (
     "IPMQuadrantModel", "DoocsLocationTableModel", "DoocsMirrorTableModel",
-    "PulseIdMapModel", "DynamicPulseIdMapModel", "CriticalCompareViewModel")
+    "PulseIdMapModel", "DynamicPulseIdMapModel", "CriticalCompareViewModel",
+    "HistorianTableModel")
 
 _SIMPLE_DISPLAY_EDIT_MODELS = ("StateAwareComponentManagerModel",)
 
@@ -126,38 +119,6 @@ def _pac_writer(write_func, model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, model.klass)
     return element
-
-
-@register_scene_reader('SpecialColumnTable')
-def _special_column_table_reader(read_func, element):
-    traits = read_base_widget_data(element)
-    show_value = element.get(NS_KARABO + 'show_value')
-    traits["show_value"] = show_value == "True"
-    value_is_percent = element.get(NS_KARABO + 'value_is_percent')
-    traits["value_is_percent"] = value_is_percent == "True"
-    color_by_value = element.get(NS_KARABO + 'color_by_value')
-    traits["color_by_value"] = color_by_value == "True"
-    return SpecialColumnTableElementModel(**traits)
-
-
-@register_scene_writer(SpecialColumnTableElementModel)
-def _special_column_table_writer(write_func, model, parent):
-    element = SubElement(parent, WIDGET_ELEMENT_TAG)
-    write_base_widget_data(model, element, 'SpecialColumnTable')
-    element.set(NS_KARABO + 'show_value', str(model.show_value))
-    element.set(NS_KARABO + 'value_is_percent', str(model.value_is_percent))
-    element.set(NS_KARABO + 'color_by_value', str(model.color_by_value))
-    return element
-
-
-@register_scene_reader('HistorianTableModel')
-def _historian_table_reader(read_func, element):
-    return _special_column_table_reader(read_func, element)
-
-
-@register_scene_writer(HistorianTableModel)
-def _historian_table_writer(write_func, model, parent):
-    return _special_column_table_writer(write_func, model, parent)
 
 
 # ----------------------------------------------------------------------------

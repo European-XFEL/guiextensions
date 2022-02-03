@@ -6,14 +6,15 @@
 
 from qtpy.QtCore import QModelIndex, QSortFilterProxyModel, Qt
 from qtpy.QtWidgets import (
-    QComboBox, QHBoxLayout, QLineEdit, QPushButton, QVBoxLayout, QWidget)
+    QComboBox, QHBoxLayout, QLayout, QLineEdit, QPushButton, QVBoxLayout,
+    QWidget)
 from traits.api import Instance
 
 from karabogui.binding.api import VectorHashBinding
 from karabogui.controllers.api import (
     register_binding_controller, with_display_type)
+from karabogui.controllers.table.api import BaseTableController
 
-from .display_special_column_table import BaseSpecialColumnTable
 from .models.api import HistorianTableModel
 
 META_DATA_COLUMN = 3
@@ -27,6 +28,7 @@ OFFLINE_DEVICES = "Offline Devices"
 class HistorianFilterModel(QSortFilterProxyModel):
     """The filter model to filter for online and offline devices
     """
+
     def __init__(self, source_model=None, parent=None):
         super().__init__(parent)
         self.setSourceModel(source_model)
@@ -61,9 +63,9 @@ class HistorianFilterModel(QSortFilterProxyModel):
         if text == ALL_DEVICES:
             self._filter_status = None
         elif text == ONLINE_DEVICES:
-            self._filter_status = "ON"
+            self._filter_status = "ONLINE"
         elif text == OFFLINE_DEVICES:
-            self._filter_status = "OFF"
+            self._filter_status = "OFFLINE"
         else:
             self._filter_status = None
         self.invalidateFilter()
@@ -75,7 +77,7 @@ class HistorianFilterModel(QSortFilterProxyModel):
     binding_type=VectorHashBinding,
     is_compatible=with_display_type("HistorianTable"),
     priority=-10, can_show_nothing=False)
-class DisplayHistorianTable(BaseSpecialColumnTable):
+class DisplayHistorianTable(BaseTableController):
     """The Dynamic display controller for the digitizer"""
     model = Instance(HistorianTableModel, args=())
     searchLabel = Instance(QLineEdit)
@@ -83,11 +85,18 @@ class DisplayHistorianTable(BaseSpecialColumnTable):
 
     def create_widget(self, parent):
         table_widget = super().create_widget(parent)
+        table_widget.setSortingEnabled(True)
+
         widget = QWidget(parent)
 
         widget_layout = QVBoxLayout()
+        widget_layout.setContentsMargins(0, 0, 0, 0)
+        widget_layout.setSizeConstraint(QLayout.SetNoConstraint)
 
         hor_layout = QHBoxLayout()
+        hor_layout.setContentsMargins(0, 0, 0, 0)
+        hor_layout.setSizeConstraint(QLayout.SetNoConstraint)
+
         self.searchLabel = QLineEdit(widget)
         clear_button = QPushButton("Clear", parent=widget)
         clear_button.clicked.connect(self.searchLabel.clear)
