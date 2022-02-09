@@ -12,6 +12,7 @@ Contents:
    whats_new
    gui_scene_development
    gui_widget_development
+   gui_api
 
 Indices and tables
 ==================
