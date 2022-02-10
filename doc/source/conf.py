@@ -1,9 +1,6 @@
 # flake8: noqa
-#!/usr/bin/env python3
+# !/usr/bin/env python3
 # -*- coding: utf-8 -*-
-#
-# FXE-Instrument Control Infrastructure documentation build configuration file, created by
-# sphinx-quickstart on Tue Apr 25 15:46:56 2017.
 #
 # This file is execfile()d with the current directory set to its
 # containing dir.
@@ -57,8 +54,8 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'GUIExtension'
-copyright = '2019, CAS'
-author = 'CAS'
+copyright = 'Controls'
+author = 'Controls'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
