@@ -22,7 +22,7 @@ from karabogui.graph.image.api import (
 
 from .display_roi_graph import BaseRoiController
 from .models.api import BeamGraphModel
-from .utils import get_node_value, rotate_points
+from .utils import get_node_value, reflect_angle, rotate_points
 
 FONT_SIZE = get_font_size_from_dpi(8)
 
@@ -132,7 +132,7 @@ class EllipseNode(BaseRoiController):
     def update(self):
         center = self._proxy_center
         axes = self._proxy_size
-        angle = self._proxy_angle
+        angle = reflect_angle(self._proxy_angle)
 
         x, y = self._calc_position(center=center,
                                    axes=axes,

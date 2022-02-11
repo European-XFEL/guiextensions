@@ -1,6 +1,7 @@
 import numpy as np
 
 from extensions.display_beam_graph import BeamGraph
+from extensions.utils import reflect_angle
 from karabo.native import (
     Configurable, Double, EncodingType, Hash, Image, ImageData, Node)
 from karabogui.testing import (
@@ -91,18 +92,19 @@ class TestBeamGraph(GuiTestCase):
                 "theta": 30}
         self.update_proxy(self.ellipse_proxy, **beam)
 
+        angle = reflect_angle(beam["theta"])
         ellipse = self.controller._ellipse
         self.assertEqual(ellipse.position, (beam["x0"], beam["y0"]))
         self.assertEqual(ellipse.size, (beam["a"], beam["b"]))
-        self.assertEqual(ellipse.angle, beam["theta"])
+        self.assertEqual(ellipse.angle, angle)
         self.assertTrue(ellipse.is_visible)
 
         x0, y0 = ellipse._calc_position(center=(beam["x0"], beam["y0"]),
                                         axes=(beam["a"], beam["b"]),
-                                        angle=np.deg2rad(beam["theta"]))
+                                        angle=np.deg2rad(angle))
         self.assertEqual(ellipse._item_position, (x0, y0))
         self.assertEqual(ellipse._item_size, (beam["a"], beam["b"]))
-        self.assertEqual(ellipse.roi_item.angle(), beam["theta"])
+        self.assertEqual(ellipse.roi_item.angle(), angle)
         self.assertTrue(ellipse.roi_item.isVisible())
 
         crosshair = ellipse.crosshair_item
@@ -110,7 +112,7 @@ class TestBeamGraph(GuiTestCase):
         self.assertEqual((pos[0], pos[1]), (beam["x0"], beam["y0"]))
         size = crosshair.size()
         self.assertEqual((size[0], size[1]), (beam["a"], beam["b"]))
-        self.assertEqual(crosshair.angle(), beam["theta"])
+        self.assertEqual(crosshair.angle(), angle)
         self.assertTrue(crosshair.isVisible())
 
     def test_invalid_beam(self):
@@ -122,15 +124,16 @@ class TestBeamGraph(GuiTestCase):
                 "theta": np.nan}
         self.update_proxy(self.ellipse_proxy, **beam)
 
+        angle = reflect_angle(0)
         ellipse = self.controller._ellipse
         self.assertEqual(ellipse.position, (0, 0))
         self.assertEqual(ellipse.size, (0, 0))
-        self.assertEqual(ellipse.angle, 0)
+        self.assertEqual(ellipse.angle, angle)
         self.assertFalse(ellipse.is_visible)
 
         self.assertEqual(ellipse._item_position, (0, 0))
         self.assertEqual(ellipse._item_size, (0, 0))
-        self.assertEqual(ellipse.roi_item.angle(), 0)
+        self.assertEqual(ellipse.roi_item.angle(), angle)
         self.assertFalse(ellipse.roi_item.isVisible())
 
         crosshair = ellipse.crosshair_item
@@ -138,7 +141,7 @@ class TestBeamGraph(GuiTestCase):
         self.assertEqual((pos[0], pos[1]), (0, 0))
         size = crosshair.size()
         self.assertEqual((size[0], size[1]), (0, 0))
-        self.assertEqual(crosshair.angle(), 0)
+        self.assertEqual(crosshair.angle(), angle)
         self.assertFalse(crosshair.isVisible())
 
     # ---------------------------------------------------------------------

@@ -90,3 +90,8 @@ def rotate_points(points, origin, angle):
     y_rot = x_norm * sin + y_norm * cos
 
     return np.add((x_rot, y_rot), origin)
+
+
+def reflect_angle(angle):
+    """Reflect angle (in degrees) and normalize to range 0-180."""
+    return 180 - (angle + 180) % 180
