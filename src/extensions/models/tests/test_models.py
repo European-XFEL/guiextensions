@@ -143,18 +143,6 @@ def test_dynamic_graph():
     assert model.number == 30
 
 
-def test_special_column_table():
-    traits = {"show_value": True, "value_is_percent": True,
-              "color_by_value": False}
-    model = api.SpecialColumnTableElementModel(**traits)
-    read_model = single_model_round_trip(model)
-    # FIXME: The geometry is not preserved in this widget
-    # _assert_geometry_traits(read_model)
-    assert read_model.show_value is True
-    assert read_model.value_is_percent is True
-    assert read_model.color_by_value is False
-
-
 def test_historian_table_model():
     traits = _geometry_traits()
     model = api.HistorianTableModel(**traits)

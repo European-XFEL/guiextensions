@@ -21,7 +21,6 @@ entries = {
         'RoiGraph = extensions.display_roi_graph',
         'ScatterPosition = extensions.display_scatter_position',
         'ScantoolDynamic = extensions.display_scantool_dynamic',
-        'SpecialColumn = extensions.display_special_column_table',
         'StateAwareComponentManager = extensions.stateaware_component_manager',
     ],
 }
