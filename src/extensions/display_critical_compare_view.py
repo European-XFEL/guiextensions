@@ -17,6 +17,7 @@ from karabogui.controllers.api import (
     register_binding_controller, with_display_type)
 from karabogui.controllers.table.api import BaseTableController
 from karabogui.request import call_device_slot
+from karabogui.util import WeakMethodRef
 
 from .models.api import CriticalCompareViewModel
 
@@ -81,34 +82,33 @@ class DisplayCriticalCompareView(BaseTableController):
             return
 
         menu = QMenu(parent=self.widget)
-
         action_show_changes = menu.addAction("Show Changes")
         action_show_changes.triggered.connect(self.onViewChanges)
         menu.exec(self.tableWidget().viewport().mapToGlobal(pos))
+
+    def request_handler(self, device_id, success, reply):
+        if not success:
+            messagebox.show_error(f"Request for {device_id} timed out.")
+            return
+
+        payload = reply["payload"]
+        if not payload["success"]:
+            reason = payload["reason"]
+            messagebox.show_error(f"Request for {device_id} not "
+                                  f"successful: {reason}.")
+            return
+
+        data = payload["data"]
+        dialog = CompareDialog(title="Critical Comparison View",
+                               data=data)
+        dialog.exec()
 
     def onViewChanges(self):
         index = self.currentIndex()
         if not index.isValid():
             return
 
-        def request_handler(device_id, success, reply):
-            if not success:
-                messagebox.show_error(f"Request for {device_id} timed out.")
-                return
-
-            payload = reply["payload"]
-            if not payload["success"]:
-                reason = payload["reason"]
-                messagebox.show_error(f"Request for {device_id} not "
-                                      f"successful: {reason}.")
-                return
-
-            data = payload["data"]
-            dialog = CompareDialog(title="Critical Comparison View",
-                                   data=data)
-            dialog.exec()
-
         device_id = self.getModelData(index.row(), 0)
-        handler = partial(request_handler, device_id)
+        handler = partial(WeakMethodRef(self.request_handler), device_id)
         call_device_slot(handler, self.getInstanceId(),
                          "requestAction", action="view", deviceId=device_id)
