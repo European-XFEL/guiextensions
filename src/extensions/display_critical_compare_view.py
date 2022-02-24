@@ -2,10 +2,9 @@
 # Author_layout: <dennis.goeries@xfel.eu>
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-
 from functools import partial
 
-from qtpy.QtCore import QSortFilterProxyModel, Qt
+from qtpy.QtCore import QEvent, QObject, QSortFilterProxyModel, Qt
 from qtpy.QtWidgets import (
     QHBoxLayout, QLayout, QLineEdit, QMenu, QPushButton, QVBoxLayout, QWidget)
 from traits.api import Bool, Instance
@@ -34,6 +33,8 @@ class DisplayCriticalCompareView(BaseTableController):
     searchLabel = Instance(QLineEdit)
     hasCustomMenu = Bool(True)
 
+    eventFilter = Instance(QObject)
+
     def create_widget(self, parent):
         table_widget = super().create_widget(parent)
         widget = QWidget(parent)
@@ -57,6 +58,19 @@ class DisplayCriticalCompareView(BaseTableController):
         widget_layout.addWidget(table_widget)
         widget.setLayout(widget_layout)
 
+        class EventFilter(QObject):
+            def __init__(self, controller):
+                super().__init__()
+                self.controller = controller
+
+            def eventFilter(self, obj, event):
+                if event.type() == QEvent.MouseButtonDblClick:
+                    self.controller.onViewChanges()
+                    return True
+                return super().eventFilter(obj, event)
+
+        self.eventFilter = EventFilter(self)
+        table_widget.viewport().installEventFilter(self.eventFilter)
         return widget
 
     def createModel(self, model):
@@ -100,8 +114,8 @@ class DisplayCriticalCompareView(BaseTableController):
 
         data = payload["data"]
         dialog = CompareDialog(title="Critical Comparison View",
-                               data=data)
-        dialog.exec()
+                               data=data, parent=self.widget)
+        dialog.show()
 
     def onViewChanges(self):
         index = self.currentIndex()

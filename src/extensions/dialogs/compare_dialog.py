@@ -64,6 +64,7 @@ class CompareDialog(QDialog):
         super().__init__(parent=parent)
         uic.loadUi(get_dialog_ui("comparison_dialog.ui"), self)
         self.setAttribute(Qt.WA_DeleteOnClose)
+        self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
         self.setModal(False)
         self.ui_title.setText(title)
         for deviceId, config in data.items():
