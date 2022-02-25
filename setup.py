@@ -18,6 +18,7 @@ entries = {
         'MetroTwinXGraph = extensions.metro.twinx_graph',
         'PointAndClick = extensions.point_and_click',
         'PulseIdMap = extensions.display_pulse_info',
+        'RecoveryReportTable = extensions.display_recovery_report_table',
         'RoiGraph = extensions.display_roi_graph',
         'ScatterPosition = extensions.display_scatter_position',
         'ScantoolDynamic = extensions.display_scantool_dynamic',

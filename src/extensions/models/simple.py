@@ -61,6 +61,10 @@ class HistorianTableModel(BaseWidgetObjectData):
     """ A model for the Operational Historian Table Element"""
 
 
+class RecoveryReportTableModel(BaseWidgetObjectData):
+    """A model for the Report Table of the RecoveryPortal"""
+
+
 # Reader and writers ...
 # --------------------------------------------------------------------------
 
@@ -68,7 +72,7 @@ class HistorianTableModel(BaseWidgetObjectData):
 _SIMPLE_WIDGET_MODELS = (
     "IPMQuadrantModel", "DoocsLocationTableModel", "DoocsMirrorTableModel",
     "PulseIdMapModel", "DynamicPulseIdMapModel", "CriticalCompareViewModel",
-    "HistorianTableModel")
+    "HistorianTableModel", "RecoveryReportTableModel")
 
 _SIMPLE_DISPLAY_EDIT_MODELS = ("StateAwareComponentManagerModel",)
 
