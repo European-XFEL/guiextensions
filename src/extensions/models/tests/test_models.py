@@ -155,3 +155,11 @@ def test_critical_compare_view():
     model = api.CriticalCompareViewModel(**traits)
     read_model = single_model_round_trip(model)
     _assert_geometry_traits(read_model)
+
+
+def test_recovery_report_table_model():
+    traits = _geometry_traits()
+
+    model = api.RecoveryReportTableModel(**traits)
+    read_model = single_model_round_trip(model)
+    _assert_geometry_traits(read_model)
