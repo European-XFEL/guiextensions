@@ -1,6 +1,6 @@
 from xml.etree.ElementTree import SubElement
 
-from traits.api import Enum, String
+from traits.api import Bool, Enum, Int, String
 
 from karabo.common.scenemodel.api import (
     BaseDisplayEditableWidget, BaseWidgetObjectData)
@@ -65,14 +65,23 @@ class RecoveryReportTableModel(BaseWidgetObjectData):
     """A model for the Report Table of the RecoveryPortal"""
 
 
+class SelectionTableModel(BaseEditWidget):
+    """A model for the convenience selections in a Table"""
+
+    # True if the table is resizing the columns to contents
+    resizeToContents = Bool(False)
+    filterKeyColumn = Int(0)
+
 # Reader and writers ...
 # --------------------------------------------------------------------------
+
 
 # Model must have __NAME__Model. Widget must have __NAME__ as class name
 _SIMPLE_WIDGET_MODELS = (
     "IPMQuadrantModel", "DoocsLocationTableModel", "DoocsMirrorTableModel",
     "PulseIdMapModel", "DynamicPulseIdMapModel", "CriticalCompareViewModel",
     "HistorianTableModel", "RecoveryReportTableModel")
+
 
 _SIMPLE_DISPLAY_EDIT_MODELS = ("StateAwareComponentManagerModel",)
 
@@ -125,8 +134,31 @@ def _pac_writer(write_func, model, parent):
     return element
 
 
+@register_scene_reader('SelectionTable')
+def _selection_convenience_table_reader(read_func, element):
+    traits = read_base_widget_data(element)
+    # copied from filter table
+    resizeToContents = element.get(NS_KARABO + 'resizeToContents', '')
+    resizeToContents = resizeToContents.lower() == 'true'
+    traits['resizeToContents'] = resizeToContents
+    filterKeyColumn = int(element.get(NS_KARABO + 'filterKeyColumn', 0))
+    traits['filterKeyColumn'] = filterKeyColumn
+    return SelectionTableModel(**traits)
+
+
+@register_scene_writer(SelectionTableModel)
+def _selection_convenience_table_write(write_func, model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_widget_data(model, element, 'SelectionTable')
+    # copied from filter table
+    element.set(NS_KARABO + 'resizeToContents',
+                str(model.resizeToContents).lower())
+    element.set(NS_KARABO + 'filterKeyColumn', str(model.filterKeyColumn))
+    return element
+
 # ----------------------------------------------------------------------------
 # Private
+
 
 def _build_empty_widget_readers_and_writers():
     """ Build readers and writers for the empty widget classes

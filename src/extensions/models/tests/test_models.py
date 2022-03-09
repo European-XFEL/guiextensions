@@ -163,3 +163,10 @@ def test_recovery_report_table_model():
     model = api.RecoveryReportTableModel(**traits)
     read_model = single_model_round_trip(model)
     _assert_geometry_traits(read_model)
+
+
+def test_selection_convenience_table_model():
+    traits = _geometry_traits()
+    model = api.SelectionTableModel(**traits)
+    read_model = single_model_round_trip(model)
+    _assert_geometry_traits(read_model)
