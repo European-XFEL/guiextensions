@@ -22,6 +22,7 @@ entries = {
         'RoiGraph = extensions.display_roi_graph',
         'ScatterPosition = extensions.display_scatter_position',
         'ScantoolDynamic = extensions.display_scantool_dynamic',
+        'SelectionTable = extensions.edit_selection_table',
         'StateAwareComponentManager = extensions.stateaware_component_manager',
     ],
 }
@@ -38,6 +39,6 @@ setup(
     entry_points=entries,
     include_package_data=True,
     package_data={
-        "extensions": ["dialogs/ui/*.ui"],
+        "extensions": ["dialogs/ui/*.ui", "icons/*.svg"],
     }
 )
