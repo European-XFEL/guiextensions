@@ -71,6 +71,7 @@ class SelectionTableModel(BaseEditWidget):
     # True if the table is resizing the columns to contents
     resizeToContents = Bool(False)
     filterKeyColumn = Int(0)
+    sortingEnabled = Bool(False)
 
 # Reader and writers ...
 # --------------------------------------------------------------------------
