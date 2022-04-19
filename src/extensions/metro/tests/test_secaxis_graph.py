@@ -1,7 +1,7 @@
-from unittest import mock
+from pytest import approx
 
 from extensions.metro.secaxis_graph import MetroSecAxisGraph
-from karabo.native import Configurable, Hash, Node, VectorDouble
+from karabo.native import Configurable, Float, Hash, Node, VectorDouble
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_hash)
 
@@ -12,6 +12,7 @@ class VectorOutput(Configurable):
 
 
 class AggregatorNode(Configurable):
+    t0 = Float()
     outputVector = Node(VectorOutput)
 
 
@@ -33,58 +34,42 @@ class TestSecAxisGraph(GuiTestCase):
 
     def test_basics(self):
         secaxis = self.controller._secaxis
-        assert secaxis._offset == 50.45
-        assert secaxis._step == 6.667
+        assert secaxis._offset == 0
 
         vline = self.controller._vline
-        assert vline.value() == -7.5675
-        assert not vline.isVisible()
+        assert vline.item.value() == 0
+        assert not vline.item.isVisible()
 
-    def test_x2_transform(self):
+        action = self._get_controller_action("Show vertical line")
+        assert not action.isChecked()
+
+    def test_vline_value(self):
         # Get the action
-        action = self._get_controller_action("X2-Transformation")
-        self.assertIsNotNone(action)
-
-        offset, step = 3, 2
-        # Trigger the transformation configuration
-        content = {"x2_offset": offset, "x2_step": step}
-        with mock.patch("extensions.metro.secaxis_graph.X2TransformDialog.get",
-                        return_value=(content, True)):
-            action.trigger()
+        set_proxy_hash(self.proxy, Hash('node.t0', 7.57))
+        vline = self.controller._vline
+        assert vline.item.value() == 7.57
+        assert not vline.item.isVisible()
 
         secaxis = self.controller._secaxis
-        assert secaxis._offset == offset
-        assert secaxis._step == step
-        assert self.model.x2_offset == offset
-        assert self.model.x2_step == step
+        assert secaxis._offset == approx(50.46, rel=1e-3)
+        assert secaxis._step == approx(-6.67, rel=1e-3)
 
-    def test_vline(self):
-        # Get the action
-        action = self._get_controller_action("Vertical Line")
-        self.assertIsNotNone(action)
+    def test_vline_visibility(self):
+        action = self._get_controller_action("Show vertical line")
+        action.trigger()
+        assert action.isChecked()
 
-        # Trigger the transformation configuration
-        value, visible = 6, True
-        content = {"vline_value": value, "vline_visible": visible}
-        with mock.patch("extensions.metro.secaxis_graph.VLineDialog.get",
-                        return_value=(content, True)):
-            action.trigger()
-
+        set_proxy_hash(self.proxy, Hash('node.t0', 7.57))
         vline = self.controller._vline
-        assert vline.value() == value
-        assert vline.isVisible() == visible
-        assert self.model.vline_value == value
-        assert self.model.vline_visible == visible
+        assert vline.item.value() == 7.57
+        assert vline.item.isVisible()
+
+        secaxis = self.controller._secaxis
+        assert secaxis._offset == approx(50.46, rel=1e-3)
+        assert secaxis._step == approx(-6.67, rel=1e-3)
 
     # ---------------------------------------------------------------------
     # Helpers
-
-    def update_proxy(self, **kwargs):
-        flattened = {}
-        for key, (x, y) in kwargs.items():
-            flattened[f'node.{key}.x'] = x
-            flattened[f'node.{key}.y0'] = y
-        set_proxy_hash(self.proxy, Hash(flattened))
 
     @property
     def widget(self):
@@ -93,13 +78,6 @@ class TestSecAxisGraph(GuiTestCase):
     @property
     def model(self):
         return self.controller.model
-
-    @property
-    def plot_data(self):
-        controller = self.controller
-        return {'outputStd': controller._std_plot,
-                'outputIo': controller._intensity_plot,
-                'outputCounts': controller._counts_plot}
 
     def _get_controller_action(self, text):
         # Get the x-transformation action

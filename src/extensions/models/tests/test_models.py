@@ -104,18 +104,9 @@ def test_metro_xas_graph_model():
 
 def test_metro_secaxis_graph_model():
     traits = _geometry_traits()
-    traits['x2_offset'] = 50.45
-    traits['x2_step'] = 6.667
-    traits['vline_visible'] = True
-    traits['vline_value'] = -7.5675
-
     model = api.MetroSecAxisGraphModel(**traits)
     read_model = single_model_round_trip(model)
     _assert_geometry_traits(read_model)
-    assert read_model.x2_offset == 50.45
-    assert read_model.x2_step == 6.667
-    assert read_model.vline_visible is True
-    assert read_model.vline_value == -7.5675
 
 
 def test_metro_twinx_graph_model():
