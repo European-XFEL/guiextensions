@@ -9,7 +9,6 @@ from .plots import (
     ScatterPositionModel)
 from .simple import (
     CriticalCompareViewModel, DoocsLocationTableModel, DoocsMirrorTableModel,
-    DynamicPulseIdMapModel, EditableDateTimeModel, HistorianTableModel,
-    IPMQuadrantModel, PointAndClickModel, PulseIdMapModel,
-    RecoveryReportTableModel, ScantoolBaseModel, SelectionTableModel,
-    StateAwareComponentManagerModel)
+    DynamicPulseIdMapModel, EditableDateTimeModel, IPMQuadrantModel,
+    PointAndClickModel, PulseIdMapModel, RecoveryReportTableModel,
+    ScantoolBaseModel, SelectionTableModel, StateAwareComponentManagerModel)

@@ -57,10 +57,6 @@ class DynamicPulseIdMapModel(BaseWidgetObjectData):
     """A model for the AlignedPulse device"""
 
 
-class HistorianTableModel(BaseWidgetObjectData):
-    """ A model for the Operational Historian Table Element"""
-
-
 class RecoveryReportTableModel(BaseWidgetObjectData):
     """A model for the Report Table of the RecoveryPortal"""
 
@@ -81,7 +77,7 @@ class SelectionTableModel(BaseEditWidget):
 _SIMPLE_WIDGET_MODELS = (
     "IPMQuadrantModel", "DoocsLocationTableModel", "DoocsMirrorTableModel",
     "PulseIdMapModel", "DynamicPulseIdMapModel", "CriticalCompareViewModel",
-    "HistorianTableModel", "RecoveryReportTableModel")
+    "RecoveryReportTableModel")
 
 
 _SIMPLE_DISPLAY_EDIT_MODELS = ("StateAwareComponentManagerModel",)
