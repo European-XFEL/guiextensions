@@ -10,7 +10,6 @@ entries = {
         'DynamicDigitizer = extensions.display_dynamic_digitizer',
         'DynamicGraph = extensions.display_dynamic_graph',
         'ExtendedVectorXYGraph = extensions.display_extended_vector_xy_graph',
-        'HistorianTable = extensions.display_historian_table',
         'IPMQuadrant = extensions.display_ipm_quadrant',
         'MetroZonePlate = extensions.metro.zone_plate',
         'MetroXasGraph = extensions.metro.xas_graph',
