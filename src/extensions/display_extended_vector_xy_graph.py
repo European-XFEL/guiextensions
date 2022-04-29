@@ -133,28 +133,17 @@ class DisplayExtendedVectorXYGraph(BaseBindingController):
                     # since proxy is used as key for stored curves, before
                     # getting the previous values from the proxy, we have to
                     # check for Undefined
-                    y_val = get_binding_value(p, [])
-                    if len(value) == len(y_val):
-                        rect = get_view_range(c)
-                        x, y = generate_down_sample(y_val, x=value, rect=rect,
-                                                    deviation=False)
-                        c.setData(x, y)
-
-                    else:
-                        c.setData([], [])
+                    self._plot_data(x=value,
+                                    y=get_binding_value(p, []),
+                                    curve=c)
             else:
                 curve = self._curves.get(proxy, None)
                 if curve is None:
                     # Note: This can happen on start up ...
                     return
-                x_val = get_binding_value(self.proxy, [])
-                if len(value) == len(x_val):
-                    rect = get_view_range(curve)
-                    x, y = generate_down_sample(value, x=x_val, rect=rect,
-                                                deviation=False)
-                    curve.setData(x, y)
-                else:
-                    curve.setData([], [])
+                self._plot_data(x=get_binding_value(self.proxy, []),
+                                y=value,
+                                curve=curve)
 
     # ----------------------------------------------------------------
     # Qt Slots
@@ -312,6 +301,17 @@ class DisplayExtendedVectorXYGraph(BaseBindingController):
         if restore_persistent:
             for curve in persistent_curves:
                 self.widget.plotItem.addItem(curve)
+
+    @staticmethod
+    def _plot_data(*, x, y, curve):
+        size = min(len(x), len(y))
+        if size == 0:
+            curve.setData([], [])
+            return
+
+        rect = get_view_range(curve)
+        curve.setData(*generate_down_sample(y[:size], x=x[:size], rect=rect,
+                                            deviation=False))
 
 
 class LegendTableDialog(QDialog):
