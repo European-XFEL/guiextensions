@@ -1,11 +1,13 @@
 from unittest import mock
 
 import numpy as np
+from numpy.testing import assert_array_equal
 
 from extensions.display_extended_vector_xy_graph import (
-    DEFAULT_LEGEND_PREFIX, DisplayExtendedVectorXYGraph)
+    DisplayExtendedVectorXYGraph)
 from karabo.native import Configurable, VectorUInt32
-from karabogui.testing import GuiTestCase, get_class_property_proxy
+from karabogui.testing import (
+    GuiTestCase, get_class_property_proxy, set_proxy_value)
 
 
 class Object(Configurable):
@@ -43,6 +45,107 @@ class Base(GuiTestCase):
     @property
     def legend_item(self):
         return self.plotItem.legend
+
+
+class TestCurves(Base):
+
+    def test_basics(self):
+        x = np.arange(10)
+        set_proxy_value(self.x_proxy, 'x', x)
+        set_proxy_value(self.y0_proxy, 'y0', x * 2)
+        set_proxy_value(self.y1_proxy, 'y1', x * 3)
+
+        y0_curve = self.controller._curves[self.y0_proxy]
+        assert_array_equal(y0_curve.xData, x)
+        assert_array_equal(y0_curve.yData, x * 2)
+
+        y1_curve = self.controller._curves[self.y1_proxy]
+        assert_array_equal(y1_curve.xData, x)
+        assert_array_equal(y1_curve.yData, x * 3)
+
+    def test_longer_y0(self):
+        x = np.arange(10)
+        set_proxy_value(self.x_proxy, 'x', x)
+        set_proxy_value(self.y0_proxy, 'y0', np.arange(11) * 2)
+        set_proxy_value(self.y1_proxy, 'y1', x * 3)
+
+        y0_curve = self.controller._curves[self.y0_proxy]
+        assert_array_equal(y0_curve.xData, x)
+        assert_array_equal(y0_curve.yData, x * 2)
+
+        y1_curve = self.controller._curves[self.y1_proxy]
+        assert_array_equal(y1_curve.xData, x)
+        assert_array_equal(y1_curve.yData, x * 3)
+
+    def test_longer_y1(self):
+        x = np.arange(10)
+        set_proxy_value(self.x_proxy, 'x', x)
+        set_proxy_value(self.y0_proxy, 'y0', x * 2)
+        set_proxy_value(self.y1_proxy, 'y1', np.arange(11) * 3)
+
+        y0_curve = self.controller._curves[self.y0_proxy]
+        assert_array_equal(y0_curve.xData, x)
+        assert_array_equal(y0_curve.yData, x * 2)
+
+        y1_curve = self.controller._curves[self.y1_proxy]
+        assert_array_equal(y1_curve.xData, x)
+        assert_array_equal(y1_curve.yData, x * 3)
+
+    def test_longer_x(self):
+        x = np.arange(10)
+        set_proxy_value(self.x_proxy, 'x', np.arange(11))
+        set_proxy_value(self.y0_proxy, 'y0', x * 2)
+        set_proxy_value(self.y1_proxy, 'y1', x * 3)
+
+        y0_curve = self.controller._curves[self.y0_proxy]
+        assert_array_equal(y0_curve.xData, x)
+        assert_array_equal(y0_curve.yData, x * 2)
+
+        y1_curve = self.controller._curves[self.y1_proxy]
+        assert_array_equal(y1_curve.xData, x)
+        assert_array_equal(y1_curve.yData, x * 3)
+
+    def test_empty_y0(self):
+        x = np.arange(10)
+        set_proxy_value(self.x_proxy, 'x', x)
+        set_proxy_value(self.y0_proxy, 'y0', np.array([]))
+        set_proxy_value(self.y1_proxy, 'y1', x * 3)
+
+        y0_curve = self.controller._curves[self.y0_proxy]
+        assert_array_equal(y0_curve.xData, [])
+        assert_array_equal(y0_curve.yData, [])
+
+        y1_curve = self.controller._curves[self.y1_proxy]
+        assert_array_equal(y1_curve.xData, x)
+        assert_array_equal(y1_curve.yData, x * 3)
+
+    def test_empty_y1(self):
+        x = np.arange(10)
+        set_proxy_value(self.x_proxy, 'x', x)
+        set_proxy_value(self.y0_proxy, 'y0', x * 2)
+        set_proxy_value(self.y1_proxy, 'y1', np.array([]))
+
+        y0_curve = self.controller._curves[self.y0_proxy]
+        assert_array_equal(y0_curve.xData, x)
+        assert_array_equal(y0_curve.yData, x * 2)
+
+        y1_curve = self.controller._curves[self.y1_proxy]
+        assert_array_equal(y1_curve.xData, [])
+        assert_array_equal(y1_curve.yData, [])
+
+    def test_empty_x(self):
+        x = np.arange(10)
+        set_proxy_value(self.x_proxy, 'x', np.array([]))
+        set_proxy_value(self.y0_proxy, 'y0', x * 2)
+        set_proxy_value(self.y1_proxy, 'y1', x * 3)
+
+        y0_curve = self.controller._curves[self.y0_proxy]
+        assert_array_equal(y0_curve.xData, [])
+        assert_array_equal(y0_curve.yData, [])
+
+        y1_curve = self.controller._curves[self.y1_proxy]
+        assert_array_equal(y1_curve.xData, [])
+        assert_array_equal(y1_curve.yData, [])
 
 
 @mock.patch('extensions.display_extended_vector_xy_graph.LegendTableDialog')
