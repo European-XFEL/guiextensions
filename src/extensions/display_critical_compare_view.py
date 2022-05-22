@@ -16,7 +16,11 @@ from karabogui.controllers.api import (
     register_binding_controller, with_display_type)
 from karabogui.controllers.table.api import BaseTableController
 from karabogui.request import call_device_slot
-from karabogui.util import WeakMethodRef
+
+try:
+    from karabogui.util import WeakMethodRef
+except ImportError:
+    from karabo.common.api import WeakMethodRef
 
 from .models.api import CriticalCompareViewModel
 
