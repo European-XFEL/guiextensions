@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QGridLayout, QVBoxLayout, QWidget
+from qtpy.QtWidgets import QGridLayout, QVBoxLayout, QWidget
 
 
 def get_container(parent, layout=None):

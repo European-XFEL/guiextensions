@@ -1,7 +1,7 @@
 import os
 
-from PyQt5 import uic
-from PyQt5.QtCore import pyqtSlot
+from qtpy import uic
+from qtpy.QtCore import Slot
 
 from karabogui.util import SignalBlocker
 
@@ -61,7 +61,7 @@ class XYDataSelectionWidget(BaseSelectionWidget):
     # ---------------------------------------------------------------------
     # Qt slots
 
-    @pyqtSlot(int, bool)
+    @Slot(int, bool)
     def _checkboxes_clicked(self, index):
         checked = [checkbox.isChecked() for checkbox in
                    self._checkboxes[:len(self._sources)]]
@@ -74,7 +74,7 @@ class XYDataSelectionWidget(BaseSelectionWidget):
         y_data = self._source_ids[index]
         self.changed.emit({changes: [{X_DATA: x_data, Y_DATA: y_data}]})
 
-    @pyqtSlot(int)
+    @Slot(int)
     def _x_axis_changed(self, index):
         # 1. Get relevant values
         x_current = self._motor_ids[self._current_index]

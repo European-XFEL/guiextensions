@@ -1,8 +1,8 @@
 import os
 
-from PyQt5 import uic
-from PyQt5.QtCore import pyqtSlot
-from PyQt5.QtWidgets import QButtonGroup
+from qtpy import uic
+from qtpy.QtCore import Slot
+from qtpy.QtWidgets import QButtonGroup
 
 from karabogui.util import SignalBlocker
 
@@ -71,7 +71,7 @@ class ImageDataSelectionWidget(BaseSelectionWidget):
     # ---------------------------------------------------------------------
     # Qt slots
 
-    @pyqtSlot(int, bool)
+    @Slot(int, bool)
     def _checkboxes_clicked(self, index):
         # Do not do anything if same index is clicked
         if index == self._current_index:
@@ -91,7 +91,7 @@ class ImageDataSelectionWidget(BaseSelectionWidget):
         self._current_index = index
         self.changed.emit({REMOVE: removed, ADD: added})
 
-    @pyqtSlot(int)
+    @Slot(int)
     def _x_axis_changed(self, x_index):
         """Changes for the x- and y-axis are coupled, and this method contains
            the logic for both changes."""
@@ -109,7 +109,7 @@ class ImageDataSelectionWidget(BaseSelectionWidget):
 
         self.changed.emit({REMOVE: removed, ADD: added})
 
-    @pyqtSlot(int)
+    @Slot(int)
     def _y_axis_changed(self, index):
         """Changes for the x- and y-axis are coupled, so when the y-axis is
            changed, we just change the x-axis and let the logic there dictate
