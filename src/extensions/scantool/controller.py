@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QGridLayout, QWidget
+from qtpy.QtWidgets import QGridLayout, QWidget
 from traits.api import Dict, Event, HasStrictTraits, Instance, on_trait_change
 
 from .const import (

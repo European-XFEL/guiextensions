@@ -1,7 +1,7 @@
 from unittest import skip
 
 import numpy as np
-from PyQt5.QtWidgets import QWidget
+from qtpy.QtWidgets import QWidget
 from traits.api import Bool
 
 from karabogui.testing import GuiTestCase

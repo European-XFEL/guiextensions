@@ -1,5 +1,5 @@
 import numpy as np
-from PyQt5.QtWidgets import QWidget
+from qtpy.QtWidgets import QWidget
 from traits.api import Array, HasStrictTraits, Instance
 
 from karabogui.graph.image.api import KaraboImageView

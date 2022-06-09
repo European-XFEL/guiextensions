@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QWidget
+from qtpy.QtWidgets import QWidget
 from traits.api import Event, HasStrictTraits, Instance
 
 from ..selection.image_data import ImageDataSelectionWidget
@@ -16,7 +16,7 @@ class DataSelectionController(HasStrictTraits):
     def __init__(self, parent=None):
         super(DataSelectionController, self).__init__()
         self.widget = get_container(parent)
-        self.widget.setFixedWidth(280)
+        self.widget.setFixedWidth(250)
 
     # ---------------------------------------------------------------------
     # Public methods
