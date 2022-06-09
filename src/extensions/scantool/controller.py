@@ -2,8 +2,9 @@ from PyQt5.QtWidgets import QGridLayout, QWidget
 from traits.api import Dict, Event, HasStrictTraits, Instance, on_trait_change
 
 from .const import (
-    A4SCAN_CONFIG, ACTUAL_STEP, ADD, CURRENT_INDEX, MOTORS, REMOVE, SCAN_TYPE,
-    SOURCES, START_POSITIONS, STEPS, STOP_POSITIONS, X_DATA, Y_DATA, Z_DATA)
+    A4SCAN_CONFIG, ACTUAL_STEP, ADD, CURRENT_INDEX, MOTOR_IDS, MOTORS, REMOVE,
+    SCAN_TYPE, SOURCE_IDS, SOURCES, START_POSITIONS, STEPS, STOP_POSITIONS,
+    X_DATA, Y_DATA, Z_DATA)
 from .data.scan import Scan
 from .plots.base import BasePlot
 from .plots.heatmap import HeatmapPlot
@@ -42,6 +43,8 @@ class ScanController(HasStrictTraits):
         self.scan = Scan(scan_type=config[SCAN_TYPE],
                          motors=config[MOTORS],
                          data_sources=config[SOURCES],
+                         motor_ids=config[MOTOR_IDS],
+                         data_source_ids=config[SOURCE_IDS],
                          actual_step=config[ACTUAL_STEP],
                          steps=config[STEPS],
                          current_index=config[CURRENT_INDEX],
@@ -66,19 +69,19 @@ class ScanController(HasStrictTraits):
         # Check if previously selected devices are present in the new scan.
         # Remove from the config if not.
         for conf in config[:]:
-            if (conf[X_DATA] not in self.scan.motors
-                    or conf[Y_DATA] not in self.scan.data_sources):
+            if (conf[X_DATA] not in self.scan.motor_ids
+                    or conf[Y_DATA] not in self.scan.data_source_ids):
                 config.remove(conf)
 
         if not config:
             # Set up default plot config by using pos0 as x_data
             # and others as y_data
-            x_data = self.scan.motors[0]
-            sources = self.scan.data_sources
+            x_data = self.scan.motor_ids[0]
+            source_ids = self.scan.data_source_ids
 
             # Populate the plot by specifying x_data and y_data
             self._config[MultiCurvePlot] = [
-                {X_DATA: x_data, Y_DATA: y_data} for y_data in sources]
+                {X_DATA: x_data, Y_DATA: y_data} for y_data in source_ids]
 
         return self._use_plot(MultiCurvePlot)
 
@@ -93,17 +96,17 @@ class ScanController(HasStrictTraits):
         # Check if previously selected devices are present in the new scan.
         # Remove from the config if not.
         for conf in config[:]:
-            if (conf[X_DATA] not in self.scan.motors
-                    or conf[Y_DATA] not in self.scan.motors
-                    or conf[Z_DATA] not in self.scan.data_sources):
+            if (conf[X_DATA] not in self.scan.motor_ids
+                    or conf[Y_DATA] not in self.scan.motor_ids
+                    or conf[Z_DATA] not in self.scan.data_source_ids):
                 config.remove(conf)
 
         # Prepare a default config
         if not config:
             self._config[HeatmapPlot] = [{
-                X_DATA: self.scan.motors[1],
-                Y_DATA: self.scan.motors[0],
-                Z_DATA: self.scan.data_sources[0]}]
+                X_DATA: self.scan.motor_ids[1],
+                Y_DATA: self.scan.motor_ids[0],
+                Z_DATA: self.scan.data_source_ids[0]}]
 
         return self._use_plot(HeatmapPlot)
 
@@ -162,7 +165,7 @@ class ScanController(HasStrictTraits):
                 for axis, device_name in config.items()}
 
     def _map_to_names(self, config):
-        return {axis: device.name for axis, device in config.items()}
+        return {axis: device.device_id for axis, device in config.items()}
 
     # ---------------------------------------------------------------------
     # trait handlers
@@ -178,8 +181,11 @@ class ScanController(HasStrictTraits):
                 raise NotImplementedError("Plot type not implemented yet.")
 
             # Check if devices are changed completely
-            self._data_selection.set_devices(motors=self.scan.motors,
-                                             sources=self.scan.data_sources)
+            self._data_selection.set_devices(
+                motors=self.scan.motors,
+                sources=self.scan.data_sources,
+                motor_ids=self.scan.motor_ids,
+                source_ids=self.scan.data_source_ids)
             self._data_selection.set_config(self._config[plot_type])
 
     @on_trait_change("scan:current_index")

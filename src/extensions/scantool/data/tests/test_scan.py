@@ -3,8 +3,8 @@ from unittest import TestCase
 import numpy as np
 
 from ...const import (
-    ACTUAL_STEP, CURRENT_INDEX, MOTORS, SCAN_TYPE, SOURCES, START_POSITIONS,
-    STEPS, STOP_POSITIONS)
+    ACTUAL_STEP, CURRENT_INDEX, MOTOR_IDS, MOTORS, SCAN_TYPE, SOURCE_IDS,
+    SOURCES, START_POSITIONS, STEPS, STOP_POSITIONS)
 from ...tests.confs import A2SCAN_CONFIG, ASCAN_CONFIG, MESH_CONFIG
 from ..scan import Scan
 
@@ -20,6 +20,8 @@ class TestScan(TestCase):
         scan = Scan(scan_type=config[SCAN_TYPE],
                     motors=config[MOTORS],
                     data_sources=config[SOURCES],
+                    motor_ids=config[MOTOR_IDS],
+                    data_source_ids=config[SOURCE_IDS],
                     actual_step=config[ACTUAL_STEP],
                     steps=config[STEPS],
                     current_index=config[CURRENT_INDEX],

@@ -287,7 +287,7 @@ class TestPersistentData(Base):
             assert curve not in self.plotItem.items
 
     @staticmethod
-    def _mock_npz( **data):
+    def _mock_npz(**data):
         mocked_npz = mock.MagicMock()
         mocked_npz.keys.side_effect = data.keys
         mocked_npz.items.side_effect = data.items

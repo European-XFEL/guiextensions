@@ -36,28 +36,29 @@ class ImageDataSelectionWidget(BaseSelectionWidget):
     # ---------------------------------------------------------------------
     # Public methods
 
-    def set_motors(self, motors):
+    def set_motors(self, motors, motor_ids):
         with SignalBlocker(self.ui_x_combobox):
             self.ui_x_combobox.clear()
-            self.ui_x_combobox.addItems(motors)
+            self.ui_x_combobox.addItems(motor_ids)
 
         with SignalBlocker(self.ui_y_combobox):
             self.ui_y_combobox.clear()
-            self.ui_y_combobox.addItems(motors)
+            self.ui_y_combobox.addItems(motor_ids)
             self.ui_y_combobox.setCurrentIndex(1)
 
         self._motors = motors
+        self._motor_ids = motor_ids
 
     def set_config(self, config):
         # 1. Images only have one config
         config = config[0]
 
         # 2. Setup widgets to indicate current config
-        x_index = self._motors.index(config[X_DATA])
+        x_index = self._motor_ids.index(config[X_DATA])
         with SignalBlocker(self.ui_x_combobox):
             self.ui_x_combobox.setCurrentIndex(x_index)
 
-        y_index = self._motors.index(config[Y_DATA])
+        y_index = self._motor_ids.index(config[Y_DATA])
         with SignalBlocker(self.ui_y_combobox):
             self.ui_y_combobox.setCurrentIndex(y_index)
 
@@ -76,16 +77,16 @@ class ImageDataSelectionWidget(BaseSelectionWidget):
         if index == self._current_index:
             return
 
-        x_data = self._motors[self.ui_x_combobox.currentIndex()]
-        y_data = self._motors[self.ui_y_combobox.currentIndex()]
+        x_data = self._motor_ids[self.ui_x_combobox.currentIndex()]
+        y_data = self._motor_ids[self.ui_y_combobox.currentIndex()]
 
         removed = [{X_DATA: x_data,
                     Y_DATA: y_data,
-                    Z_DATA: self._sources[self._current_index]}]
+                    Z_DATA: self._source_ids[self._current_index]}]
 
         added = [{X_DATA: x_data,
                   Y_DATA: y_data,
-                  Z_DATA: self._sources[index]}]
+                  Z_DATA: self._source_ids[index]}]
 
         self._current_index = index
         self.changed.emit({REMOVE: removed, ADD: added})
@@ -99,9 +100,9 @@ class ImageDataSelectionWidget(BaseSelectionWidget):
         with SignalBlocker(self.ui_y_combobox):
             self.ui_y_combobox.setCurrentIndex(y_index)
 
-        x_data = self._motors[x_index]
-        y_data = self._motors[y_index]
-        z_data = self._sources[self._current_index]
+        x_data = self._motor_ids[x_index]
+        y_data = self._motor_ids[y_index]
+        z_data = self._source_ids[self._current_index]
 
         removed = [{X_DATA: y_data, Y_DATA: x_data, Z_DATA: z_data}]
         added = [{X_DATA: x_data, Y_DATA: y_data, Z_DATA: z_data}]

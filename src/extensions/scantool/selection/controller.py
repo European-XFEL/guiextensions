@@ -16,7 +16,7 @@ class DataSelectionController(HasStrictTraits):
     def __init__(self, parent=None):
         super(DataSelectionController, self).__init__()
         self.widget = get_container(parent)
-        self.widget.setFixedWidth(150)
+        self.widget.setFixedWidth(280)
 
     # ---------------------------------------------------------------------
     # Public methods
@@ -27,15 +27,15 @@ class DataSelectionController(HasStrictTraits):
     def use_image_selection(self):
         self._use_selection(ImageDataSelectionWidget)
 
-    def set_devices(self, motors, sources):
+    def set_devices(self, motors, sources, motor_ids, source_ids):
         if self._selection_widget is None:
             return
 
         # Bookkeep the changes in the selection such that it is persistent
         # on the next scans (with the same config
 
-        self._selection_widget.set_motors(motors)
-        self._selection_widget.set_sources(sources)
+        self._selection_widget.set_motors(motors, motor_ids)
+        self._selection_widget.set_sources(sources, source_ids)
 
     def set_config(self, config):
         if self._selection_widget is None:

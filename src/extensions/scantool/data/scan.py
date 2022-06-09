@@ -22,6 +22,8 @@ class Scan(HasStrictTraits):
     motors = Property(ListStr, depends_on="_motors")
     data_sources = Property(ListStr, depends_on="_data_sources")
 
+    motor_ids = Property(List(Str))
+    data_source_ids = Property(List(Str))
     start_positions = Property(Array)
     stop_positions = Property(Array)
 
@@ -69,6 +71,22 @@ class Scan(HasStrictTraits):
         self._data_sources = [DataSource(name=name) for name in names]
 
     @cached_property
+    def _get_motor_ids(self):
+        return [motor.device_id for motor in self._motors]
+
+    def _set_motor_ids(self, motor_ids):
+        for motor_id, motor in zip(motor_ids, self._motors):
+            motor.device_id = motor_id
+
+    @cached_property
+    def _get_data_source_ids(self):
+        return [source.device_id for source in self._data_sources]
+
+    def _set_data_source_ids(self, data_source_ids):
+        for source_id, source in zip(data_source_ids, self._data_sources):
+            source.device_id = source_id
+
+    @cached_property
     def _get_start_positions(self):
         return [motor.start_position for motor in self._motors]
 
@@ -85,8 +103,8 @@ class Scan(HasStrictTraits):
             motor.stop_position = pos
 
     def get_device(self, name):
-        if name in self.motors:
-            return self._motors[self.motors.index(name)]
+        if name in self.motor_ids:
+            return self._motors[self.motor_ids.index(name)]
 
-        if name in self.data_sources:
-            return self._data_sources[self.data_sources.index(name)]
+        if name in self.data_source_ids:
+            return self._data_sources[self.data_source_ids.index(name)]
