@@ -28,12 +28,13 @@ class XYDataSelectionWidget(BaseSelectionWidget):
     # ---------------------------------------------------------------------
     # Public methods
 
-    def set_motors(self, motors):
+    def set_motors(self, motors, motor_ids):
         with SignalBlocker(self.ui_x_combobox):
             self.ui_x_combobox.clear()
-            self.ui_x_combobox.addItems(motors)
+            self.ui_x_combobox.addItems(motor_ids)
 
         self._motors = motors
+        self._motor_ids = motor_ids
 
     def set_config(self, config):
         # 1. Collapse to unique device names
@@ -49,7 +50,7 @@ class XYDataSelectionWidget(BaseSelectionWidget):
             return
 
         # 3. Setup widgets to indicate current config
-        x_index = self._motors.index(next(iter(x_data)))
+        x_index = self._motor_ids.index(next(iter(x_data)))
         with SignalBlocker(self.ui_x_combobox):
             self.ui_x_combobox.setCurrentIndex(x_index)
             self._current_index = x_index
@@ -69,15 +70,15 @@ class XYDataSelectionWidget(BaseSelectionWidget):
             return
 
         changes = ADD if self._checkboxes[index].isChecked() else REMOVE
-        x_data = self._motors[self.ui_x_combobox.currentIndex()]
-        y_data = self._sources[index]
+        x_data = self._motor_ids[self.ui_x_combobox.currentIndex()]
+        y_data = self._source_ids[index]
         self.changed.emit({changes: [{X_DATA: x_data, Y_DATA: y_data}]})
 
     @pyqtSlot(int)
     def _x_axis_changed(self, index):
         # 1. Get relevant values
-        x_current = self._motors[self._current_index]
-        x_data = self._motors[index]
+        x_current = self._motor_ids[self._current_index]
+        x_data = self._motor_ids[index]
         y_data_list = self._get_all_y_data()
 
         # 2. Get to-remove configs
@@ -99,7 +100,7 @@ class XYDataSelectionWidget(BaseSelectionWidget):
 
     def _get_all_y_data(self):
         y_data = []
-        for index, source in enumerate(self._sources):
+        for index, source in enumerate(self._source_ids):
             if self._checkboxes[index].isChecked():
                 y_data.append(source)
         return y_data

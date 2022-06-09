@@ -10,6 +10,7 @@ class Device(HasStrictTraits):
     name = Str
     data = Property(Array, depends_on="current_index")
     current_index = ArrayOrNone
+    device_id = Str
 
     _data = Array
     _shape = ArrayOrNone

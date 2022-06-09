@@ -1,14 +1,14 @@
 from functools import partial
 
-from PyQt5.QtCore import pyqtSignal, pyqtSlot
-from PyQt5.QtWidgets import QCheckBox, QWidget
+from qtpy.QtCore import Signal, Slot
+from qtpy.QtWidgets import QCheckBox, QWidget
 
 from ..const import MOTOR_NAMES, SOURCE_NAMES
 
 
 class BaseSelectionWidget(QWidget):
 
-    changed = pyqtSignal(object)
+    changed = Signal(object)
 
     def __init__(self, parent=None):
         super(BaseSelectionWidget, self).__init__(parent)
@@ -17,6 +17,8 @@ class BaseSelectionWidget(QWidget):
         # Initialize variables
         self._motors = MOTOR_NAMES
         self._sources = SOURCE_NAMES
+        self._motors_ids = []
+        self._source_ids = []
         self._checkboxes = []
         self._current_index = 0
 
@@ -26,15 +28,14 @@ class BaseSelectionWidget(QWidget):
             checkbox = QCheckBox(device, self)
             checkbox.clicked.connect(partial(self._checkboxes_clicked, index))
             self._checkboxes.append(checkbox)
-
         return self._checkboxes
 
-    def set_motors(self, motors):
+    def set_motors(self, motors, motor_ids):
         pass
 
-    def set_sources(self, sources):
+    def set_sources(self, sources, source_ids):
         # Setup needed checkboxes from already existing
-        for index, device in enumerate(sources):
+        for index, device in enumerate(source_ids):
             checkbox = self._checkboxes[index]
             checkbox.setText(device)
             checkbox.setVisible(True)
@@ -44,10 +45,11 @@ class BaseSelectionWidget(QWidget):
             checkbox.setVisible(False)
 
         self._sources = sources
+        self._source_ids = source_ids
 
     def set_config(self, config):
         pass
 
-    @pyqtSlot(int)
+    @Slot(int)
     def _checkboxes_clicked(self, index):
         pass

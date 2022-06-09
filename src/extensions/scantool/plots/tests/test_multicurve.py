@@ -19,9 +19,18 @@ class TestMultiCurveController(GuiTestCase):
         self._plot = MultiCurvePlot()
 
         # Populate the plot by specifying x_data and y_data
-        self._x_data = Device(name="x_data", _data=np.full(LENGTH, np.nan))
-        self._y_data = Device(name="y_data", _data=np.full(LENGTH, np.nan))
-        self._z_data = Device(name="z_data", _data=np.full(LENGTH, np.nan))
+        self._x_data = Device(
+            name="x_data",
+            device_id="TEST/DEVICE/X",
+            _data=np.full(LENGTH, np.nan))
+        self._y_data = Device(
+            name="y_data",
+            device_id="TEST/DEVICE/Y",
+            _data=np.full(LENGTH, np.nan))
+        self._z_data = Device(
+            name="z_data",
+            device_id="TEST/DEVICE/Z",
+            _data=np.full(LENGTH, np.nan))
 
         self._add_data_to_plot()
 

@@ -30,7 +30,7 @@ class MultiCurvePlot(GraphPlot):
            We utilize an ItemRegistry to bookkeep all the PlotDataItems"""
 
         # Attach a PlotDataItem to the config
-        item = self._get_item(config[Y_DATA].name)
+        item = self._get_item(config[Y_DATA].device_id)
         self._items.add(item, config)
 
         if update:

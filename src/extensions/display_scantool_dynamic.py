@@ -13,8 +13,9 @@ from karabogui.controllers.api import (
 
 from .models.api import ScantoolBaseModel
 from .scantool.const import (
-    ACTUAL_STEP, ASCANS, CSCANS, CURRENT_INDEX, DSCANS, MOTOR_NAMES, MOTORS,
-    SCAN_TYPE, SOURCE_NAMES, SOURCES, START_POSITIONS, STEPS, STOP_POSITIONS)
+    ACTUAL_STEP, ASCANS, CSCANS, CURRENT_INDEX, DSCANS, MOTOR_IDS, MOTOR_NAMES,
+    MOTORS, SCAN_TYPE, SOURCE_IDS, SOURCE_NAMES, SOURCES, START_POSITIONS,
+    STEPS, STOP_POSITIONS)
 from .scantool.controller import ScanController
 from .scantool.data.scan import Scan
 
@@ -92,6 +93,17 @@ class ScantoolDynamicWidget(BaseBindingController):
         sources = [source for source in SOURCE_NAMES
                    if not np.isnan(self._get_value(proxies, source))]
         config.update({MOTORS: motors, SOURCES: sources})
+
+        # Starting v2.4.7-2.13.4 Karabacon in the output schema has motorIds
+        # and sourceIds. If they are not present then x0..4, y0..6 are used
+        if hasattr(proxies, MOTOR_IDS):
+            config.update({MOTOR_IDS: self._get_value(proxies, MOTOR_IDS)})
+        else:
+            config.update({MOTOR_IDS: motors})
+        if hasattr(proxies, SOURCE_IDS):
+            config.update({SOURCE_IDS: self._get_value(proxies, SOURCE_IDS)})
+        else:
+            config.update({SOURCE_IDS: sources})
 
         scan = self._controller.new_scan(config)
 

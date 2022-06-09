@@ -1,6 +1,8 @@
 from karabogui.testing import GuiTestCase
 
-from ...const import ADD, MOTOR_NAMES, REMOVE, SOURCE_NAMES, X_DATA, Y_DATA
+from ...const import (
+    ADD, MOTOR_NAMES, REMOVE, SOURCE_NAMES, TEST_MOTOR_IDS, TEST_SOURCE_IDS,
+    X_DATA, Y_DATA)
 from ..xy_data import XYDataSelectionWidget
 
 
@@ -30,44 +32,50 @@ class TestXYDataSelectionController(GuiTestCase):
     def test_set_devices(self):
         # Set and assert motors
         motors = MOTOR_NAMES[:2]
-        self._widget.set_motors(motors)
-        self._assert_motors(names=motors, index=0)
+        motor_ids = TEST_MOTOR_IDS[:2]
+        self._widget.set_motors(motors, motor_ids)
+        self._assert_motors(names=motor_ids, index=0)
         self._assert_changes(changes=None)
 
         # Set and assert devices
         sources = SOURCE_NAMES[:3]
-        self._widget.set_sources(sources)
-        self._assert_sources(names=sources, checked=[])
+        source_ids = TEST_SOURCE_IDS[:3]
+        self._widget.set_sources(sources, source_ids)
+        self._assert_sources(names=source_ids, checked=[])
         self._assert_changes(changes=None)
 
     def test_set_config(self):
         # Set devices
         motors = MOTOR_NAMES[:2]
-        self._widget.set_motors(motors)
+        motor_ids = TEST_MOTOR_IDS[:2]
+        self._widget.set_motors(motors, motor_ids)
         sources = SOURCE_NAMES[:3]
-        self._widget.set_sources(sources)
+        source_ids = TEST_SOURCE_IDS[:3]
+        self._widget.set_sources(sources, source_ids)
 
         # Set config
-        x_data = motors[1]
-        y_data_list = sources[1:]
+        x_data = motor_ids[1]
+        y_data_list = source_ids[1:]
         config = [{X_DATA: x_data, Y_DATA: y_data} for y_data in y_data_list]
         self._widget.set_config(config)
 
         # Assert widgets
-        self._assert_motors(names=motors, index=1)
-        self._assert_sources(names=sources, checked=y_data_list)
+        self._assert_motors(names=motor_ids, index=1)
+        self._assert_sources(names=source_ids, checked=y_data_list)
         self._assert_changes(changes=None)
 
     def test_changes(self):
         # Set devices
         motors = MOTOR_NAMES[:2]
-        self._widget.set_motors(motors)
+        motor_ids = TEST_MOTOR_IDS[:2]
+        self._widget.set_motors(motors, motor_ids)
         sources = SOURCE_NAMES[:3]
-        self._widget.set_sources(sources)
+        source_ids = TEST_SOURCE_IDS[:3]
+        self._widget.set_sources(sources, source_ids)
 
         # Set config
-        x_data = motors[1]
-        y_data_list = sources[1:]
+        x_data = motor_ids[1]
+        y_data_list = source_ids[1:]
         config = [{X_DATA: x_data, Y_DATA: y_data} for y_data in y_data_list]
         self._widget.set_config(config)
 
@@ -76,32 +84,34 @@ class TestXYDataSelectionController(GuiTestCase):
         x_index = 0
         combobox = self._widget.ui_x_combobox
         combobox.setCurrentIndex(x_index)
-        self._assert_changes(changes={X_DATA: motors[x_index]})
+        self._assert_changes(changes={X_DATA: motor_ids[x_index]})
 
         # Remove y_data by unchecking one source
         y_index = 1
         checkbox = self._widget._checkboxes[y_index]
         self.assertTrue(checkbox.isChecked())
         checkbox.click()
-        self._assert_changes(removed={Y_DATA: sources[y_index]})
+        self._assert_changes(removed={Y_DATA: source_ids[y_index]})
 
         # Add y_data by checking one source
         y_index = 1
         checkbox = self._widget._checkboxes[y_index]
         self.assertFalse(checkbox.isChecked())
         checkbox.click()
-        self._assert_changes(added={Y_DATA: sources[y_index]})
+        self._assert_changes(added={Y_DATA: source_ids[y_index]})
 
     def test_last_item(self):
         # Set devices
         motors = MOTOR_NAMES[:2]
-        self._widget.set_motors(motors)
+        motor_ids = TEST_MOTOR_IDS[:2]
+        self._widget.set_motors(motors, motor_ids)
         sources = SOURCE_NAMES[:3]
-        self._widget.set_sources(sources)
+        source_ids = TEST_SOURCE_IDS[:3]
+        self._widget.set_sources(sources, source_ids)
 
         # Set config, only put one source
         y_index = 1
-        config = [{X_DATA: motors[1], Y_DATA: sources[y_index]}]
+        config = [{X_DATA: motor_ids[1], Y_DATA: source_ids[y_index]}]
         self._widget.set_config(config)
 
         y_index = 1

@@ -12,11 +12,15 @@ START_POSITIONS = "startPositions"
 STOP_POSITIONS = "stopPositions"
 POS = "pos"
 Y = "y"
-MOTOR_NAMES = ["pos{}".format(index) for index in range(NR_MOTORS)]
-SOURCE_NAMES = ["y{}".format(index) for index in range(NR_VALUES)]
+MOTOR_NAMES = [f"pos{index}" for index in range(NR_MOTORS)]
+SOURCE_NAMES = [f"y{index}" for index in range(NR_VALUES)]
+TEST_MOTOR_IDS = [f"TEST/DEVICE/MOTOR{index}" for index in range(NR_MOTORS)]
+TEST_SOURCE_IDS = [f"TEST/DEVICE/SOURCE{index}" for index in range(NR_VALUES)]
 
 MOTORS = "motors"
 SOURCES = "sources"
+MOTOR_IDS = "motorIds"
+SOURCE_IDS = "sourceIds"
 
 # Scan types
 ASCANS = ["ascan", "a2scan", "a3scan", "a4scan"]
@@ -47,6 +51,8 @@ A4SCAN_CONFIG = {
     SCAN_TYPE: "a4scan",
     MOTORS: MOTOR_NAMES,
     SOURCES: SOURCE_NAMES,
+    MOTOR_IDS: MOTOR_NAMES,
+    SOURCE_IDS: SOURCE_NAMES,
     STEPS: [5],
     ACTUAL_STEP: 0,
     CURRENT_INDEX: [0],
