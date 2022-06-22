@@ -154,3 +154,10 @@ def test_selection_convenience_table_model():
     model = api.SelectionTableModel(**traits)
     read_model = single_model_round_trip(model)
     _assert_geometry_traits(read_model)
+
+
+def test_networkx_model():
+    traits = _geometry_traits()
+    model = api.NetworkXModel(**traits)
+    read_model = single_model_round_trip(model)
+    _assert_geometry_traits(read_model)
