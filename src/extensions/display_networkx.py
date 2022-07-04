@@ -6,16 +6,23 @@ import random
 import re
 
 from qtpy.QtCore import QLineF, QPointF, QRectF, QSizeF, Qt, qFuzzyCompare
-from qtpy.QtGui import QColor, QPainter, QPainterPath, QPen, QRadialGradient
+from qtpy.QtGui import (
+    QColor, QGuiApplication, QPainter, QPainterPath, QPen, QRadialGradient)
 from qtpy.QtWidgets import (
     QCheckBox, QGraphicsItem, QGraphicsScene, QGraphicsView, QGroupBox,
     QHBoxLayout, QLineEdit, QPushButton, QStyle, QVBoxLayout, QWidget)
-from traits.api import Bool, Dict, Float, Instance, Int, List, String, WeakRef
+from traits.api import (
+    Bool, Dict, Float, Instance, Int, List, String, Undefined, WeakRef)
 
 import karabogui.icons as icons
+from karabogui import messagebox
 from karabogui.binding.api import VectorHashBinding, get_binding_value
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller, with_display_type)
+from karabogui.events import KaraboEvent
+from karabogui.request import (
+    broadcast_event, get_scene_from_server, get_topology,
+    onConfigurationUpdate, onSchemaUpdate)
 
 from .models.api import FilterInstance, NetworkXModel, NodePosition
 
@@ -67,7 +74,7 @@ class Node(QGraphicsItem):
     Nodes allow filters to be applied to them which influence their visibility.
 
     Finally, double-clicking a node will open the device scene of the device
-    it represents, and CTRL clicking a node will open it in the configurator.
+    it represents, and SHIFT clicking a node will open it in the configurator.
     """
     edge_list = List(Edge)
     new_pos = Instance(QPointF)
@@ -219,6 +226,79 @@ class Node(QGraphicsItem):
             self.setVisible(False)
             for edge in self.edge_list:
                 edge.setVisible(False)
+
+    def mouseDoubleClickEvent(self, event):
+        """
+        Double click events will open the device scene
+
+        This is mostly a copy of the topology method, except that we need
+        to request schemas and configurations every time, as we will not
+        have necessarily done this for a given node already.
+        """
+        device_id = str(self.label)
+
+        def _config_handler():
+            """Act on the arrival of the configuration"""
+            scenes = proxy["availableScenes"].value
+            if scenes is Undefined or not len(scenes):
+                messagebox.show_warning(
+                    "The device <b>{}</b> does not specify a scene "
+                    "name!".format(device_id))
+            else:
+                scene_name = scenes[0]
+                get_scene_from_server(device_id, scene_name)
+
+        def _schema_handler():
+            """Act on the arrival of the schema"""
+            if proxy["availableScenes"] is None:
+                messagebox.show_warning(
+                    "The device <b>{}</b> does not specify a scene "
+                    "name!".format(device_id))
+                return
+            scenes = proxy["availableScenes"].value
+            if scenes is Undefined:
+                onConfigurationUpdate(proxy, _config_handler, request=True)
+            elif not len(scenes):
+                messagebox.show_warning(
+                    "The device <b>{}</b> does not specify a scene "
+                    "name!".format(device_id))
+            else:
+                scene_name = scenes[0]
+                get_scene_from_server(device_id, scene_name)
+
+        proxy = get_topology().get_device(device_id)
+        if not len(proxy.binding.value):
+            # We completely miss our schema and wait for it.
+            onSchemaUpdate(proxy, _schema_handler, request=True)
+        elif proxy["availableScenes"].value is Undefined:
+            onConfigurationUpdate(proxy, _config_handler, request=True)
+        else:
+            scenes = proxy["availableScenes"].value
+            if not len(scenes):
+                # The device might not have a scene name in property
+                messagebox.show_warning(
+                    "The device <b>{}</b> does not specify a scene "
+                    "name!".format(device_id))
+            else:
+                scene_name = scenes[0]
+                get_scene_from_server(device_id, scene_name)
+
+    def mousePressEvent(self, event):
+        """
+        A SHIFT-click will show the device in the configurator.
+
+        Cannot use ALT because that event is caught by the scene-view
+        itself already and it will not even forward the mouse event if
+        the ALT modifier is pressed.
+        """
+        modifiers = QGuiApplication.keyboardModifiers()
+        if modifiers & Qt.ShiftModifier:
+            broadcast_event(KaraboEvent.ShowConfiguration,
+                            {'proxy': get_topology().get_device(self.label)})
+            event.accept()
+            return
+
+        self.update()
 
 
 class Edge(QGraphicsItem):
