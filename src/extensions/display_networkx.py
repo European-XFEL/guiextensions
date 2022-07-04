@@ -3,12 +3,13 @@
 #############################################################################
 import math
 import random
+import re
 
 from qtpy.QtCore import QLineF, QPointF, QRectF, QSizeF, Qt, qFuzzyCompare
 from qtpy.QtGui import QColor, QPainter, QPainterPath, QPen, QRadialGradient
 from qtpy.QtWidgets import (
-    QGraphicsItem, QGraphicsScene, QGraphicsView, QPushButton, QStyle,
-    QVBoxLayout, QWidget)
+    QCheckBox, QGraphicsItem, QGraphicsScene, QGraphicsView, QGroupBox,
+    QHBoxLayout, QLineEdit, QPushButton, QStyle, QVBoxLayout, QWidget)
 from traits.api import Bool, Dict, Float, Instance, Int, List, String, WeakRef
 
 import karabogui.icons as icons
@@ -16,7 +17,7 @@ from karabogui.binding.api import VectorHashBinding, get_binding_value
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller, with_display_type)
 
-from .models.api import NetworkXModel, NodePosition
+from .models.api import FilterInstance, NetworkXModel, NodePosition
 
 GROUP_COLORS = {
     "p2p": (QColor("#52b788"), QColor("#6c757d")),
@@ -34,13 +35,20 @@ STATUS_COLOR = {
 }
 
 SHADOW_COLOR = QColor(100, 100, 100, 100)
+FILTER_ACTIVE_COLOR = "#d8f3dc"
+FILTER_DISABLED_COLOR = "#ced4da"
+
 
 try:
     PAUSE_ICON = icons.mediaPause.icon
     PLAY_ICON = icons.mediaStart.icon
+    CLEAR_FILTER_ICON = icons.stop.icon
+    FILTER_TRAFFIC_ICON = icons.deviceMonitored.icon
 except AttributeError:
     PAUSE_ICON = icons.mediaPause
     PLAY_ICON = icons.mediaStart
+    CLEAR_FILTER_ICON = icons.stop
+    FILTER_TRAFFIC_ICON = icons.deviceMonitored
 
 
 class Edge:
@@ -181,6 +189,36 @@ class Node(QGraphicsItem):
             self.graph.itemMoved()
 
         return super().itemChange(change, value)
+
+    def apply_filter(self, filters):
+        """
+        Apply the filters to the node. It will be invisible if none match.
+
+        :param filters: A list of FilterItems
+
+        """
+        self_match = False or len(filters) == 0
+        edge_match = False or len(filters) == 0
+        visible_edges = []
+        for filter in filters:
+            match, edge_matches = filter.apply_filter(self)
+            self_match |= match
+            visible_edges += edge_matches
+
+        edge_match |= len(visible_edges) > 0
+        if self_match or edge_match:
+            self.setVisible(True)
+            # only show edge if a node matched the filter
+            # or if there are no filters
+            for edge in self.edge_list:
+                if edge in visible_edges or len(filters) == 0:
+                    edge.setVisible(True)
+                else:
+                    edge.setVisible(False)
+        else:
+            self.setVisible(False)
+            for edge in self.edge_list:
+                edge.setVisible(False)
 
 
 class Edge(QGraphicsItem):
@@ -412,6 +450,98 @@ class GraphWidget(QGraphicsView):
         self.scale_factor = factor
         self.scale(scale_factor, scale_factor)
 
+    def filter(self, filters):
+        """
+        Apply a list of filters to all nodes on the scene
+
+        :param filters: A list of FilterItems
+        """
+        for node in self.scene().items():
+            if not isinstance(node, Node):
+                continue
+            node.apply_filter(filters)
+
+
+class FilterItem(QCheckBox):
+    """
+    Filter items determine which nodes (and connecting edges) are shown.
+
+    Filters usually OR, and can be enabled and disabled.
+    """
+
+    def __init__(self, filter_text, parent_layout, main_widget,
+                 active=True, parent=None):
+        super().__init__(parent=parent)
+        self.setText(filter_text)
+        self.set_button_style(active)
+        self.clicked.connect(self.toggle_active)
+        self.parent_layout = parent_layout
+        self.main_widget = main_widget
+        self.is_active = active
+        self.setMaximumWidth(100)
+
+    def set_button_style(self, active):
+        if active:
+            self.setStyleSheet(
+                f"QCheckBox {{background-color: {FILTER_ACTIVE_COLOR};}}")
+        else:
+            self.setStyleSheet(
+                f"QCheckBox {{background-color: {FILTER_DISABLED_COLOR};}}")
+        self.setChecked(active)
+
+    def toggle_active(self):
+        """
+        Toggle the filters active state. Only active filters are applied.
+        """
+        self.is_active = not self.is_active
+        self.set_button_style(self.is_active)
+        self.main_widget.update_filter()
+
+    def apply_filter(self, node):
+        """
+        Evaluate the filter for the node.
+
+        :param node: a Node object
+
+        :return: A tuple (Bool, List) where the bool indicates if the Node
+            evaluates against the filter, and the list contains those
+            edges which are determined to be visible by the filter.
+        """
+        match = False
+        edge_matches = []
+        filter_text = self.text()
+        if re.match(f".*{filter_text}.*", node.label):
+            match = True
+        for edge in node.edge_list:
+            if re.match(f".*{filter_text}.*", edge.source.label):
+                edge_matches.append(edge)
+            elif re.match(f".*{filter_text}.*", edge.dest.label):
+                edge_matches.append(edge)
+        return match, edge_matches
+
+    def active(self):
+        return self.is_active
+
+    def mouseDoubleClickEvent(self, event):
+        self.parent_layout.removeWidget(self)
+        self.main_widget.update_filter()
+        self.deleteLater()
+
+
+class FilterLineEdit(QLineEdit):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.setText("Add filter here...")
+
+    def focusInEvent(self, event):
+        self.clear()
+        super().focusInEvent(event)
+
+    def focusOutEvent(self, event):
+        self.setText("Add filter here...")
+        super().focusInEvent(event)
+
 
 @register_binding_controller(
     ui_name='NetworkX Graph',
@@ -425,16 +555,53 @@ class NetworkX(BaseBindingController):
     graphwidget = WeakRef(GraphWidget)
     freeze_btn = Instance(QPushButton)
     frozen = Bool()
+    filter_ledit = Instance(QLineEdit)
+    filter_instances = Instance(QHBoxLayout)
 
     def create_widget(self, parent):
         widget = QWidget(parent=parent)
         layout = QVBoxLayout()
+
+        # add the filter tool bar
+        filter_layout = QHBoxLayout()
+        self.filter_ledit = FilterLineEdit()
+        self.filter_ledit.returnPressed.connect(self.on_filter)
+        clear_filter_btn = QPushButton()
+        clear_filter_btn.setIcon(CLEAR_FILTER_ICON)
+        clear_filter_btn.clicked.connect(self.on_clear_filter)
         freeze_btn = QPushButton()
         freeze_btn.setIcon(PAUSE_ICON)
         freeze_btn.clicked.connect(self.on_freeze)
         self.freeze_btn = freeze_btn
         self.frozen = False
-        layout.addWidget(freeze_btn)
+        filter_layout.addWidget(self.filter_ledit)
+        filter_layout.addWidget(clear_filter_btn)
+        filter_layout.addWidget(freeze_btn)
+        layout.addLayout(filter_layout)
+
+        self.filter_instances = QHBoxLayout()
+        # add a stretch of align right
+        self.filter_instances.addStretch()
+        # and then any saved filters
+        for instance in self.model.filterInstances:
+            filter_widget = FilterItem(instance.filter_text,
+                                       self.filter_instances,
+                                       main_widget=self,
+                                       active=instance.is_active,
+                                       parent=self.widget)
+            self.filter_instances.addWidget(
+                filter_widget, 0, Qt.AlignRight)
+        group_box = QGroupBox("Currently Configured Filters")
+        group_box.setStyleSheet("""
+        QGroupBox::title {
+            subcontrol-origin: margin;
+            subcontrol-position: top center; /* position at the top center */
+            margin-top: 2ex;
+            }
+        """)
+        group_box.setLayout(self.filter_instances)
+        layout.addWidget(group_box)
+
         self.graphwidget = GraphWidget(self, parent=widget)
         layout.addWidget(self.graphwidget)
         widget.setLayout(layout)
@@ -473,6 +640,7 @@ class NetworkX(BaseBindingController):
             node_edge_list.append(row)
         if self.graphwidget:
             self.graphwidget.create_graph(node_edge_list)
+            self.update_filter()
 
         # sort out if any new nodes (with random positions) were added
         # if so, we should un-freeze the widget so that forces are applied
@@ -517,3 +685,52 @@ class NetworkX(BaseBindingController):
             self.freeze_btn.setIcon(PAUSE_ICON)
         elif self.freeze_btn.icon() != PLAY_ICON:
             self.freeze_btn.setIcon(PLAY_ICON)
+
+    def on_filter(self):
+        """
+        Adds a filter item, when the user hits enter
+        """
+        filter_text = self.filter_ledit.text()
+        for idx in range(self.filter_instances.count()):
+            item = self.filter_instances.itemAt(idx).widget()
+            if item and item.text() == filter_text:
+                return  # don't add twice
+        filter_widget = FilterItem(filter_text, self.filter_instances,
+                                   main_widget=self,
+                                   parent=self.widget)
+        self.filter_instances.addWidget(
+            filter_widget, 0, Qt.AlignRight)
+        self.update_filter()
+
+    def update_filter(self):
+        """
+        Updates and applies the filters acting on the nodes
+        """
+        filters = []
+        filter_instances = []
+        for idx in range(self.filter_instances.count()):
+            item = self.filter_instances.itemAt(idx).widget()
+            if item:
+                if item.active():
+                    filters.append(item)
+                # save state for model
+                traits = {"filter_text": item.text(),
+                          "is_active": item.active()}
+                filter_instances.append(FilterInstance(**traits))
+        # we save the activation state to the model.
+        self.model.filterInstances = filter_instances
+        self.graphwidget.filter(filters)
+
+    def on_clear_filter(self):
+        """
+        Clears all filters and restores the traffic filter as a default filter
+        """
+        while self.filter_instances.count():
+            widget = self.filter_instances.itemAt(0).widget()
+            self.filter_instances.removeWidget(
+                self.filter_instances.itemAt(0).widget())
+            if widget:
+                widget.deleteLater()
+        # add a stretch again
+        self.filter_instances.addStretch()
+        self.update_filter()
