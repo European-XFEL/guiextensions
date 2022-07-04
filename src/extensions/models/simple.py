@@ -153,7 +153,6 @@ def _selection_convenience_table_write(write_func, model, parent):
     element.set(NS_KARABO + 'filterKeyColumn', str(model.filterKeyColumn))
     return element
 
-
 # ----------------------------------------------------------------------------
 # Private
 

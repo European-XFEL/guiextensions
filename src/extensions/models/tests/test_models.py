@@ -158,6 +158,26 @@ def test_selection_convenience_table_model():
 
 def test_networkx_model():
     traits = _geometry_traits()
+    positions = []
+    filters = []
+    for i in range(10):
+        positions.append(api.NodePosition(device_id=f"foo{i}",
+                                          x=i,
+                                          y=-i))
+        filters.append(api.FilterInstance(filter_text=f"bar{i}",
+                                          is_active=(i % 2 == 0)))
+    traits["nodePositions"] = positions
+    traits["filterInstances"] = filters
     model = api.NetworkXModel(**traits)
     read_model = single_model_round_trip(model)
     _assert_geometry_traits(read_model)
+
+    for i in range(10):
+        msg = f"Node position does not match for {i}"
+        assert model.nodePositions[i].device_id == positions[i].device_id, msg
+        assert model.nodePositions[i].x == positions[i].x, msg
+        assert model.nodePositions[i].y == positions[i].y, msg
+
+        msg = f"Filter does not match for {i}"
+        assert model.filterInstances[i].filter_text == filters[i].filter_text, msg  # noqa
+        assert model.filterInstances[i].is_active == filters[i].is_active, msg
