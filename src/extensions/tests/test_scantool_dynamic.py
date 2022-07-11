@@ -4,7 +4,14 @@ from extensions.scantool.plots.heatmap import HeatmapPlot
 from extensions.scantool.plots.multicurve import MultiCurvePlot
 from extensions.scantool.tests.confs import (
     A2SCAN_CONFIG, ASCAN_CONFIG, C2SCAN_CONFIG, MESH_CONFIG)
-from karabo.common.api import ProxyStatus, State
+
+try:
+    from karabogui.binding.api import ProxyStatus
+except ImportError:
+    # compatibility with GUI version < 2.16
+    from karabo.common.api import ProxyStatus
+
+from karabo.common.api import State
 from karabo.native import (
     AccessMode, Configurable, Double, Hash, Node, String, UInt32, VectorDouble,
     VectorInt32)
