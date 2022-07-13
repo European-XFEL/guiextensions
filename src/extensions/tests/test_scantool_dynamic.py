@@ -25,6 +25,11 @@ from ..scantool.const import (
     SOURCE_NAMES, SOURCES, START_POSITIONS, STEPS, STOP_POSITIONS, X_DATA,
     Y_DATA, Z_DATA)
 
+try:
+    from karabo.common.api import ProxyStatus
+except ImportError:
+    from karabogui.binding.api import ProxyStatus
+
 
 class DataNode(Configurable):
     displayType = "WidgetNode|Scantool-Base"

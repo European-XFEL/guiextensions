@@ -34,6 +34,10 @@ class DoocsMirrorTableModel(BaseWidgetObjectData):
     """ A model for the Doocs Mirror"""
 
 
+class DisplayConditionCommand(BaseWidgetObjectData):
+    """ A model for the Condition Command Base Widget """
+
+
 class ScantoolBaseModel(BaseWidgetObjectData):
     """ A model for the Scantool Base Widget """
 
@@ -77,7 +81,7 @@ class SelectionTableModel(BaseEditWidget):
 _SIMPLE_WIDGET_MODELS = (
     "IPMQuadrantModel", "DoocsLocationTableModel", "DoocsMirrorTableModel",
     "PulseIdMapModel", "DynamicPulseIdMapModel", "CriticalCompareViewModel",
-    "RecoveryReportTableModel")
+    "RecoveryReportTableModel", "DisplayConditionCommand")
 
 
 _SIMPLE_DISPLAY_EDIT_MODELS = ("StateAwareComponentManagerModel",)
@@ -109,7 +113,6 @@ def _date_time_edit_writer(write_func, model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'EditableDateTime')
     element.set(NS_KARABO + 'time_format', str(model.time_format))
-    return element
 
 
 @register_scene_reader('DisplayPointAndClick')

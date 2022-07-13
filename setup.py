@@ -4,6 +4,7 @@ entries = {
     'karabogui.gui_extensions': [
         'CriticalCompareView = extensions.display_critical_compare_view',
         'BeamGraph = extensions.display_beam_graph',
+        'ConditionCommand = extensions.display_condition',
         'DateTimeEdit = extensions.edit_datetime_label',
         'DoocsMirrorTable = extensions.display_doocs_mirror_table',
         'DoocsLocationTable = extensions.display_doocs_location_table',
