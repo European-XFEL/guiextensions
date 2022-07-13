@@ -1,4 +1,5 @@
 from karabo.native import Bool, Configurable, Slot
+from karabogui.binding.api import ProxyStatus
 from karabogui.testing import GuiTestCase, get_class_property_proxy
 
 from ..display_condition import DisplayConditionCommand
@@ -57,3 +58,21 @@ class TestDisplayCondition(GuiTestCase):
         """
         assert self.controller.add_proxy(self.bool_proxy)
         assert not self.controller.add_proxy(self.bool_proxy)
+
+    def test_enabled(self):
+        """
+        Test the enabled status of the button when the proxy device and
+        condition_proxy devices go offline/online.
+        """
+        online = ProxyStatus.ONLINE
+        offline = ProxyStatus.OFFLINE
+        self.controller.add_proxy(self.bool_proxy)
+        self.controller.proxy.root_proxy.status = offline
+        assert not self.controller._button.isEnabled()
+
+        self.controller.proxy.root_proxy.status = online
+        self.controller._condition_proxy.root_proxy.status = online
+        assert self.controller._button.isEnabled()
+
+        self.controller._condition_proxy.root_proxy.status = offline
+        assert not self.controller._button.isEnabled()

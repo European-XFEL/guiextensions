@@ -1,6 +1,6 @@
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QPushButton, QStackedWidget, QToolButton
-from traits.api import Instance, WeakRef
+from traits.api import Instance, WeakRef, on_trait_change
 
 from karabogui import access, icons
 from karabogui.binding.api import (
@@ -141,3 +141,15 @@ class DisplayConditionCommand(BaseBindingController):
     def execute_action(self):
         """Execute the action on the command proxy"""
         self.proxy.execute()
+
+    @on_trait_change('proxy.root_proxy.status, '
+                     '_condition_proxy.root_proxy.status')
+    def _proxy_status_changed(self, _):
+        """ Disable the button if the proxy device or condition_proxy device go
+        offline."""
+        if self._button is None or self._condition_proxy is None:
+            return
+        condition_proxy_online = self._condition_proxy.root_proxy.online
+        proxy_online = self.proxy.root_proxy.online
+        enable = condition_proxy_online and proxy_online
+        self._button.setEnabled(enable)
