@@ -3,6 +3,7 @@ from qtpy.QtWidgets import QPushButton, QStackedWidget, QToolButton
 from traits.api import Instance, WeakRef, on_trait_change
 
 from karabogui import access, icons
+from karabogui.api import is_proxy_allowed
 from karabogui.binding.api import (
     BoolBinding, PropertyProxy, SlotBinding, get_binding_value)
 from karabogui.controllers.api import (
@@ -121,21 +122,20 @@ class DisplayConditionCommand(BaseBindingController):
             self._button.setText(displayed_name)
         elif proxy is self._condition_proxy:
             self.value_update(proxy)
-        self._button.setStyleSheet(BUTTON_STYLE)
 
     def value_update(self, proxy):
         binding = proxy.binding
         if binding is None or not isinstance(binding, BoolBinding):
             return
-        value = get_binding_value(binding, None)
-
-        is_allowed = bool(value)
-        is_accessible = (access.GLOBAL_ACCESS_LEVEL >=
-                         binding.required_access_level)
-        self._button.setEnabled(is_allowed and is_accessible)
-        self._button.setStyleSheet(BUTTON_STYLE)
         self._condition_proxy = proxy
+        self._set_button_enabled()
         self.widget.setCurrentIndex(1)
+
+    def state_update(self, proxy):
+        binding = proxy.binding
+        if isinstance(binding, SlotBinding):
+            self._set_button_enabled()
+
     # ---------------------------------------------------------------------
 
     def execute_action(self):
@@ -153,3 +153,16 @@ class DisplayConditionCommand(BaseBindingController):
         proxy_online = self.proxy.root_proxy.online
         enable = condition_proxy_online and proxy_online
         self._button.setEnabled(enable)
+
+    def _set_button_enabled(self):
+        if self._condition_proxy is None:
+            return
+        binding = self._condition_proxy.binding
+        if binding is None or not isinstance(binding, BoolBinding):
+            return
+        value = get_binding_value(binding, None)
+        is_allowed = bool(value) and is_proxy_allowed(self.proxy)
+        is_accessible = (access.GLOBAL_ACCESS_LEVEL >=
+                         self.proxy.binding.required_access_level)
+        self._button.setEnabled(is_allowed and is_accessible)
+        self._button.setStyleSheet(BUTTON_STYLE)

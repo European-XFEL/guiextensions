@@ -1,12 +1,21 @@
-from karabo.native import Bool, Configurable, Slot
-from karabogui.binding.api import ProxyStatus
-from karabogui.testing import GuiTestCase, get_class_property_proxy
+from karabo.common.states import State
+from karabo.native import AccessLevel, Bool, Configurable, Slot, String
+from karabogui.binding.api import (
+    DeviceProxy, PropertyProxy, ProxyStatus, apply_default_configuration,
+    build_binding)
+from karabogui.testing import (
+    GuiTestCase, get_class_property_proxy, set_proxy_value)
 
 from ..display_condition import DisplayConditionCommand
 
 
 class SlotObject(Configurable):
-    prop = Slot()
+    state = String(defaultValue=State.ACTIVE)
+
+    @Slot(allowedStates=[State.ACTIVE],
+          requiredAccessLevel=AccessLevel.OBSERVER)
+    def yep(self):
+        pass
 
 
 class BoolObject(Configurable):
@@ -18,10 +27,15 @@ class TestDisplayCondition(GuiTestCase):
     def setUp(self):
         super().setUp()
         schema = SlotObject.getClassSchema()
-        proxy = get_class_property_proxy(schema, "prop")
+        binding = build_binding(schema)
+        apply_default_configuration(binding)
+        dev_proxy = DeviceProxy(device_id="dev", server_id="swerver",
+                                binding=binding)
+        proxy = PropertyProxy(root_proxy=dev_proxy, path="yep")
         controller = DisplayConditionCommand(proxy=proxy)
         controller.create(parent=None)
         self.controller = controller
+        self.proxy = proxy
 
         bool_schema = BoolObject.getClassSchema()
         bool_proxy = get_class_property_proxy(bool_schema, "prop")
@@ -76,3 +90,15 @@ class TestDisplayCondition(GuiTestCase):
 
         self.controller._condition_proxy.root_proxy.status = offline
         assert not self.controller._button.isEnabled()
+
+    def test_state_update(self):
+        """Test the Slot proxy state change enables/disables the button."""
+        self.bool_proxy.value = True
+        self.controller.add_proxy(self.bool_proxy)
+        assert self.controller._button.isEnabled()
+
+        set_proxy_value(self.proxy, 'state', State.INIT.value)
+        assert not self.controller._button.isEnabled()
+
+        set_proxy_value(self.proxy, 'state', State.ACTIVE.value)
+        assert self.controller._button.isEnabled()
