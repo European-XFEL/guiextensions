@@ -64,7 +64,7 @@ def is_compatible(binding):
     return isinstance(binding, SlotBinding)
 
 
-@register_binding_controller(ui_name="Condition Command",
+@register_binding_controller(ui_name="Conditional Command",
                              klassname="ConditionCommand",
                              binding_type=(BoolBinding, SlotBinding),
                              is_compatible=is_compatible,
