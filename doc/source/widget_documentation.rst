@@ -151,3 +151,47 @@ elements:
 For each vector, a value `True` means this pulse ID (represented by the vector's index)
 has an event (fel bunch, ppl bunch, detector frame), a value `False` mean no event for
 the pulse ID.
+
+
+Conditional Command
+===================
+
+The ``Conditional Command`` is a command button that represents a device slot. It additionally
+requires a boolean property, to be associated with. Depending on the value of the boolean,
+the button is enabled or disabled in the scene.
+
+
+To convert a command button to a ``Conditional Command``:
+
+#. Right click context menu-item 'Change Widget' -> 'Conditional Command'.
+#. Add a Bool property proxy by dragging and dropping a Boolean parameter onto the button.
+
+The ``Conditional Command`` button will have a colored border to differentiate it from
+the normal command button.
+
+If the Bool property and Slot property belong to different Devices, then both
+Devices have to be online to enable the ``Conditional Command`` button.
+
+
+.. figure:: images/conditional-buttons.png
+   :alt: conditional-buttons.png
+   :align: center
+
+Visual appearance of conditional button:
+
+A) Before adding a Bool property.
+
+B) The  added Bool property has the value `True` and the device is in one of
+the allowed states of the slot.
+
+C) The  added Bool property has the value `False`  or the current state of
+the device does not allow the slot to be called.
+
+Currently, only a single Bool property can be combined with a Slot to form a ``Conditional Command``.
+If it is desired to combine several Bool properties or to invert the value(i.e, to enable the
+button if the Bool is false), then the logic has to be coded in a device or macro and the result
+needs to be exposed as another Bool that then can be used for the ``Conditional Command``.
+
+Note that, in contrast to the protection of allowed states, the disabling of the ``Conditional Button``
+is only active for buttons in scenes. The Bool property has no influence whether the slot can be
+called via the configuration editor of the GUI or from other devices or macros.
