@@ -1,6 +1,7 @@
 import random
 from enum import Enum
 from time import sleep
+from unittest import skip
 
 from karabo.native import (
     AccessMode, Configurable, Float, Hash, MetricPrefix, String, Unit,
@@ -147,6 +148,7 @@ class TestNetworkX(GuiTestCase):
             self.assertTrue(node_found)
             self.assertTrue(edge_found)
 
+    @skip(reason="Test fails sporadically. Redmine ticket #133166")
     def test_filters(self):
         data = _create_values()
         set_proxy_hash(self.proxy, Hash('nodes', data, ))
