@@ -8,6 +8,9 @@ from karabogui.testing import (
 
 from ..display_condition import DisplayConditionCommand
 
+online = ProxyStatus.ONLINE
+offline = ProxyStatus.OFFLINE
+
 
 class SlotObject(Configurable):
     state = String(defaultValue=State.ACTIVE)
@@ -55,6 +58,9 @@ class TestDisplayCondition(GuiTestCase):
         bool_proxy = self.bool_proxy
         bool_proxy.value = True
         assert self.controller.add_proxy(bool_proxy)
+
+        self.controller.proxy.root_proxy.status = online
+        self.controller._condition_proxy.root_proxy.status = online
         assert self.controller._button.isEnabled()
 
     def test_controller_widget_disabled(self):
@@ -65,6 +71,8 @@ class TestDisplayCondition(GuiTestCase):
         bool_proxy = self.bool_proxy
         bool_proxy.value = False
         assert self.controller.add_proxy(bool_proxy)
+        self.controller.proxy.root_proxy.status = online
+        self.controller._condition_proxy.root_proxy.status = online
         assert not self.controller._button.isEnabled()
 
     def test_second_proxy(self):
@@ -78,12 +86,11 @@ class TestDisplayCondition(GuiTestCase):
         Test the enabled status of the button when the proxy device and
         condition_proxy devices go offline/online.
         """
-        online = ProxyStatus.ONLINE
-        offline = ProxyStatus.OFFLINE
         self.controller.add_proxy(self.bool_proxy)
         self.controller.proxy.root_proxy.status = offline
         assert not self.controller._button.isEnabled()
 
+        self.bool_proxy.value = True
         self.controller.proxy.root_proxy.status = online
         self.controller._condition_proxy.root_proxy.status = online
         assert self.controller._button.isEnabled()
@@ -95,6 +102,8 @@ class TestDisplayCondition(GuiTestCase):
         """Test the Slot proxy state change enables/disables the button."""
         self.bool_proxy.value = True
         self.controller.add_proxy(self.bool_proxy)
+        self.controller.proxy.root_proxy.status = online
+        self.controller._condition_proxy.root_proxy.status = online
         assert self.controller._button.isEnabled()
 
         set_proxy_value(self.proxy, 'state', State.INIT.value)
