@@ -61,6 +61,10 @@ class DynamicPulseIdMapModel(BaseWidgetObjectData):
     """A model for the AlignedPulse device"""
 
 
+class DetectorCellsModel(BaseWidgetObjectData):
+    """A model for the AgipdLitFrameFinder"""
+
+
 class RecoveryReportTableModel(BaseWidgetObjectData):
     """A model for the Report Table of the RecoveryPortal"""
 
@@ -81,8 +85,9 @@ class SelectionTableModel(BaseEditWidget):
 _SIMPLE_WIDGET_MODELS = (
     "IPMQuadrantModel", "DoocsLocationTableModel", "DoocsMirrorTableModel",
     "PulseIdMapModel", "DynamicPulseIdMapModel", "CriticalCompareViewModel",
-    "RecoveryReportTableModel", "DisplayConditionCommand")
-
+    "RecoveryReportTableModel", "DisplayConditionCommand",
+    "DetectorCellsModel",
+)
 
 _SIMPLE_DISPLAY_EDIT_MODELS = ("StateAwareComponentManagerModel",)
 

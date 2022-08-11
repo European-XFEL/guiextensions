@@ -153,6 +153,23 @@ has an event (fel bunch, ppl bunch, detector frame), a value `False` mean no eve
 the pulse ID.
 
 
+Detector Cells Widget
+=====================
+
+This widget shows detector memory cells as a matrix indicating unused, dark and lit cells.
+
+.. figure:: images/detector_cells.png
+	 :alt: detector_cells.png
+	 :align: center
+
+The `DisplayType` is "WidgetNode|DetectorCells" and its schema contains the following
+elements:
+
+* **nFrame** (`UInt16`) is the number of exposed frames (used cells).
+* **nPulsePerFrame** (`VectorUInt16`) that contains `nFrame` elements. Every element is
+  the number of exposed X-ray pulses in a frame.
+
+
 Conditional Command
 ===================
 
