@@ -6,6 +6,7 @@ entries = {
         'BeamGraph = extensions.display_beam_graph',
         'ConditionCommand = extensions.display_condition',
         'DateTimeEdit = extensions.edit_datetime_label',
+        'DetectorCells = extensions.display_detector_cells',
         'DoocsMirrorTable = extensions.display_doocs_mirror_table',
         'DoocsLocationTable = extensions.display_doocs_location_table',
         'DynamicDigitizer = extensions.display_dynamic_digitizer',
