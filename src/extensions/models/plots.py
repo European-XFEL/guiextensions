@@ -1,6 +1,6 @@
 from xml.etree.ElementTree import SubElement
 
-from traits.trait_types import Bool, Float, Int, List, String
+from traits.trait_types import Bool, Enum, Float, Int, List, String
 
 from extensions.models.utils import read_base_plot, write_base_plot
 from karabo.common.scenemodel.const import NS_KARABO, WIDGET_ELEMENT_TAG
@@ -40,6 +40,14 @@ class ExtendedVectorXYGraph(BasePlotModel):
     x_grid = Bool(True)
     y_grid = Bool(True)
     legends = List(String)
+
+
+class TableVectorXYGraphModel(BasePlotModel):
+    """ A model for the TableVectorXYGraph"""
+    x_grid = Bool(True)
+    y_grid = Bool(True)
+    legends = List(String)
+    klass = Enum('DisplayTableVectorXYGraph', 'EditableTableVectorXYGraph')
 
 
 @register_scene_reader('ScatterPosition')
@@ -118,5 +126,23 @@ def _extended_vector_xy_reader(read_func, element):
 def _extended_vector_xy_writer(write_func, model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_plot(model, element, 'ExtendedVectorXYGraph')
+    element.set(NS_KARABO + 'legends', ",".join(model.legends))
+    return element
+
+
+@register_scene_reader('TableVectorXYGraph')
+def _table_vector_xy_reader(element):
+    traits = read_base_plot(element)
+    legends = element.get(NS_KARABO + 'legends', '')
+    if len(legends):
+        traits['legends'] = legends.split(',')
+
+    return TableVectorXYGraphModel(**traits)
+
+
+@register_scene_writer(TableVectorXYGraphModel)
+def _table_vector_xy_writer(model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_plot(model, element, 'TableVectorXYGraph')
     element.set(NS_KARABO + 'legends', ",".join(model.legends))
     return element

@@ -4,31 +4,28 @@ import numpy as np
 from numpy.testing import assert_array_equal
 
 from extensions.display_extended_vector_xy_graph import (
-    DisplayExtendedVectorXYGraph)
-from karabo.native import Configurable, VectorUInt32
+    DisplayExtendedVectorXYGraph, EditableTableVectorXYGraph)
+from karabo.native import Configurable, Hash, String, VectorHash, VectorUInt32
+from karabogui.binding.api import (
+    DeviceProxy, PropertyProxy, ProxyStatus, build_binding)
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_value)
 
+MODULE_PATH = "extensions.display_extended_vector_xy_graph"
 
-class Object(Configurable):
+
+def patched_send_property_changes(proxies):
+    for proxy in proxies:
+        set_proxy_value(proxy, proxy.path, proxy.edit_value)
+
+
+class DeviceWithVectors(Configurable):
     x = VectorUInt32()
     y0 = VectorUInt32()
     y1 = VectorUInt32()
 
 
 class Base(GuiTestCase):
-    def setUp(self):
-        super(Base, self).setUp()
-
-        schema = Object.getClassSchema()
-        self.x_proxy = get_class_property_proxy(schema, 'x')
-        self.y0_proxy = get_class_property_proxy(schema, 'y0')
-        self.y1_proxy = get_class_property_proxy(schema, 'y1')
-
-        self.controller = DisplayExtendedVectorXYGraph(proxy=self.x_proxy)
-        self.controller.create(None)
-        self.controller.visualize_additional_property(self.y0_proxy)
-        self.controller.visualize_additional_property(self.y1_proxy)
 
     def tearDown(self):
         self.controller.destroy()
@@ -47,7 +44,23 @@ class Base(GuiTestCase):
         return self.plotItem.legend
 
 
-class TestCurves(Base):
+class BaseExtendedVectorXYGraphTest(Base):
+
+    def setUp(self):
+        super(Base, self).setUp()
+
+        schema = DeviceWithVectors.getClassSchema()
+        self.x_proxy = get_class_property_proxy(schema, 'x')
+        self.y0_proxy = get_class_property_proxy(schema, 'y0')
+        self.y1_proxy = get_class_property_proxy(schema, 'y1')
+
+        self.controller = DisplayExtendedVectorXYGraph(proxy=self.x_proxy)
+        self.controller.create(None)
+        self.controller.visualize_additional_property(self.y0_proxy)
+        self.controller.visualize_additional_property(self.y1_proxy)
+
+
+class TestCurves(BaseExtendedVectorXYGraphTest):
 
     def test_basics(self):
         x = np.arange(10)
@@ -148,8 +161,8 @@ class TestCurves(Base):
         assert_array_equal(y1_curve.yData, [])
 
 
-@mock.patch('extensions.display_extended_vector_xy_graph.LegendTableDialog')
-class TestLegends(Base):
+@mock.patch(f'{MODULE_PATH}.LegendTableDialog')
+class TestLegends(BaseExtendedVectorXYGraphTest):
 
     def test_basics(self, mocked_dialog):
         self.assertListEqual(self.model.legends, ['', ''])
@@ -158,7 +171,7 @@ class TestLegends(Base):
         # Return intermittently
         mocked_dialog.get.return_value = (None, False)
 
-        self.controller._configure_data()
+        self.controller.configure_data()
         mocked_dialog.get.assert_called_with(
             {"names": ['y0', 'y1'],
              "legends": ['', ''],
@@ -173,7 +186,7 @@ class TestLegends(Base):
                   "removed": [False, False]}
         mocked_dialog.get.return_value = (config, True)
 
-        self.controller._configure_data()
+        self.controller.configure_data()
         self.assertListEqual(self.model.legends, config["legends"])
         zipped = zip((self.y0_proxy, self.y1_proxy), config["legends"])
         for proxy, legend in zipped:
@@ -187,12 +200,12 @@ class TestLegends(Base):
                   "legends": ['foo', 'bar'],
                   "removed": [False, False]}
         mocked_dialog.get.return_value = (config, True)
-        self.controller._configure_data()
+        self.controller.configure_data()
 
         # Second call: return intermittently
         mocked_dialog.reset_mock()
         mocked_dialog.get.return_value = (None, False)
-        self.controller._configure_data()
+        self.controller.configure_data()
         mocked_dialog.get.assert_called_with(
             {"names": ['y0', 'y1'],
              "legends": ['foo', 'bar'],
@@ -204,9 +217,9 @@ FIRST_ARRAY = np.vstack((np.arange(10), np.arange(10) ** 2))
 SECOND_ARRAY = np.vstack((np.arange(10, 20), np.arange(10, 20) ** 2))
 
 
-@mock.patch('extensions.display_extended_vector_xy_graph.LegendTableDialog')
-@mock.patch('extensions.display_extended_vector_xy_graph.getOpenFileName')
-class TestPersistentData(Base):
+@mock.patch(f'{MODULE_PATH}.LegendTableDialog')
+@mock.patch(f'{MODULE_PATH}.getOpenFileName')
+class TestPersistentData(BaseExtendedVectorXYGraphTest):
 
     def test_basics(self, *_):
         assert len(self.controller._persistent_curves) == 0
@@ -298,3 +311,164 @@ class TestPersistentData(Base):
     @property
     def persistent_curves(self):
         return self.controller._persistent_curves
+
+
+# -----------------------------------------------------------------------------
+# Table Vector XY Graph tests
+
+class TableSchema(Configurable):
+    label = String()
+    x = VectorUInt32()
+    y = VectorUInt32()
+
+
+class DeviceWithTable(Configurable):
+    prop = VectorHash(rows=TableSchema)
+
+
+class BaseTableVectorXYGraphTest(Base):
+    """"""
+
+    def setUp(self):
+        super(Base, self).setUp()
+        schema = DeviceWithTable.getClassSchema()
+        binding = build_binding(schema)
+        root_proxy = DeviceProxy(binding=binding, device_id='TestDevice')
+        root_proxy.status = ProxyStatus.ONLINE
+        self.prop_proxy = PropertyProxy(root_proxy=root_proxy, path='prop')
+
+        self.controller = EditableTableVectorXYGraph(proxy=self.prop_proxy)
+        self.controller.create(None)
+
+    def set_table(self, **rows):
+        table = [Hash('label', label, 'x', values[0], 'y', values[1])
+                 for label, values in rows.items()]
+        set_proxy_value(self.prop_proxy, 'prop', table)
+
+
+class TestTableVectorXYGraph(BaseTableVectorXYGraphTest):
+    def test_basics(self):
+        self.set_table(first=np.array([[0, 1, 2, 3, 4],
+                                       [5, 6, 7, 8, 9]]),
+                       second=np.array([[10, 11, 12, 13],
+                                       [14, 15, 16, 17]]))
+        assert len(self.controller._curves) == 2
+
+        first = self.controller._curves['first']
+        assert_array_equal(first.xData, [0, 1, 2, 3, 4])
+        assert_array_equal(first.yData, [5, 6, 7, 8, 9])
+
+        second = self.controller._curves['second']
+        assert_array_equal(second.xData, [10, 11, 12, 13])
+        assert_array_equal(second.yData, [14, 15, 16, 17])
+
+    def test_empty(self):
+        assert len(self.controller._curves) == 0
+
+    def test_add_rows(self):
+        self.set_table(first=np.array([[0, 1, 2, 3, 4],
+                                       [5, 6, 7, 8, 9]]),
+                       second=np.array([[10, 11, 12, 13],
+                                       [14, 15, 16, 17]]))
+        assert len(self.controller._curves) == 2
+
+        self.set_table(first=np.array([[0, 1, 2, 3, 4],
+                                       [5, 6, 7, 8, 9]]),
+                       second=np.array([[10, 11, 12, 13],
+                                       [14, 15, 16, 17]]),
+                       third=np.array([[20, 21, 22, 23],
+                                       [24, 25, 26, 27]]))
+        assert len(self.controller._curves) == 3
+
+        first = self.controller._curves['first']
+        assert_array_equal(first.xData, [0, 1, 2, 3, 4])
+        assert_array_equal(first.yData, [5, 6, 7, 8, 9])
+
+        second = self.controller._curves['second']
+        assert_array_equal(second.xData, [10, 11, 12, 13])
+        assert_array_equal(second.yData, [14, 15, 16, 17])
+
+        third = self.controller._curves['third']
+        assert_array_equal(third.xData, [20, 21, 22, 23])
+        assert_array_equal(third.yData, [24, 25, 26, 27])
+
+    def test_remove_rows(self):
+        self.set_table(first=np.array([[0, 1, 2, 3, 4],
+                                       [5, 6, 7, 8, 9]]),
+                       second=np.array([[10, 11, 12, 13],
+                                       [14, 15, 16, 17]]))
+        assert len(self.controller._curves) == 2
+
+        self.set_table(first=np.array([[0, 1, 2, 3, 4],
+                                       [5, 6, 7, 8, 9]]))
+        assert len(self.controller._curves) == 1
+
+        first = self.controller._curves['first']
+        assert_array_equal(first.xData, [0, 1, 2, 3, 4])
+        assert_array_equal(first.yData, [5, 6, 7, 8, 9])
+
+    def test_configure_data(self):
+        self.set_table(first=np.array([[0, 1, 2, 3, 4],
+                                       [5, 6, 7, 8, 9]]),
+                       second=np.array([[10, 11, 12, 13],
+                                       [14, 15, 16, 17]]))
+
+
+@mock.patch(f'{MODULE_PATH}.send_property_changes',
+            new=patched_send_property_changes)
+@mock.patch(f'{MODULE_PATH}.LegendTableDialog')
+class TestConfigureTableVectorXYGraph(BaseTableVectorXYGraphTest):
+
+    def test_rename(self, mocked_dialog, *_):
+        self.set_table(first=np.array([[0, 1, 2, 3, 4],
+                                       [5, 6, 7, 8, 9]]),
+                       second=np.array([[10, 11, 12, 13],
+                                       [14, 15, 16, 17]]))
+        assert len(self.controller._curves) == 2
+
+        config = {"names": ['first', 'second'],
+                  "legends": ['firsty', 'secondy'],
+                  "removed": [False, False]}
+        mocked_dialog.get.return_value = (config, True)
+        self.controller.configure_data()
+
+        mocked_dialog.get.assert_called_with(
+            {"names": ['first', 'second'],
+             "legends": ['first', 'second'],
+             "removable": [True, True]},
+            parent=self.controller.widget
+        )
+        assert len(self.controller._curves) == 2
+
+        first = self.controller._curves['firsty']
+        assert_array_equal(first.xData, [0, 1, 2, 3, 4])
+        assert_array_equal(first.yData, [5, 6, 7, 8, 9])
+
+        second = self.controller._curves['secondy']
+        assert_array_equal(second.xData, [10, 11, 12, 13])
+        assert_array_equal(second.yData, [14, 15, 16, 17])
+
+    def test_remove(self, mocked_dialog, *_):
+        self.set_table(first=np.array([[0, 1, 2, 3, 4],
+                                       [5, 6, 7, 8, 9]]),
+                       second=np.array([[10, 11, 12, 13],
+                                       [14, 15, 16, 17]]))
+        assert len(self.controller._curves) == 2
+
+        config = {"names": ['first', 'second'],
+                  "legends": ['first', 'second'],
+                  "removed": [True, False]}
+        mocked_dialog.get.return_value = (config, True)
+        self.controller.configure_data()
+
+        mocked_dialog.get.assert_called_with(
+            {"names": ['first', 'second'],
+             "legends": ['first', 'second'],
+             "removable": [True, True]},
+            parent=self.controller.widget
+        )
+        assert len(self.controller._curves) == 1
+
+        second = self.controller._curves['second']
+        assert_array_equal(second.xData, [10, 11, 12, 13])
+        assert_array_equal(second.yData, [14, 15, 16, 17])
