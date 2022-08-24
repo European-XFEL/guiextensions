@@ -2,7 +2,7 @@ from unittest import main
 
 from qtpy.QtCore import QItemSelectionModel, Qt
 
-from extensions.display_critical_compare_view import DisplayCriticalCompareView
+from extensions.display_recovery_compare_view import DisplayRecoveryCompareView
 from karabo.native import AccessMode, Configurable, Hash, String, VectorHash
 from karabogui.testing import GuiTestCase, get_property_proxy, set_proxy_hash
 
@@ -45,7 +45,7 @@ class TestComponentView(GuiTestCase):
         super().setUp()
         schema = Object.getClassSchema()
         self.proxy = get_property_proxy(schema, "prop")
-        self.controller = DisplayCriticalCompareView(proxy=self.proxy)
+        self.controller = DisplayRecoveryCompareView(proxy=self.proxy)
         self.controller.create(None)
 
     def tearDown(self):

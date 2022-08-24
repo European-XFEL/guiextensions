@@ -2,7 +2,6 @@ from setuptools import find_packages, setup
 
 entries = {
     'karabogui.gui_extensions': [
-        'CriticalCompareView = extensions.display_critical_compare_view',
         'BeamGraph = extensions.display_beam_graph',
         'ConditionCommand = extensions.display_condition',
         'DateTimeEdit = extensions.edit_datetime_label',
@@ -20,6 +19,7 @@ entries = {
         'NetworkX = extensions.display_networkx',
         'PointAndClick = extensions.point_and_click',
         'PulseIdMap = extensions.display_pulse_info',
+        'RecoveryCompareView = extensions.display_recovery_compare_view',
         'RecoveryReportTable = extensions.display_recovery_report_table',
         'RoiGraph = extensions.display_roi_graph',
         'ScatterPosition = extensions.display_scatter_position',

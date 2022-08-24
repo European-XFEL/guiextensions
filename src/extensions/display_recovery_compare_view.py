@@ -31,13 +31,11 @@ from .models.api import CriticalCompareViewModel
     binding_type=VectorHashBinding,
     is_compatible=with_display_type("CriticalCompareView"),
     priority=-10, can_show_nothing=False)
-class DisplayCriticalCompareView(BaseTableController):
+class DisplayRecoveryCompareView(BaseTableController):
     model = Instance(CriticalCompareViewModel, args=())
 
     searchLabel = Instance(QLineEdit)
     hasCustomMenu = Bool(True)
-
-    eventFilter = Instance(QObject)
 
     def create_widget(self, parent):
         table_widget = super().create_widget(parent)
@@ -73,8 +71,7 @@ class DisplayCriticalCompareView(BaseTableController):
                     return True
                 return super().eventFilter(obj, event)
 
-        self.eventFilter = EventFilter(self)
-        table_widget.viewport().installEventFilter(self.eventFilter)
+        table_widget.viewport().installEventFilter(EventFilter(widget))
         return widget
 
     def createModel(self, model):
