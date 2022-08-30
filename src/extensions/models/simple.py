@@ -3,7 +3,7 @@ from xml.etree.ElementTree import SubElement
 from traits.api import Bool, Enum, Int, String
 
 from karabo.common.scenemodel.api import (
-    BaseDisplayEditableWidget, BaseWidgetObjectData)
+    BaseDisplayEditableWidget, BaseWidgetObjectData, ImageGraphModel)
 from karabo.common.scenemodel.bases import BaseEditWidget
 from karabo.common.scenemodel.const import NS_KARABO, WIDGET_ELEMENT_TAG
 from karabo.common.scenemodel.io_utils import (
@@ -36,6 +36,11 @@ class DoocsMirrorTableModel(BaseWidgetObjectData):
 
 class DisplayConditionCommand(BaseWidgetObjectData):
     """ A model for the Condition Command Base Widget """
+
+
+class ROIAnnotateModel(ImageGraphModel):
+    """ A model for Image Annotation"""
+    coordinateDevice = String('')
 
 
 class ScantoolBaseModel(BaseWidgetObjectData):
@@ -86,8 +91,8 @@ _SIMPLE_WIDGET_MODELS = (
     "IPMQuadrantModel", "DoocsLocationTableModel", "DoocsMirrorTableModel",
     "PulseIdMapModel", "DynamicPulseIdMapModel", "CriticalCompareViewModel",
     "RecoveryReportTableModel", "DisplayConditionCommand",
-    "DetectorCellsModel",
-)
+    "DetectorCellsModel", "ROIAnnotateModel")
+
 
 _SIMPLE_DISPLAY_EDIT_MODELS = ("StateAwareComponentManagerModel",)
 
@@ -160,6 +165,32 @@ def _selection_convenience_table_write(write_func, model, parent):
                 str(model.resizeToContents).lower())
     element.set(NS_KARABO + 'filterKeyColumn', str(model.filterKeyColumn))
     return element
+
+
+@register_scene_reader('ROIAnnotate')
+def _image_annotate_reader(element):
+    traits = read_base_widget_data(element)
+    traits['aux_plots'] = int(element.get(NS_KARABO + 'aux_plots', '0'))
+    traits['colormap'] = element.get(NS_KARABO + 'colormap', "viridis")
+    traits['aspect_ratio'] = int(element.get(NS_KARABO + 'aspect_ratio', 1))
+    show_scale = element.get(NS_KARABO + 'show_scale', '1')
+    traits['show_scale'] = bool(int(show_scale))
+    element.get(NS_KARABO + 'coordinateDevice', '')
+    return ROIAnnotateModel(**traits)
+
+
+@register_scene_writer(ROIAnnotateModel)
+def _image_annotate_writer(model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_widget_data(model, element, 'ROIAnnotate')
+    element.set(NS_KARABO + 'colormap', model.colormap)
+    element.set(NS_KARABO + 'aux_plots', str(model.aux_plots))
+    element.set(NS_KARABO + 'aspect_ratio', str(model.aspect_ratio))
+    show_scale = str(int(model.show_scale))
+    element.set(NS_KARABO + 'show_scale', show_scale)
+    element.set(NS_KARABO + 'coordinateDevice', str(model.coordinateDevice))
+    return element
+
 
 # ----------------------------------------------------------------------------
 # Private
