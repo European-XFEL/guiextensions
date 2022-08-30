@@ -2,6 +2,7 @@ from setuptools import find_packages, setup
 
 entries = {
     'karabogui.gui_extensions': [
+        'Amore = extensions.amore.display_roi_annotate',
         'BeamGraph = extensions.display_beam_graph',
         'ConditionCommand = extensions.display_condition',
         'DateTimeEdit = extensions.edit_datetime_label',
