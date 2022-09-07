@@ -36,6 +36,7 @@ class DisplayRecoveryCompareView(BaseTableController):
 
     searchLabel = Instance(QLineEdit)
     hasCustomMenu = Bool(True)
+    eventFilter = Instance(QObject)
 
     def create_widget(self, parent):
         table_widget = super().create_widget(parent)
@@ -71,7 +72,8 @@ class DisplayRecoveryCompareView(BaseTableController):
                     return True
                 return super().eventFilter(obj, event)
 
-        table_widget.viewport().installEventFilter(EventFilter(widget))
+        self.eventFilter = EventFilter(self)
+        table_widget.viewport().installEventFilter(self.eventFilter)
         return widget
 
     def createModel(self, model):
@@ -99,24 +101,13 @@ class DisplayRecoveryCompareView(BaseTableController):
         menu = QMenu(parent=self.widget)
         action_show_changes = menu.addAction("Show Changes")
         action_show_changes.triggered.connect(self.onViewChanges)
+        action_show_changes = menu.addAction("Show Compared Properties")
+        action_show_changes.triggered.connect(self.onViewProperties)
+
         menu.exec(self.tableWidget().viewport().mapToGlobal(pos))
 
-    def request_handler(self, device_id, success, reply):
-        if not success:
-            messagebox.show_error(f"Request for {device_id} timed out.")
-            return
-
-        payload = reply["payload"]
-        if not payload["success"]:
-            reason = payload["reason"]
-            messagebox.show_error(f"Request for {device_id} not "
-                                  f"successful: {reason}.")
-            return
-
-        data = payload["data"]
-        dialog = CompareDialog(title="Critical Comparison View",
-                               data=data, parent=self.widget)
-        dialog.show()
+    # Action Slots
+    # ----------------------------------------------------------------------
 
     def onViewChanges(self):
         index = self.currentIndex()
@@ -124,6 +115,55 @@ class DisplayRecoveryCompareView(BaseTableController):
             return
 
         device_id = self.getModelData(index.row(), 0)
-        handler = partial(WeakMethodRef(self.request_handler), device_id)
+        handler = partial(WeakMethodRef(self._compare_handler), device_id)
         call_device_slot(handler, self.getInstanceId(),
                          "requestAction", action="view", deviceId=device_id)
+
+    def onViewProperties(self):
+        index = self.currentIndex()
+        if not index.isValid():
+            return
+
+        classId = self.getModelData(index.row(), 1)
+        handler = partial(WeakMethodRef(self._show_class_handler), classId)
+        call_device_slot(handler, self.getInstanceId(),
+                         "requestAction", action="compareProperties",
+                         classId=classId)
+
+    # Action handlers
+    # ----------------------------------------------------------------------
+
+    def _compare_handler(self, device_id, success, reply):
+        if not success:
+            messagebox.show_error(
+                f"Compare request for {device_id} failed.",
+                parent=self.widget)
+            return
+
+        payload = reply["payload"]
+        data = payload["data"]
+        dialog = CompareDialog(title="Critical Comparison View",
+                               data=data, parent=self.widget)
+        dialog.show()
+
+    def _show_class_handler(self, classId, success, reply):
+        if not success:
+            messagebox.show_error(
+                f"Show properties request for {classId} failed.",
+                parent=self.widget)
+            return
+
+        payload = reply["payload"]
+        data = payload["data"]
+        # If we retrieve an empty Hash, all properties have been compared
+        if not len(data):
+            text = ("All properties were considered for comparison of devices "
+                    f"of class <b>{classId}</b>!")
+        else:
+            data = sorted(data)
+            props = "".join(f"<li>{prop}</li>" for prop in data)
+            text = ("<strong>The following properties were considered: "
+                    f"</strong><ul>{props}</ul>")
+
+        messagebox.show_information(text, title="Comparison - Properties",
+                                    parent=self.widget)
