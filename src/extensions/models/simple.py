@@ -47,6 +47,10 @@ class ScantoolBaseModel(BaseWidgetObjectData):
     """ A model for the Scantool Base Widget """
 
 
+class ScantoolDeviceViewModel(BaseEditWidget):
+    """A model for the ScantoolDeviceViewModel device"""
+
+
 class StateAwareComponentManagerModel(BaseDisplayEditableWidget):
     """ A model for the Component Manager Device Selection"""
     klass = Enum('DisplayStateAwareComponentManager',
@@ -82,6 +86,7 @@ class SelectionTableModel(BaseEditWidget):
     filterKeyColumn = Int(0)
     sortingEnabled = Bool(False)
 
+
 # Reader and writers ...
 # --------------------------------------------------------------------------
 
@@ -107,6 +112,19 @@ def _scantool_base_reader(read_func, element):
 def _scantool_base_writer(write_func, model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'Scantool-Base')
+    return element
+
+
+@register_scene_reader('Scantool-Device-View')
+def _scantool_device_view_reader(element):
+    traits = read_base_widget_data(element)
+    return ScantoolDeviceViewModel(**traits)
+
+
+@register_scene_writer(ScantoolDeviceViewModel)
+def _scantool_device_view_writer(model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_widget_data(model, element, 'Scantool-Device-View')
     return element
 
 

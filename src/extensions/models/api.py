@@ -12,4 +12,5 @@ from .simple import (
     CriticalCompareViewModel, DoocsLocationTableModel, DoocsMirrorTableModel,
     DynamicPulseIdMapModel, EditableDateTimeModel, IPMQuadrantModel,
     PointAndClickModel, PulseIdMapModel, RecoveryReportTableModel,
-    ScantoolBaseModel, SelectionTableModel, StateAwareComponentManagerModel)
+    ScantoolBaseModel, ScantoolDeviceViewModel, SelectionTableModel,
+    StateAwareComponentManagerModel)
