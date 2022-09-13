@@ -74,9 +74,7 @@ class ScantoolDeviceView(BaseBindingController):
             self._changed_groups[dev_proxy_path] = False
 
         self._treewidget.itemChanged.connect(self._item_changed)
-        self._toolbar.addButtonClicked.connect(self._add_devices)
-        self._toolbar.applyButtonClicked.connect(self._apply_changes)
-        self._toolbar.removeAllButtonClicked.connect(self._remove_devices)
+        self._toolbar.buttonClicked.connect(self._toolbar_button_clicked)
 
         self._device_dialog = ScantoolDeviceDialog(parent=self.widget)
         self._device_dialog.addDevicesSignal.connect(
@@ -125,6 +123,7 @@ class ScantoolDeviceView(BaseBindingController):
         for device in devices:
             self.add_device_tree_item(device, group_item, proxy.path)
         group_item.setExpanded(True)
+        group_item.setSelected(False)
 
         self._toolbar.set_apply_button_enabled(False)
         self._is_updating = False
@@ -157,8 +156,15 @@ class ScantoolDeviceView(BaseBindingController):
         self._is_updating = False
         self._is_editing = False
 
-    def _add_devices(self):
-        self._device_dialog.show()
+    def _toolbar_button_clicked(self, button_type):
+        if button_type == "add":
+            self._device_dialog.show()
+        elif button_type == "sort":
+            self._sort_devices()
+        elif button_type == "remove_all":
+            self._remove_devices()
+        elif button_type == "apply":
+            self._apply_changes()
 
     def _add_devices_from_dialog(self, device_type, devices):
         if devices:
@@ -172,6 +178,16 @@ class ScantoolDeviceView(BaseBindingController):
                     self._toolbar.set_apply_button_enabled(True)
                     break
 
+    def _sort_devices(self):
+        for group_item in self._group_refs.values():
+            unchecked_items = []
+            for index in reversed(range(group_item.childCount())):
+                if group_item.child(index).checkState(0) != Qt.Checked:
+                    unchecked_items.append(group_item.takeChild(index))
+            for item in unchecked_items:
+                group_item.addChild(item)
+        self._apply_changes()
+
     def _remove_devices(self):
         reply = QMessageBox.question(
             self._treewidget.parent(), "Remove Devices",
@@ -181,7 +197,7 @@ class ScantoolDeviceView(BaseBindingController):
             for group_item in self._group_refs.values():
                 for index in reversed(range(group_item.childCount())):
                     group_item.takeChild(index)
-            self._toolbar.set_apply_button_enabled(True)
+            self._apply_changes()
 
     def _apply_changes(self):
         proxies = []
