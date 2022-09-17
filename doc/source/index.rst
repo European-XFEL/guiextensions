@@ -8,6 +8,7 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
+   install_latest_version
    widget_documentation
    whats_new
    gui_scene_development
