@@ -28,6 +28,7 @@ entries = {
         'ScantoolDeviceView = extensions.display_scantool_device_view',
         'SelectionTable = extensions.edit_selection_table',
         'StateAwareComponentManager = extensions.stateaware_component_manager',
+        'XasGraph = extensions.display_xas_graph',
     ],
 }
 

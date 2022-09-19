@@ -9,7 +9,8 @@ import pyqtgraph as pg
 from traits.api import Instance, List
 
 from extensions.models.metro import MetroTwinXGraphModel
-from extensions.utils import get_array_data, get_node_value, guess_path
+from extensions.utils import (
+    add_twinx, get_array_data, get_node_value, guess_path)
 from karabo.common.scenemodel.api import build_model_config
 from karabogui.binding.api import (
     NDArrayBinding, VectorNumberBinding, WidgetNodeBinding)
@@ -19,7 +20,7 @@ from karabogui.graph.common.api import KaraboLegend, get_pen_cycler
 from karabogui.graph.plots.api import (
     KaraboPlotView, VectorBarGraphPlot, generate_down_sample, get_view_range)
 
-from .utils import PlotData, add_twinx
+from .utils import PlotData
 
 
 @register_binding_controller(

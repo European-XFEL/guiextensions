@@ -50,6 +50,13 @@ class TableVectorXYGraphModel(BasePlotModel):
     klass = Enum('DisplayTableVectorXYGraph', 'EditableTableVectorXYGraph')
 
 
+class XasGraphModel(BasePlotModel):
+    """ A model for the metro XAS graph """
+    x_label = String('Energy')
+    x_units = String('eV')
+    y_label = String('XAS')
+
+
 @register_scene_reader('ScatterPosition')
 def _scatter_position_reader(read_func, element):
     traits = read_base_plot(element)
@@ -146,3 +153,15 @@ def _table_vector_xy_writer(model, parent):
     write_base_plot(model, element, 'TableVectorXYGraph')
     element.set(NS_KARABO + 'legends', ",".join(model.legends))
     return element
+
+
+@register_scene_reader('XasGraph')
+def _xas_graph_reader(element):
+    traits = read_base_plot(element)
+    return XasGraphModel(**traits)
+
+
+@register_scene_writer(XasGraphModel)
+def _xas_graph_writer(model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_plot(model, element, 'XasGraph')
