@@ -14,19 +14,24 @@ except ImportError:
 from karabo.common.api import State
 from karabo.native import (
     AccessMode, Configurable, Double, Hash, Node, String, UInt32, VectorDouble,
-    VectorInt32)
+    VectorInt32, VectorString)
 from karabogui.binding.api import (
     DeviceClassProxy, PropertyProxy, apply_configuration, build_binding)
-from karabogui.testing import GuiTestCase, set_proxy_value
+from karabogui.testing import GuiTestCase, get_property_proxy, set_proxy_value
 
-from ..display_scantool_dynamic import ScantoolDynamicWidget
+from ..display_scantool_dynamic import (
+    HISTORY_PROXY_PATH, ScantoolDynamicWidget)
 from ..scantool.const import (
-    ACTUAL_STEP, CURRENT_INDEX, MESHES, MOTOR_NAMES, MOTORS, SCAN_TYPE,
-    SOURCE_NAMES, SOURCES, START_POSITIONS, STEPS, STOP_POSITIONS, X_DATA,
-    Y_DATA, Z_DATA)
+    ACTUAL_STEP, CURRENT_INDEX, MESHES, MOTOR_IDS, MOTOR_NAMES, MOTORS,
+    NR_MOTORS, NR_VALUES, SCAN_TYPE, SOURCE_IDS, SOURCE_NAMES, SOURCES,
+    START_POSITIONS, STEPS, STOP_POSITIONS, X_DATA, Y_DATA, Z_DATA)
+
+MAX_OUTPUT_POINTS = 100
 
 
 class DataNode(Configurable):
+    # Data node represent actual karabacon output schema
+
     displayType = "WidgetNode|Scantool-Base"
 
     # Scan settings
@@ -55,41 +60,90 @@ class DataNode(Configurable):
         defaultValue=[1.])
 
     # Motor and source values
-    pos0 = Double(
-        defaultValue=0.0,
+    for index in range(NR_MOTORS):
+        locals()[f'pos{index}'] = Double(
+            defaultValue=0.0,
+            accessMode=AccessMode.READONLY)
+
+    for index in range(NR_VALUES):
+        locals()[f'y{index}'] = Double(
+            defaultValue=0.0,
+            accessMode=AccessMode.READONLY)
+
+    motorIds = VectorString(
+        displayedName="Motor IDs",
+        description="Motor IDs",
+        defaultValue=[],
+        maxSize=NR_MOTORS,
         accessMode=AccessMode.READONLY)
-    pos1 = Double(
-        defaultValue=0.0,
+
+    sourceIds = VectorString(
+        displayedName="Data Source IDs",
+        description="Data Source IDs",
+        defaultValue=[],
+        maxSize=NR_VALUES,
         accessMode=AccessMode.READONLY)
-    pos2 = Double(
-        defaultValue=0.0,
+
+
+class HistoryNode(Configurable):
+    displayType = "WidgetNode|Scantool-Base"
+
+    scanType = String(
+        defaultValue="ascan",
         accessMode=AccessMode.READONLY)
-    pos3 = Double(
-        defaultValue=0.0,
+
+    steps = VectorInt32(
+        defaultValue=[5],
+        maxSize=16,
         accessMode=AccessMode.READONLY)
-    y0 = Double(
-        defaultValue=0.0,
+
+    startPositions = VectorDouble(
+        accessMode=AccessMode.READONLY,
+        defaultValue=[0.])
+    stopPositions = VectorDouble(
+        accessMode=AccessMode.READONLY,
+        defaultValue=[1.])
+
+    for index in range(NR_MOTORS):
+        locals()[f'pos{index}'] = VectorDouble(
+            maxSize=MAX_OUTPUT_POINTS,
+            accessMode=AccessMode.READONLY)
+
+    for index in range(NR_VALUES):
+        locals()[f'y{index}'] = VectorDouble(
+            maxSize=MAX_OUTPUT_POINTS,
+            accessMode=AccessMode.READONLY)
+
+    motorIds = VectorString(
+        defaultValue=[],
+        maxSize=NR_MOTORS,
         accessMode=AccessMode.READONLY)
-    y1 = Double(
-        defaultValue=0.0,
-        accessMode=AccessMode.READONLY)
-    y2 = Double(
-        defaultValue=0.0,
-        accessMode=AccessMode.READONLY)
-    y3 = Double(
-        defaultValue=0.0,
-        accessMode=AccessMode.READONLY)
-    y4 = Double(
-        defaultValue=0.0,
-        accessMode=AccessMode.READONLY)
-    y5 = Double(
-        defaultValue=0.0,
+
+    sourceIds = VectorString(
+        maxSize=NR_VALUES,
+        defaultValue=[],
         accessMode=AccessMode.READONLY)
 
 
 class OutputSchema(Configurable):
     data = Node(DataNode)
     state = String(enum=State, displayType='State')
+
+
+class HistoryDataNode(Configurable):
+    data = Node(HistoryNode)
+
+
+class HistorySchemaNode(Configurable):
+    schema = Node(HistoryDataNode)
+
+
+class HistoryOutputNode(Configurable):
+    output = Node(HistorySchemaNode)
+
+
+class HistoryOutputSchema(Configurable):
+    history = Node(HistoryOutputNode)
 
 
 class TestScantoolDynamicWidget(GuiTestCase):
@@ -104,9 +158,13 @@ class TestScantoolDynamicWidget(GuiTestCase):
                                   status=ProxyStatus.ONLINE)
         self.proxy = PropertyProxy(root_proxy=device, path='data')
 
+        schema = HistoryOutputSchema.getClassSchema()
+        self.history_proxy = get_property_proxy(schema, HISTORY_PROXY_PATH)
+
         # Create the controllers and initialize their widgets
         self.controller = ScantoolDynamicWidget(proxy=self.proxy)
         self.controller.create(None)
+        self.controller.visualize_additional_property(self.history_proxy)
         self.controller._first_proxy_received = True
         self._scan = None
 
@@ -202,6 +260,13 @@ class TestScantoolDynamicWidget(GuiTestCase):
         self._write_full_scan(config)
         self._assert_full_scan(config)
 
+    def test_history_plot(self):
+        # Do a full scan
+        config = ASCAN_CONFIG
+        self._write_scan_history(config)
+        self._assert_full_scan(config)
+        self._assert_multicurve_plot(config)
+
     # -----------------------------------------------------------------------
     # Helper methods
 
@@ -246,18 +311,53 @@ class TestScantoolDynamicWidget(GuiTestCase):
         self._scan = self.controller._scan
         set_proxy_value(self.proxy, 'state', 'ON')
 
+    def _write_scan_history(self, config):
+        # Set initial scan config
+        data = Hash(SCAN_TYPE, config[SCAN_TYPE],
+                    STEPS, config[STEPS],
+                    START_POSITIONS, config[START_POSITIONS],
+                    STOP_POSITIONS, config[STOP_POSITIONS],
+                    *self._motor_vector_values(
+                        len(config[MOTOR_IDS]), config[STEPS][0]),
+                    *self._source_vector_values(
+                        len(config[SOURCE_IDS]), config[STEPS][0]),
+                    MOTOR_IDS, config[MOTOR_IDS],
+                    SOURCE_IDS, config[SOURCE_IDS],)
+        apply_configuration(data, self.history_proxy.binding)
+        self._scan = self.controller._history_scan
+
     def _motor_values(self, num_motors, actual_step):
         """Dummy motor values."""
         values = []
-        for motor in range(num_motors):
-            values.extend(["pos{}".format(motor), actual_step + motor])
+        for index in range(num_motors):
+            values.extend([f"pos{index}", actual_step + index])
         return values
 
     def _source_values(self, num_sources, actual_step):
-        """Dummy motor values."""
+        """Dummy source values."""
         values = []
-        for motor in range(num_sources):
-            values.extend(["y{}".format(motor), (actual_step + motor) ** 2])
+        for index in range(num_sources):
+            values.extend([f"y{index}", (actual_step + index) ** 2])
+        return values
+
+    def _motor_vector_values(self, num_motors, total_steps):
+        """Dummy motor vector values."""
+        values = []
+        for index in range(NR_MOTORS):
+            if index <= num_motors - 1:
+                values.extend([f"pos{index}", list(range(0, total_steps + 1))])
+            else:
+                values.extend([f"pos{index}", []])
+        return values
+
+    def _source_vector_values(self, num_sources, total_steps):
+        """Dummy source vector values."""
+        values = []
+        for index in range(NR_VALUES):
+            if index <= num_sources - 1:
+                values.extend([f"y{index}",  [i*i for i in range(10)]])
+            else:
+                values.extend([f"y{index}", []])
         return values
 
     # -----------------------------------------------------------------------

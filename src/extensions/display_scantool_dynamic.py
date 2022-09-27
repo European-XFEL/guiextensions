@@ -7,7 +7,8 @@ import numpy as np
 from traits.api import Bool, Instance
 
 from karabo.common.states import State
-from karabogui.binding.api import WidgetNodeBinding, get_binding_value
+from karabogui.binding.api import (
+    PropertyProxy, VectorHashBinding, WidgetNodeBinding, get_binding_value)
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller, with_display_type)
 
@@ -19,11 +20,13 @@ from .scantool.const import (
 from .scantool.controller import ScanController
 from .scantool.data.scan import Scan
 
+HISTORY_PROXY_PATH = "history.output.schema.data"
+
 
 @register_binding_controller(
     ui_name='Scantool Base Widget',
     klassname='Scantool-Base',
-    binding_type=WidgetNodeBinding,
+    binding_type=(WidgetNodeBinding, VectorHashBinding),
     is_compatible=with_display_type('WidgetNode|Scantool-Base'),
     priority=0, can_show_nothing=False)
 class ScantoolDynamicWidget(BaseBindingController):
@@ -32,6 +35,8 @@ class ScantoolDynamicWidget(BaseBindingController):
     _controller = Instance(ScanController)
     # Scan contains the scan parameters, device objects
     _scan = Instance(Scan)
+    _history_scan = Instance(Scan)
+    _history_proxy = Instance(PropertyProxy)
 
     _is_scanning = Bool(False)
     _first_proxy_received = Bool(False)
@@ -40,6 +45,15 @@ class ScantoolDynamicWidget(BaseBindingController):
         self._controller = ScanController(parent=parent)
         self._controller.add_data_selection()
         return self._controller.widget
+
+    def add_proxy(self, proxy):
+        if proxy.path == HISTORY_PROXY_PATH and self._history_proxy is None:
+            self._history_proxy = PropertyProxy(
+                root_proxy=proxy.root_proxy,
+                path=proxy.path)
+            return True
+        else:
+            return False
 
     def value_update(self, proxy):
         # This is for initialization.
@@ -50,7 +64,9 @@ class ScantoolDynamicWidget(BaseBindingController):
 
         # Reject first node proxy from first widget creation,
         # This contains unwanted default values. Still thinking about this.
-        if not self._first_proxy_received:
+        if proxy.path == HISTORY_PROXY_PATH:
+            self._history_scan = self._plot_history_scan(proxy)
+        elif not self._first_proxy_received:
             self._first_proxy_received = True
             return
 
@@ -112,6 +128,59 @@ class ScantoolDynamicWidget(BaseBindingController):
             self._controller.use_multicurve_plot()
         else:
             self._controller.use_heatmap_plot()
+
+        return scan
+
+    def _plot_history_scan(self, proxy):
+        if not self._is_node_proxy_valid(proxy):
+            return
+
+        # Setup new scan object
+        proxies = proxy.value
+        config = {}
+
+        # Get scan parameters
+        config.update({
+            SCAN_TYPE: self._get_value(proxies, SCAN_TYPE),
+            STEPS: self._get_value(proxies, STEPS),
+            ACTUAL_STEP: 0,
+            CURRENT_INDEX: [0],
+            START_POSITIONS: self._get_value(proxies, START_POSITIONS),
+            STOP_POSITIONS: self._get_value(proxies, STOP_POSITIONS)})
+        # Get active motor and data sources
+        motors = [motor for motor in MOTOR_NAMES
+                  if self._get_value(proxies, motor).size]
+        sources = [source for source in SOURCE_NAMES
+                   if self._get_value(proxies, source).size]
+        config.update({MOTORS: motors, SOURCES: sources,
+                       MOTOR_IDS: self._get_value(proxies, MOTOR_IDS),
+                       SOURCE_IDS: self._get_value(proxies, SOURCE_IDS)})
+        scan = self._controller.new_scan(config)
+
+        if config[SCAN_TYPE] in ASCANS + DSCANS + CSCANS:
+            self._controller.use_multicurve_plot()
+            for step in range(config[STEPS][0] + 1):
+                scan.actual_step = step
+                scan.current_index = [step]
+
+                for device in scan.devices:
+                    value = get_binding_value(getattr(proxies, device.name))
+                    device.add(value[step], [step])
+                    self._controller.update(device)
+        else:
+            self._controller.use_heatmap_plot()
+            index = 0
+            for col in range(config[STEPS][0] + 1):
+                for row in range(config[STEPS][1] + 1):
+                    scan.actual_step = index
+                    scan.current_index = [col, row]
+                    # Update values of relevant devices
+                    for device in scan.devices:
+                        value = get_binding_value(
+                            getattr(proxies, device.name))
+                        device.add(value[index], [col, row])
+                        self._controller.update(device)
+                    index += 1
 
         return scan
 
