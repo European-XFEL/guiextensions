@@ -11,9 +11,7 @@ from karabogui.itemtypes import NavigationItemTypes, ProjectItemTypes
 
 class ButtonToolbar(QWidget):
 
-    addButtonClicked = Signal()
-    applyButtonClicked = Signal()
-    removeAllButtonClicked = Signal()
+    buttonClicked = Signal(str)
 
     def __init__(self, tree_widget, parent):
         super(ButtonToolbar, self).__init__(parent)
@@ -33,12 +31,15 @@ class ButtonToolbar(QWidget):
         self.remove_button.setEnabled(False)
         self.remove_all_button = QPushButton(icons.delete, "", self)
         self.remove_all_button.setToolTip("Remove all items")
+        self.sort_button = QPushButton(icons.reset, "", self)
+        self.sort_button.setToolTip("Sort items by active")
         self.apply_button = QPushButton(icons.yes, "Apply", self)
         self.apply_button.setToolTip("Apply changes")
         self.apply_button.setEnabled(False)
 
         hlayout = QHBoxLayout(self)
         hlayout.addWidget(self.add_button)
+        hlayout.addWidget(self.sort_button)
         hlayout.addWidget(self.copy_button)
         hlayout.addWidget(self.up_button)
         hlayout.addWidget(self.down_button)
@@ -53,15 +54,16 @@ class ButtonToolbar(QWidget):
         self.up_button.clicked.connect(self._up_clicked)
         self.down_button.clicked.connect(self._down_clicked)
         self.remove_button.clicked.connect(self._remove_clicked)
+        self.sort_button.clicked.connect(self._sort_clicked)
         self.remove_all_button.clicked.connect(self._remove_all_clicked)
         self.apply_button.clicked.connect(self._apply_clicked)
 
         self.tree_widget = tree_widget
-        self.tree_widget.itemClicked.connect(self._item_clicked)
-        # self.tree_widget.itemAdded.connect(self._item_added)
+        self.tree_widget.itemSelectionChanged.connect(
+            self._item_selection_changed)
 
     def _add_clicked(self):
-        self.addButtonClicked.emit()
+        self.buttonClicked.emit("add")
 
     def _copy_clicked(self):
         item = self.tree_widget.currentItem()
@@ -70,7 +72,6 @@ class ButtonToolbar(QWidget):
         new_item = item.clone()
         parent.insertChild(index + 1, new_item)
         self.tree_widget.setCurrentItem(new_item)
-        self.set_button_states()
         self.set_apply_button_enabled(True)
 
     def _up_clicked(self):
@@ -89,29 +90,36 @@ class ButtonToolbar(QWidget):
         self.set_apply_button_enabled(True)
 
     def _remove_clicked(self):
-        current_index = self.tree_widget.currentIndex()
-        self.tree_widget.model().removeRow(
-            current_index.row(),
-            current_index.parent())
+        item = self.tree_widget.currentItem()
+        parent = item.parent()
+        parent.removeChild(item)
         self.set_apply_button_enabled(True)
         self.set_button_states()
+
+    def _sort_clicked(self):
+        self.buttonClicked.emit("sort")
 
     def _remove_all_clicked(self):
-        self.removeAllButtonClicked.emit()
+        self.buttonClicked.emit("remove_all")
         self.set_apply_button_enabled(True)
+        self.set_button_states()
 
     def _apply_clicked(self):
-        self.applyButtonClicked.emit()
-
-    def _item_clicked(self, item, column):
-        self.set_button_states()
+        self.buttonClicked.emit("apply")
 
     def _item_added(self):
         self.set_apply_button_enabled(True)
 
+    def _item_selection_changed(self):
+        self.set_button_states()
+
     def set_button_states(self):
         item = self.tree_widget.currentItem()
-        is_child_item = self.tree_widget.indexOfTopLevelItem(item) == -1
+        if item is None:
+            # Case when child item has been deleted
+            is_child_item = False
+        else:
+            is_child_item = self.tree_widget.indexOfTopLevelItem(item) == -1
         self.copy_button.setEnabled(is_child_item)
         self.remove_button.setEnabled(is_child_item)
         if is_child_item:
