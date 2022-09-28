@@ -7,7 +7,7 @@ from .metro import (
 from .networkx import FilterInstance, NetworkXModel, NodePosition
 from .plots import (
     DynamicDigitizerModel, DynamicGraphModel, ExtendedVectorXYGraph,
-    ScatterPositionModel, TableVectorXYGraphModel)
+    PeakIntegrationGraphModel, ScatterPositionModel, TableVectorXYGraphModel)
 from .simple import (
     CriticalCompareViewModel, DoocsLocationTableModel, DoocsMirrorTableModel,
     DynamicPulseIdMapModel, EditableDateTimeModel, IPMQuadrantModel,

@@ -18,6 +18,7 @@ entries = {
         'MetroSecAxisGraph = extensions.metro.secaxis_graph',
         'MetroTwinXGraph = extensions.metro.twinx_graph',
         'NetworkX = extensions.display_networkx',
+        'PeakIntegrationGraph = extensions.peak_integration_graph',
         'PointAndClick = extensions.point_and_click',
         'PulseIdMap = extensions.display_pulse_info',
         'RecoveryCompareView = extensions.display_recovery_compare_view',
