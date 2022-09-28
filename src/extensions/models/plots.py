@@ -52,8 +52,7 @@ class TableVectorXYGraphModel(BasePlotModel):
 
 class XasGraphModel(BasePlotModel):
     """ A model for the metro XAS graph """
-    x_label = String('Energy')
-    x_units = String('eV')
+    x_label = String('Bins')
     y_label = String('XAS')
 
 
