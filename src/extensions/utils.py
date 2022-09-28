@@ -109,8 +109,7 @@ class TwinXViewBox(pg.ViewBox):
 
     def __init__(self, y_label=None, parent=None):
         super().__init__(parent=parent, enableMenu=False)
-        self.setMouseEnabled(y=False)
-        # self.menu = None
+        self.setMouseEnabled(x=True, y=True)
         self.setZValue(10000)
         self.setAcceptedMouseButtons(Qt.NoButton)
         self.y_label = y_label
@@ -120,6 +119,7 @@ class TwinXViewBox(pg.ViewBox):
         plotItem.scene().addItem(self)
         viewBox = plotItem.getViewBox()
         viewBox.sigResized.connect(self._resize)
+        viewBox.sigStateChanged.connect(self._view_changed)
 
         # Link to current axes
         axis = plotItem.getAxis('right')
@@ -134,6 +134,16 @@ class TwinXViewBox(pg.ViewBox):
     @Slot(object)
     def _resize(self, main_viewBox):
         self.setGeometry(main_viewBox.sceneBoundingRect())
+
+    @Slot(object)
+    def _view_changed(self, main_viewBox):
+        # We only care about `enableAutoRange` triggers
+        enabled = main_viewBox.autoRangeEnabled()[1]
+        self.enableAutoRange(1, enabled)
+
+    def scaleBy(self, s=None, center=None, x=None, y=None):
+        super().scaleBy(s=s, center=center, x=x, y=y)
+        self.linkedView(0).scaleBy(s=s, x=x, y=y)
 
 
 def add_twinx(plotItem, data_item=None, y_label=None):
