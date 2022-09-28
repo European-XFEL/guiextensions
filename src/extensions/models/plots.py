@@ -57,6 +57,10 @@ class XasGraphModel(BasePlotModel):
     y_label = String('XAS')
 
 
+class PeakIntegrationGraphModel(BasePlotModel):
+    """ A model for the metro XAS graph """
+
+
 @register_scene_reader('ScatterPosition')
 def _scatter_position_reader(read_func, element):
     traits = read_base_plot(element)
@@ -165,3 +169,15 @@ def _xas_graph_reader(element):
 def _xas_graph_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_plot(model, element, 'XasGraph')
+
+
+@register_scene_reader('PeakIntegrationGraph')
+def _peak_integration_graph_reader(element):
+    traits = read_base_plot(element)
+    return PeakIntegrationGraphModel(**traits)
+
+
+@register_scene_writer(PeakIntegrationGraphModel)
+def _peak_integration_graph_writer(model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_plot(model, element, 'PeakIntegrationGraph')

@@ -181,3 +181,10 @@ def test_networkx_model():
         msg = f"Filter does not match for {i}"
         assert model.filterInstances[i].filter_text == filters[i].filter_text, msg  # noqa
         assert model.filterInstances[i].is_active == filters[i].is_active, msg
+
+
+def test_peak_integration_graph_model():
+    traits = _geometry_traits()
+    model = api.PeakIntegrationGraphModel(**traits)
+    read_model = single_model_round_trip(model)
+    _assert_geometry_traits(read_model)
