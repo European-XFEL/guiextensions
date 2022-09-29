@@ -51,6 +51,10 @@ class ScantoolDeviceViewModel(BaseEditWidget):
     """A model for the ScantoolDeviceViewModel device"""
 
 
+class MotorAssignmentTableModel(BaseEditWidget):
+    """A model for the Assignment Table device"""
+
+
 class StateAwareComponentManagerModel(BaseDisplayEditableWidget):
     """ A model for the Component Manager Device Selection"""
     klass = Enum('DisplayStateAwareComponentManager',
@@ -96,8 +100,7 @@ _SIMPLE_WIDGET_MODELS = (
     "IPMQuadrantModel", "DoocsLocationTableModel", "DoocsMirrorTableModel",
     "PulseIdMapModel", "DynamicPulseIdMapModel", "CriticalCompareViewModel",
     "RecoveryReportTableModel", "DisplayConditionCommand",
-    "DetectorCellsModel", "ROIAnnotateModel")
-
+    "DetectorCellsModel", "ROIAnnotateModel", "MotorAssignmentTableModel")
 
 _SIMPLE_DISPLAY_EDIT_MODELS = ("StateAwareComponentManagerModel",)
 

@@ -149,6 +149,13 @@ def test_recovery_report_table_model():
     _assert_geometry_traits(read_model)
 
 
+def test_motor_assignment_table():
+    traits = _geometry_traits()
+    model = api.MotorAssignmentTableModel(**traits)
+    read_model = single_model_round_trip(model)
+    _assert_geometry_traits(read_model)
+
+
 def test_selection_convenience_table_model():
     traits = _geometry_traits()
     model = api.SelectionTableModel(**traits)
@@ -179,7 +186,8 @@ def test_networkx_model():
         assert model.nodePositions[i].y == positions[i].y, msg
 
         msg = f"Filter does not match for {i}"
-        assert model.filterInstances[i].filter_text == filters[i].filter_text, msg  # noqa
+        assert model.filterInstances[i].filter_text == filters[
+            i].filter_text, msg  # noqa
         assert model.filterInstances[i].is_active == filters[i].is_active, msg
 
 

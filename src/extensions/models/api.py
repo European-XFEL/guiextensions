@@ -12,6 +12,6 @@ from .plots import (
 from .simple import (
     CriticalCompareViewModel, DoocsLocationTableModel, DoocsMirrorTableModel,
     DynamicPulseIdMapModel, EditableDateTimeModel, IPMQuadrantModel,
-    PointAndClickModel, PulseIdMapModel, RecoveryReportTableModel,
-    ScantoolBaseModel, ScantoolDeviceViewModel, SelectionTableModel,
-    StateAwareComponentManagerModel)
+    MotorAssignmentTableModel, PointAndClickModel, PulseIdMapModel,
+    RecoveryReportTableModel, ScantoolBaseModel, ScantoolDeviceViewModel,
+    SelectionTableModel, StateAwareComponentManagerModel)
