@@ -26,7 +26,9 @@ class CompleterDelegate(QStyledItemDelegate):
         """Reimplemented function of QStyledItemDelegate"""
         editor = QLineEdit(parent)
         value = get_binding_value(self.proxy, [])
-        editor.setCompleter(QCompleter(value))
+        completer = QCompleter(value)
+        completer.setCaseSensitivity(Qt.CaseInsensitive)
+        editor.setCompleter(completer)
         return editor
 
     def setModelData(self, editor, model, index):
@@ -49,7 +51,9 @@ class MotorCompleterDelegate(QStyledItemDelegate):
             interfaces = a.get("interfaces", 0)
             if self._check_interface(interfaces, Interfaces.Motor):
                 filtered.append(k)
-        editor.setCompleter(QCompleter(filtered))
+        completer = QCompleter(filtered)
+        completer.setCaseSensitivity(Qt.CaseInsensitive)
+        editor.setCompleter(completer)
         return editor
 
     def _check_interface(self, mask, bit):
