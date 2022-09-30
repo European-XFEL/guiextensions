@@ -3,7 +3,7 @@ from unittest import main
 from qtpy.QtCore import Qt
 
 from extensions.edit_motor_stage_table import (
-    CompleterDelegate, EditableAssignmentTable)
+    CompleterDelegate, EditableAssignmentTable, MotorCompleterDelegate)
 from karabo.native import (
     AccessMode, Configurable, Hash, String, VectorHash, VectorString)
 from karabogui.testing import GuiTestCase, get_property_proxy, set_proxy_hash
@@ -65,8 +65,7 @@ class TestAssignmentTable(GuiTestCase):
 
     def test_delegate(self):
         delegate = self.controller.tableWidget().itemDelegateForColumn(0)
-        self.assertIsInstance(delegate, CompleterDelegate)
-        self.assertEqual(delegate.proxy, self.controller.terminalOptions)
+        self.assertIsInstance(delegate, MotorCompleterDelegate)
 
         delegate = self.controller.tableWidget().itemDelegateForColumn(1)
         self.assertIsInstance(delegate, CompleterDelegate)
