@@ -5,10 +5,11 @@ from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QCompleter, QLineEdit, QStyledItemDelegate
 from traits.api import Instance
 
-from karabo.native import is_equal
+from karabo.common.api import Interfaces
+from karabo.native import Hash, is_equal
 from karabogui.api import (
     BaseTableController, PropertyProxy, VectorHashBinding, get_binding_value,
-    register_binding_controller, with_display_type)
+    get_topology, register_binding_controller, with_display_type)
 
 from .models.api import MotorAssignmentTableModel
 
@@ -37,6 +38,32 @@ class CompleterDelegate(QStyledItemDelegate):
             self.commitData.emit(self.sender())
 
 
+class MotorCompleterDelegate(QStyledItemDelegate):
+
+    def createEditor(self, parent, option, index):
+        """Reimplemented function of QStyledItemDelegate"""
+        editor = QLineEdit(parent)
+        topo = get_topology()._system_hash.get("device", Hash())
+        filtered = []
+        for k, _, a in topo.iterall():
+            interfaces = a.get("interfaces", 0)
+            if self._check_interface(interfaces, Interfaces.Motor):
+                filtered.append(k)
+        editor.setCompleter(QCompleter(filtered))
+        return editor
+
+    def _check_interface(self, mask, bit):
+        return (mask & bit) == bit
+
+    def setModelData(self, editor, model, index):
+        """Reimplemented function of QStyledItemDelegate"""
+        old = index.model().data(index, Qt.DisplayRole)
+        new = editor.text()
+        if not is_equal(old, new):
+            model.setData(index, new, Qt.EditRole)
+            self.commitData.emit(self.sender())
+
+
 @register_binding_controller(
     ui_name="Motor Stage Assignment Table",
     klassname="MotorStageAssignmentTable",
@@ -46,19 +73,14 @@ class CompleterDelegate(QStyledItemDelegate):
 class EditableAssignmentTable(BaseTableController):
     model = Instance(MotorAssignmentTableModel, args=())
 
-    terminalOptions = Instance(PropertyProxy)
     stageOptions = Instance(PropertyProxy)
 
     def binding_update(self, proxy):
         super().binding_update(proxy)
-        self.terminalOptions = PropertyProxy(root_proxy=proxy.root_proxy,
-                                             path="terminalOptions")
         self.stageOptions = PropertyProxy(root_proxy=proxy.root_proxy,
                                           path="stageOptions")
-
         # Apply the delegates
-        terminal_delegate = CompleterDelegate(self.terminalOptions,
-                                              parent=self.tableWidget())
+        terminal_delegate = MotorCompleterDelegate(parent=self.tableWidget())
         stage_delegate = CompleterDelegate(self.stageOptions,
                                            parent=self.tableWidget())
 
