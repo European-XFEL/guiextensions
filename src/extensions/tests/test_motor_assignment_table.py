@@ -1,6 +1,6 @@
 from unittest import main
 
-from qtpy.QtCore import Qt
+from qtpy.QtCore import QModelIndex, Qt
 
 from extensions.edit_motor_stage_table import (
     CompleterDelegate, EditableAssignmentTable, MotorCompleterDelegate)
@@ -66,10 +66,16 @@ class TestAssignmentTable(GuiTestCase):
     def test_delegate(self):
         delegate = self.controller.tableWidget().itemDelegateForColumn(0)
         self.assertIsInstance(delegate, MotorCompleterDelegate)
+        editor = delegate.createEditor(self.controller.tableWidget(), None,
+                                       QModelIndex())
+        self.assertFalse(editor.completer().caseSensitivity())
 
         delegate = self.controller.tableWidget().itemDelegateForColumn(1)
+        editor = delegate.createEditor(self.controller.tableWidget(), None,
+                                       QModelIndex())
         self.assertIsInstance(delegate, CompleterDelegate)
         self.assertEqual(delegate.proxy, self.controller.stageOptions)
+        self.assertFalse(editor.completer().caseSensitivity())
 
     def test_set_value(self):
         self.assertEqual(self.controller.sourceModel().rowCount(None), 0)
