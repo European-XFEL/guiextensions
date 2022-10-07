@@ -1,6 +1,7 @@
 from karabo.common.scenemodel.tests.utils import single_model_round_trip
 
 from .. import api
+from ..simple import _SIMPLE_WIDGET_MODELS
 
 
 def _geometry_traits():
@@ -203,3 +204,15 @@ def test_peak_integration_graph_model():
     model = api.PeakIntegrationGraphModel(**traits)
     read_model = single_model_round_trip(model)
     _assert_geometry_traits(read_model)
+
+
+def test_simple_widgets():
+    """Test that all simple widgets are provided in the model api and
+    test their geometry
+    """
+    for name in _SIMPLE_WIDGET_MODELS:
+        klass = getattr(api, name)
+        traits = _geometry_traits()
+        model = klass(**traits)
+        read_model = single_model_round_trip(model)
+        _assert_geometry_traits(read_model)
