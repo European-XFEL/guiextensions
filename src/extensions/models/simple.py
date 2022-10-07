@@ -100,7 +100,7 @@ _SIMPLE_WIDGET_MODELS = (
     "IPMQuadrantModel", "DoocsLocationTableModel", "DoocsMirrorTableModel",
     "PulseIdMapModel", "DynamicPulseIdMapModel", "CriticalCompareViewModel",
     "RecoveryReportTableModel", "DisplayConditionCommand",
-    "DetectorCellsModel", "ROIAnnotateModel", "MotorAssignmentTableModel")
+    "DetectorCellsModel", "MotorAssignmentTableModel")
 
 _SIMPLE_DISPLAY_EDIT_MODELS = ("StateAwareComponentManagerModel",)
 

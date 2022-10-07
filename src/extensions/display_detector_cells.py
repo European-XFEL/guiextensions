@@ -9,7 +9,7 @@ from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller, with_display_type)
 from karabogui.fonts import get_font_size_from_dpi
 
-from .models.simple import DetectorCellsModel
+from .models.api import DetectorCellsModel
 
 GRAY = QColor(127, 127, 127, 255)
 BLUE = QColor(31, 119, 180, 255)

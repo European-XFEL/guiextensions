@@ -9,7 +9,7 @@ from karabogui.binding.api import (
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
 
-from .models.simple import DisplayConditionCommand
+from .models.api import DisplayConditionCommand
 
 BUTTON_STYLE = """
 QPushButton::enabled{

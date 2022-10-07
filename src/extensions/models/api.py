@@ -10,8 +10,9 @@ from .plots import (
     PeakIntegrationGraphModel, ScatterPositionModel, TableVectorXYGraphModel,
     XasGraphModel)
 from .simple import (
-    CriticalCompareViewModel, DoocsLocationTableModel, DoocsMirrorTableModel,
-    DynamicPulseIdMapModel, EditableDateTimeModel, IPMQuadrantModel,
-    MotorAssignmentTableModel, PointAndClickModel, PulseIdMapModel,
-    RecoveryReportTableModel, ScantoolBaseModel, ScantoolDeviceViewModel,
+    CriticalCompareViewModel, DetectorCellsModel, DisplayConditionCommand,
+    DoocsLocationTableModel, DoocsMirrorTableModel, DynamicPulseIdMapModel,
+    EditableDateTimeModel, IPMQuadrantModel, MotorAssignmentTableModel,
+    PointAndClickModel, PulseIdMapModel, RecoveryReportTableModel,
+    ROIAnnotateModel, ScantoolBaseModel, ScantoolDeviceViewModel,
     SelectionTableModel, StateAwareComponentManagerModel)
