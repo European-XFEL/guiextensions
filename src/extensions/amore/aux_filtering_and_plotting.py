@@ -189,7 +189,7 @@ def _create_lut(color):
     for i, c in enumerate(color):
         colors.append(tuple([cc * 255 for cc in c] + [1]))
     cmap = ColorMap(np.linspace(0, 1.0, len(colors)), colors)
-    lut = cmap.getLookupTable(mode="rgb", alpha=False)
+    lut = cmap.getLookupTable(alpha=False)
     return lut
 
 
