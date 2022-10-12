@@ -31,18 +31,18 @@ def read_node_positions(element):
     positions = []
 
     for child_elem in element:
-        if child_elem.tag != NS_KARABO + 'nodePosition':
+        if child_elem.tag != NS_KARABO + "nodePosition":
             continue
 
-        device_id = child_elem.get('device_id', None)
+        device_id = child_elem.get("device_id", None)
 
         if not device_id:
             continue
 
-        x = float(child_elem.get('x', 0.0))
-        y = float(child_elem.get('y', 0.0))
+        x = float(child_elem.get("x", 0.0))
+        y = float(child_elem.get("y", 0.0))
 
-        traits = {'device_id': device_id, 'x': x, 'y': y}
+        traits = {"device_id": device_id, "x": x, "y": y}
 
         positions.append(NodePosition(**traits))
 
@@ -51,7 +51,7 @@ def read_node_positions(element):
 
 def write_node_positions(model, element):
     for node_position in model.nodePositions:
-        node_element = SubElement(element, NS_KARABO + 'nodePosition')
+        node_element = SubElement(element, NS_KARABO + "nodePosition")
         for attribute in node_position.class_visible_traits():
             node_element.set(attribute,
                              str(getattr(node_position, attribute)))
@@ -61,17 +61,17 @@ def read_filter_instances(element):
     instances = []
 
     for child_elem in element:
-        if child_elem.tag != NS_KARABO + 'filterInstance':
+        if child_elem.tag != NS_KARABO + "filterInstance":
             continue
 
-        filter_text = child_elem.get('filter_text', None)
+        filter_text = child_elem.get("filter_text", None)
 
         if not filter_text:
             continue
 
-        is_active = child_elem.get('is_active', "True") == "True"
+        is_active = child_elem.get("is_active", "True") == "True"
 
-        traits = {'filter_text': filter_text, 'is_active': is_active}
+        traits = {"filter_text": filter_text, "is_active": is_active}
 
         instances.append(FilterInstance(**traits))
 
@@ -80,24 +80,24 @@ def read_filter_instances(element):
 
 def write_filter_instances(model, element):
     for instance in model.filterInstances:
-        filter_element = SubElement(element, NS_KARABO + 'filterInstance')
+        filter_element = SubElement(element, NS_KARABO + "filterInstance")
         for attribute in instance.class_visible_traits():
             filter_element.set(attribute,
                                str(getattr(instance, attribute)))
 
 
-@register_scene_reader('NetworkX')
-def _networkx_reader(read_func, element):
+@register_scene_reader("NetworkX")
+def _networkx_reader(element):
     traits = read_base_widget_data(element)
-    traits['nodePositions'] = read_node_positions(element)
-    traits['filterInstances'] = read_filter_instances(element)
+    traits["nodePositions"] = read_node_positions(element)
+    traits["filterInstances"] = read_filter_instances(element)
     return NetworkXModel(**traits)
 
 
 @register_scene_writer(NetworkXModel)
-def _networkx_writer(write_func, model, parent):
+def _networkx_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
-    write_base_widget_data(model, element, 'NetworkX')
+    write_base_widget_data(model, element, "NetworkX")
     write_node_positions(model, element)
     write_filter_instances(model, element)
     return element

@@ -3,7 +3,7 @@ from xml.etree.ElementTree import SubElement
 from traits.api import Bool, Enum, Int, String
 
 from karabo.common.scenemodel.api import (
-    BaseDisplayEditableWidget, BaseWidgetObjectData, ImageGraphModel)
+    BaseDisplayEditableWidget, BaseWidgetObjectData)
 from karabo.common.scenemodel.bases import BaseEditWidget
 from karabo.common.scenemodel.const import NS_KARABO, WIDGET_ELEMENT_TAG
 from karabo.common.scenemodel.io_utils import (
@@ -38,11 +38,6 @@ class DisplayConditionCommand(BaseWidgetObjectData):
     """ A model for the Condition Command Base Widget """
 
 
-class ROIAnnotateModel(ImageGraphModel):
-    """ A model for Image Annotation"""
-    coordinateDevice = String('')
-
-
 class ScantoolBaseModel(BaseWidgetObjectData):
     """ A model for the Scantool Base Widget """
 
@@ -57,13 +52,13 @@ class MotorAssignmentTableModel(BaseEditWidget):
 
 class StateAwareComponentManagerModel(BaseDisplayEditableWidget):
     """ A model for the Component Manager Device Selection"""
-    klass = Enum('DisplayStateAwareComponentManager',
-                 'EditableStateAwareComponentManager')
+    klass = Enum("DisplayStateAwareComponentManager",
+                 "EditableStateAwareComponentManager")
 
 
 class PointAndClickModel(BaseDisplayEditableWidget):
     """ A model for the Point-And-Click Widget"""
-    klass = Enum('DisplayPointAndClick', 'EditablePointAndClick')
+    klass = Enum("DisplayPointAndClick", "EditablePointAndClick")
 
 
 class PulseIdMapModel(BaseWidgetObjectData):
@@ -102,23 +97,26 @@ _SIMPLE_WIDGET_MODELS = (
     "RecoveryReportTableModel", "DisplayConditionCommand",
     "DetectorCellsModel", "MotorAssignmentTableModel")
 
-_SIMPLE_DISPLAY_EDIT_MODELS = ("StateAwareComponentManagerModel",)
+_SIMPLE_DISPLAY_EDIT_MODELS = (
+    "StateAwareComponentManagerModel", "PointAndClickModel")
 
 
-@register_scene_reader('Scantool-Base')
-def _scantool_base_reader(read_func, element):
+@register_scene_reader("Scantool-Base")  # future deprecated
+@register_scene_reader("ScantoolBase")
+def _scantool_base_reader(element):
     traits = read_base_widget_data(element)
     return ScantoolBaseModel(**traits)
 
 
 @register_scene_writer(ScantoolBaseModel)
-def _scantool_base_writer(write_func, model, parent):
+def _scantool_base_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
-    write_base_widget_data(model, element, 'Scantool-Base')
+    write_base_widget_data(model, element, "Scantool-Base")
     return element
 
 
-@register_scene_reader('Scantool-Device-View')
+@register_scene_reader("Scantool-Device-View")  # future deprecated
+@register_scene_reader("ScantoolDeviceView")
 def _scantool_device_view_reader(element):
     traits = read_base_widget_data(element)
     return ScantoolDeviceViewModel(**traits)
@@ -127,89 +125,45 @@ def _scantool_device_view_reader(element):
 @register_scene_writer(ScantoolDeviceViewModel)
 def _scantool_device_view_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
-    write_base_widget_data(model, element, 'Scantool-Device-View')
+    write_base_widget_data(model, element, "Scantool-Device-View")
     return element
 
 
-@register_scene_reader('EditableDateTime')
-def _date_time_edit_reader(read_func, element):
+@register_scene_reader("EditableDateTime")
+def _date_time_edit_reader(element):
     traits = read_base_widget_data(element)
-    time_format = element.get(NS_KARABO + 'time_format', '%H:%M:%S')
-    traits['time_format'] = time_format
+    time_format = element.get(NS_KARABO + "time_format", "%H:%M:%S")
+    traits["time_format"] = time_format
     return EditableDateTimeModel(**traits)
 
 
 @register_scene_writer(EditableDateTimeModel)
-def _date_time_edit_writer(write_func, model, parent):
+def _date_time_edit_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
-    write_base_widget_data(model, element, 'EditableDateTime')
-    element.set(NS_KARABO + 'time_format', str(model.time_format))
+    write_base_widget_data(model, element, "EditableDateTime")
+    element.set(NS_KARABO + "time_format", str(model.time_format))
 
 
-@register_scene_reader('DisplayPointAndClick')
-def _pac_ro_reader(read_func, element):
-    traits = read_base_widget_data(element)
-    return PointAndClickModel(klass='DisplayPointAndClick', **traits)
-
-
-@register_scene_reader('EditablePointAndClick')
-def _pac_edit_reader(read_func, element):
-    traits = read_base_widget_data(element)
-    return PointAndClickModel(klass='EditablePointAndClick', **traits)
-
-
-@register_scene_writer(PointAndClickModel)
-def _pac_writer(write_func, model, parent):
-    element = SubElement(parent, WIDGET_ELEMENT_TAG)
-    write_base_widget_data(model, element, model.klass)
-    return element
-
-
-@register_scene_reader('SelectionTable')
-def _selection_convenience_table_reader(read_func, element):
+@register_scene_reader("SelectionTable")
+def _selection_convenience_table_reader(element):
     traits = read_base_widget_data(element)
     # copied from filter table
-    resizeToContents = element.get(NS_KARABO + 'resizeToContents', '')
-    resizeToContents = resizeToContents.lower() == 'true'
-    traits['resizeToContents'] = resizeToContents
-    filterKeyColumn = int(element.get(NS_KARABO + 'filterKeyColumn', 0))
-    traits['filterKeyColumn'] = filterKeyColumn
+    resizeToContents = element.get(NS_KARABO + "resizeToContents", "")
+    resizeToContents = resizeToContents.lower() == "true"
+    traits["resizeToContents"] = resizeToContents
+    filterKeyColumn = int(element.get(NS_KARABO + "filterKeyColumn", 0))
+    traits["filterKeyColumn"] = filterKeyColumn
     return SelectionTableModel(**traits)
 
 
 @register_scene_writer(SelectionTableModel)
-def _selection_convenience_table_write(write_func, model, parent):
+def _selection_convenience_table_write(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
-    write_base_widget_data(model, element, 'SelectionTable')
+    write_base_widget_data(model, element, "SelectionTable")
     # copied from filter table
-    element.set(NS_KARABO + 'resizeToContents',
+    element.set(NS_KARABO + "resizeToContents",
                 str(model.resizeToContents).lower())
-    element.set(NS_KARABO + 'filterKeyColumn', str(model.filterKeyColumn))
-    return element
-
-
-@register_scene_reader('ROIAnnotate')
-def _image_annotate_reader(element):
-    traits = read_base_widget_data(element)
-    traits['aux_plots'] = int(element.get(NS_KARABO + 'aux_plots', '0'))
-    traits['colormap'] = element.get(NS_KARABO + 'colormap', "viridis")
-    traits['aspect_ratio'] = int(element.get(NS_KARABO + 'aspect_ratio', 1))
-    show_scale = element.get(NS_KARABO + 'show_scale', '1')
-    traits['show_scale'] = bool(int(show_scale))
-    element.get(NS_KARABO + 'coordinateDevice', '')
-    return ROIAnnotateModel(**traits)
-
-
-@register_scene_writer(ROIAnnotateModel)
-def _image_annotate_writer(model, parent):
-    element = SubElement(parent, WIDGET_ELEMENT_TAG)
-    write_base_widget_data(model, element, 'ROIAnnotate')
-    element.set(NS_KARABO + 'colormap', model.colormap)
-    element.set(NS_KARABO + 'aux_plots', str(model.aux_plots))
-    element.set(NS_KARABO + 'aspect_ratio', str(model.aspect_ratio))
-    show_scale = str(int(model.show_scale))
-    element.set(NS_KARABO + 'show_scale', show_scale)
-    element.set(NS_KARABO + 'coordinateDevice', str(model.coordinateDevice))
+    element.set(NS_KARABO + "filterKeyColumn", str(model.filterKeyColumn))
     return element
 
 
@@ -241,7 +195,7 @@ def _build_empty_widget_readers_and_writers():
 
     for model_name in _SIMPLE_WIDGET_MODELS:
         klass = globals()[model_name]
-        file_name = model_name[:-len('Model')]
+        file_name = model_name[:-len("Model")]
         register_scene_reader(file_name)(_build_reader_func(klass))
         register_scene_writer(klass)(_build_writer_func(file_name))
 
@@ -265,10 +219,10 @@ def _build_empty_display_editable_readers_and_writers():
 
     for model_name in _SIMPLE_DISPLAY_EDIT_MODELS:
         klass = globals()[model_name]
-        file_name = model_name[:-len('Model')]
+        file_name = model_name[:-len("Model")]
         reader = _build_reader_func(klass)
-        register_scene_reader('Display' + file_name)(reader)
-        register_scene_reader('Editable' + file_name)(reader)
+        register_scene_reader("Display" + file_name)(reader)
+        register_scene_reader("Editable" + file_name)(reader)
         register_scene_writer(klass)(_writer_func)
 
 

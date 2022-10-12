@@ -46,7 +46,7 @@ def _metro_secaxis_graph_reader(element):
 
 
 @register_scene_writer(MetroSecAxisGraphModel)
-def _metro_secaxis_graph_writer(write_func, model, parent):
+def _metro_secaxis_graph_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_plot(model, element, 'MetroSecAxisGraph')
 
@@ -58,7 +58,7 @@ def _metro_twinx_graph_reader(element):
 
 
 @register_scene_writer(MetroTwinXGraphModel)
-def _metro_twinx_graph_writer(write_func, model, parent):
+def _metro_twinx_graph_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_plot(model, element, 'MetroTwinXGraph')
 
@@ -84,6 +84,6 @@ def _metro_xas_graph_reader(element):
 
 
 @register_scene_writer(MetroXasGraphModel)
-def _metro_xas_graph_writer(write_func, model, parent):
+def _metro_xas_graph_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_plot(model, element, 'MetroXasGraph')
