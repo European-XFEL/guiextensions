@@ -66,6 +66,8 @@ class GraphPlot(BasePlot):
         super(GraphPlot, self).__init__()
         self.widget = KaraboPlotView(parent)
         self.widget.enable_data_toggle(True)
+        self.widget.add_toolbar()
+        self.widget.enable_export()
         self.widget.restore(PLOT_CONFIG)
 
     def update(self, device):
