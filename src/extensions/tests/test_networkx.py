@@ -123,11 +123,12 @@ class TestNetworkX(GuiTestCase):
         for row in data:
             origin = row["originNode"]
             dest = row["destinationNode"]
-            connection_type = row["connectionType"]  # not used currently
-            origin_type = row["originType"]
-            dest_type = row["destinationType"]
-            status = row["status"]  # not updated currently
-            bytes_transferred = row["bytesTransferred"]  # not used currently
+
+            assert "connectionType" in row  # not used currently
+            assert "originType" in row
+            assert "destinationType" in row
+            assert "status" in row  # # not updated currently
+            assert "bytesTransferred" in row  # not used currently
             node_found = False
             edge_found = False
             for node in nodes:
@@ -190,7 +191,7 @@ class TestNetworkX(GuiTestCase):
 
             self.assertEqual(visible, node.isVisible())
 
-        # toggle again, and also remove one filter
+            # toggle again, and also remove one filter
             # toggle one filter off
             for idx in range(self.controller.filter_instances.count()):
                 item = self.controller.filter_instances.itemAt(idx).widget()
