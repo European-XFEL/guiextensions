@@ -21,7 +21,7 @@ from karabogui.graph.common.api import AuxPlots, MouseMode
 from karabogui.graph.image.api import (
     KaraboImageNode, KaraboImagePlot, KaraboImageView, KaraboImageViewBox)
 
-from ..models.simple import ROIAnnotateModel
+from ..models.api import ROIAnnotateModel
 from .annotation_dialog_and_display import (
     AnnotationSearchDialog, DisplayTool, DisplayToolset)
 from .aux_filtering_and_plotting import display_saved_data, update_from_remote

@@ -1,6 +1,6 @@
 # flake8: noqa
 
-from .images import BeamGraphModel, RectRoiGraphModel
+from .images import BeamGraphModel, RectRoiGraphModel, ROIAnnotateModel
 from .metro import (
     MetroSecAxisGraphModel, MetroTwinXGraphModel, MetroXasGraphModel,
     MetroZonePlateModel)
@@ -14,5 +14,5 @@ from .simple import (
     DoocsLocationTableModel, DoocsMirrorTableModel, DynamicPulseIdMapModel,
     EditableDateTimeModel, IPMQuadrantModel, MotorAssignmentTableModel,
     PointAndClickModel, PulseIdMapModel, RecoveryReportTableModel,
-    ROIAnnotateModel, ScantoolBaseModel, ScantoolDeviceViewModel,
-    SelectionTableModel, StateAwareComponentManagerModel)
+    ScantoolBaseModel, ScantoolDeviceViewModel, SelectionTableModel,
+    StateAwareComponentManagerModel)

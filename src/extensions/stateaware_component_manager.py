@@ -22,7 +22,7 @@ from karabogui.controllers.api import (
 from karabogui.request import call_device_slot, send_property_changes
 from karabogui.singletons.api import get_manager, get_network, get_topology
 
-from .models.simple import StateAwareComponentManagerModel
+from .models.api import StateAwareComponentManagerModel
 
 LABEL_MAPPING = OrderedDict()
 LABEL_MAPPING["Class"] = "classId"

@@ -3,7 +3,7 @@ from unittest.mock import patch
 from qtpy.QtCore import QLocale
 
 from extensions.edit_datetime_label import EditableDateTime
-from extensions.models.simple import EditableDateTimeModel
+from extensions.models.api import EditableDateTimeModel
 from karabo.common.states import State
 from karabo.native import Configurable, Hash, String
 from karabogui.testing import (
