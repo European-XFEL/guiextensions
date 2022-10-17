@@ -12,22 +12,6 @@ def test_ipm_quadrant_model():
     _assert_geometry_traits(read_model)
 
 
-def test_doocs_location_table_model():
-    traits = _geometry_traits()
-
-    model = api.DoocsLocationTableModel(**traits)
-    read_model = single_model_round_trip(model)
-    _assert_geometry_traits(read_model)
-
-
-def test_doocs_mirror_table_model():
-    traits = _geometry_traits()
-
-    model = api.DoocsMirrorTableModel(**traits)
-    read_model = single_model_round_trip(model)
-    _assert_geometry_traits(read_model)
-
-
 def test_pnc_model():
     model = api.PointAndClickModel(klass="EditablePointAndClick")
     read_model = single_model_round_trip(model)
@@ -45,35 +29,6 @@ def test_editable_datetime():
     read_model = single_model_round_trip(model)
     _assert_geometry_traits(read_model)
     assert model.time_format == "%H:%M"
-
-
-def test_critical_compare_view():
-    traits = _geometry_traits()
-    model = api.CriticalCompareViewModel(**traits)
-    read_model = single_model_round_trip(model)
-    _assert_geometry_traits(read_model)
-
-
-def test_recovery_report_table_model():
-    traits = _geometry_traits()
-
-    model = api.RecoveryReportTableModel(**traits)
-    read_model = single_model_round_trip(model)
-    _assert_geometry_traits(read_model)
-
-
-def test_motor_assignment_table():
-    traits = _geometry_traits()
-    model = api.MotorAssignmentTableModel(**traits)
-    read_model = single_model_round_trip(model)
-    _assert_geometry_traits(read_model)
-
-
-def test_selection_convenience_table_model():
-    traits = _geometry_traits()
-    model = api.SelectionTableModel(**traits)
-    read_model = single_model_round_trip(model)
-    _assert_geometry_traits(read_model)
 
 
 def test_networkx_model():
