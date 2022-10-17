@@ -41,3 +41,38 @@ def write_base_plot(model, element, klass):
     write_axes_set(model, element)
     write_range_set(model, element)
     write_view_set(model, element)
+
+
+def update_base_table(element):
+    """Return the base table properties from `element`"""
+    traits = {}
+    resizeToContents = element.get(NS_KARABO + "resizeToContents", "")
+    resizeToContents = resizeToContents.lower() == "true"
+    traits["resizeToContents"] = resizeToContents
+    return traits
+
+
+def update_filter_table(element):
+    """Return the base filter table properties from `element`"""
+    traits = update_base_table(element)
+    sortingEnabled = element.get(NS_KARABO + "sortingEnabled", "")
+    sortingEnabled = sortingEnabled.lower() == "true"
+    traits["sortingEnabled"] = sortingEnabled
+    # Filter Column
+    filterKeyColumn = int(element.get(NS_KARABO + "filterKeyColumn", 0))
+    traits["filterKeyColumn"] = filterKeyColumn
+    return traits
+
+
+def write_base_table(model, element):
+    """Write the base table properties from `model` to `element`"""
+    resizeToContents = str(model.resizeToContents).lower()
+    element.set(NS_KARABO + "resizeToContents", resizeToContents)
+
+
+def write_filter_table(model, element):
+    """Write the basic filter table properties from `model` to `element`"""
+    write_base_table(model, element)
+    sortingEnabled = str(model.sortingEnabled).lower()
+    element.set(NS_KARABO + "sortingEnabled", sortingEnabled)
+    element.set(NS_KARABO + "filterKeyColumn", str(model.filterKeyColumn))
