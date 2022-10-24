@@ -276,14 +276,17 @@ class DisplayImageAnnotate(BaseBindingController):
         selected_pen = fn.mkPen(color)
         if size is not None:
             roi_item = roi_class(pos=pos, size=size, name=name,
-                                 scaleSnap=self.widget.roi._scale_snap,
-                                 translateSnap=(
-                                     self.widget.roi._translate_snap),
                                  pen=selected_pen)
         else:
-            roi_item = roi_class(pos=pos, name=name,
-                                 scaleSnap=self.widget.roi._scale_snap,
-                                 pen=selected_pen)
+            roi_item = roi_class(pos=pos, name=name, pen=selected_pen)
+
+        scaleSnap = (getattr(self.widget.roi, '_scale_snap', None)
+                     or getattr(self.widget.roi, 'scaleSnap'))
+        translateSnap = (getattr(self.widget.roi, '_translate_snap', None)
+                         or getattr(self.widget.roi, 'translateSnap'))
+
+        roi_item.scaleSnap = scaleSnap
+        roi_item.translateSnap = translateSnap
         # ROIs can't be removed to avoid possible misunderstandings
         # since in fact they can only be hidden from plot but
         # not from history.
