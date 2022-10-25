@@ -4,9 +4,12 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 import numpy as np
-from traits.api import Bool, Instance
+from qtpy.QtWidgets import QMessageBox
+from traits.api import Bool, Instance, on_trait_change
 
+from karabo.common.api import WeakMethodRef
 from karabo.common.states import State
+from karabogui.api import call_device_slot, get_reason_parts, messagebox
 from karabogui.binding.api import (
     PropertyProxy, VectorHashBinding, WidgetNodeBinding, get_binding_value)
 from karabogui.controllers.api import (
@@ -201,6 +204,33 @@ class ScantoolDynamicWidget(BaseBindingController):
             # Scan has just started.
             self._scan = self._setup_new_scan(proxy)
             self._is_scanning = True
+
+    @on_trait_change("_controller:_plot_double_clicked")
+    def _plot_doube_clicked(self, data):
+        if not self._is_scanning:
+            positions = data['coord'][:len(data['aliases'])]
+            text = f"Move motor(s) {data['aliases']} to {positions} ?"
+            msg_box = QMessageBox(QMessageBox.Question, 'Move Motors',
+                                  text, QMessageBox.Yes | QMessageBox.Cancel,
+                                  parent=self.widget)
+            msg_box.setDefaultButton(QMessageBox.Cancel)
+            msg_box.setModal(False)
+            if msg_box.exec() == QMessageBox.Yes:
+                call_device_slot(WeakMethodRef(self.handle_motor_move),
+                                 self.proxy.root_proxy.device_id,
+                                 "requestAction",
+                                 aliases=data["aliases"],
+                                 positions=positions,
+                                 action="moveMotors")
+
+    def handle_motor_move(self, success, reply):
+        """Handler for requestAction"""
+        if not success:
+            reason, details = get_reason_parts(reply)
+            messagebox.show_error(reason, details=details, parent=self.widget)
+        else:
+            messagebox.show_information(reply["payload"]["reason"],
+                                        parent=self.widget)
 
     def _get_state(self, proxy):
         root_proxy = proxy.root_proxy
