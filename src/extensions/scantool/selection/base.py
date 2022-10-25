@@ -50,6 +50,9 @@ class BaseSelectionWidget(QWidget):
     def set_config(self, config):
         pass
 
+    def get_selected_motors(self):
+        pass
+
     @Slot(int)
     def _checkboxes_clicked(self, index):
         pass

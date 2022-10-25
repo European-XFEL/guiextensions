@@ -58,6 +58,9 @@ class XYDataSelectionWidget(BaseSelectionWidget):
         for checkbox in self._checkboxes:
             checkbox.setChecked(checkbox.text() in y_data)
 
+    def get_selected_motors(self):
+        return [self.ui_x_combobox.currentText()]
+
     # ---------------------------------------------------------------------
     # Qt slots
 

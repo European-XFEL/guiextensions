@@ -68,6 +68,10 @@ class ImageDataSelectionWidget(BaseSelectionWidget):
             if checked:
                 self._current_index = index
 
+    def get_selected_motors(self):
+        return [self.ui_x_combobox.currentText(),
+                self.ui_y_combobox.currentText()]
+
     # ---------------------------------------------------------------------
     # Qt slots
 

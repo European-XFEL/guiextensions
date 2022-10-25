@@ -1,4 +1,4 @@
-from qtpy.QtWidgets import QGridLayout, QWidget
+from qtpy.QtWidgets import QGraphicsScene, QGridLayout, QWidget
 from traits.api import Dict, Event, HasStrictTraits, Instance, on_trait_change
 
 from .const import (
@@ -26,6 +26,7 @@ class ScanController(HasStrictTraits):
     })
 
     _plot_refreshed = Event
+    _plot_double_clicked = Event
 
     def __init__(self, parent=None):
         super(ScanController, self).__init__()
@@ -128,6 +129,17 @@ class ScanController(HasStrictTraits):
     # ---------------------------------------------------------------------
     # Private methods
 
+    def _mouse_double_clicked(self, event):
+        QGraphicsScene.mouseDoubleClickEvent(
+            self._current_plot.widget.plotItem.scene(), event)
+        scene_coords = event.scenePos()
+        plot_item = self._current_plot.widget.plotItem
+        if plot_item.sceneBoundingRect().contains(scene_coords):
+            pos = plot_item.vb.mapSceneToView(scene_coords)
+            self._plot_double_clicked = {
+                "coord": [pos.x(), pos.y()],
+                "aliases": self._data_selection.get_selected_motors()}
+
     def _use_plot(self, klass):
         """Generic class to remove and destroy existing plot and
            instantiate the requested plot class and add its widget to the
@@ -155,6 +167,12 @@ class ScanController(HasStrictTraits):
 
         # 3, Finalize plot setup by informing listeners
         self._plot_refreshed = klass
+
+        # 4. Reimplement mouseDoubleCkickedEvent
+        # We can not use sigMouseClicked signal of scene due to the bug in
+        # pyqtgraph: double click is not detected.
+        self._current_plot.widget.plotItem.scene().mouseDoubleClickEvent =\
+            self._mouse_double_clicked
 
         return self._current_plot
 

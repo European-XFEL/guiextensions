@@ -43,6 +43,9 @@ class DataSelectionController(HasStrictTraits):
 
         self._selection_widget.set_config(config)
 
+    def get_selected_motors(self):
+        return self._selection_widget.get_selected_motors()
+
     # ---------------------------------------------------------------------
     # Private methods
 
