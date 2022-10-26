@@ -8,7 +8,7 @@ from karabogui.binding.api import VectorHashBinding
 from karabogui.controllers.api import (
     register_binding_controller, with_display_type)
 from karabogui.controllers.table.api import (
-    BaseTableController, TableButtonDelegate)
+    BaseFilterTableController, TableButtonDelegate)
 from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.singletons.api import get_network
 
@@ -67,7 +67,7 @@ class ButtonDelegate(TableButtonDelegate):
     is_compatible=with_display_type("RecoveryReportTable"),
     priority=-10,
     can_show_nothing=False)
-class DisplayRecoveryReportTable(BaseTableController):
+class DisplayRecoveryReportTable(BaseFilterTableController):
     model = Instance(RecoveryReportTableModel, args=())
 
     def create_delegates(self):
