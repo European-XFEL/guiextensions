@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from qtpy.QtCore import QLocale
+from qtpy.QtCore import QLocale, Qt
 
 from extensions.edit_datetime_label import EditableDateTime
 from extensions.models.api import EditableDateTimeModel
@@ -26,6 +26,9 @@ class TestDateTimeEdit(GuiTestCase):
         self.controller = EditableDateTime(proxy=self.proxy,
                                            model=EditableDateTimeModel())
         self.controller.create(None)
+
+    def test_focus_policy(self):
+        self.assertEqual(self.controller.widget.focusPolicy(), Qt.StrongFocus)
 
     def test_set_value(self):
         h = Hash("prop", "2009-04-25")
