@@ -37,6 +37,7 @@ class EditableDateTime(BaseBindingController):
         widget = QDateTimeEdit(parent)
         widget.dateTimeChanged.connect(self._on_user_edit)
         widget.setCalendarPopup(True)
+        widget.setFocusPolicy(Qt.StrongFocus)
 
         widget.setDisplayFormat(self.model.time_format)
         action = QAction("Change datetime format...", widget)
