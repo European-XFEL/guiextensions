@@ -13,6 +13,7 @@ from qtpy.QtWidgets import (
 from traits.api import Bool, Dict, Instance, String, WeakRef
 
 from karabo.native import Hash, HashList
+from karabogui.api import is_proxy_allowed
 from karabogui.binding.api import (
     PropertyProxy, VectorHashBinding, get_binding_value)
 from karabogui.controllers.api import (
@@ -128,6 +129,10 @@ class ScantoolDeviceView(BaseBindingController):
         self._toolbar.set_apply_button_enabled(False)
         self._is_updating = False
         self._treewidget.setUpdatesEnabled(True)
+
+    def state_update(self, proxy):
+        enable = is_proxy_allowed(proxy)
+        self.widget.setEnabled(enable)
 
     def add_device_tree_item(self, device, group_item, proxy_path):
         rows = [device[row] for row in DEVICE_PROXY_MAP[proxy_path]["rows"]]
