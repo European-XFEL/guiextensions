@@ -1,63 +1,17 @@
 #############################################################################
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from traits.api import Instance
+from qtpy.QtWidgets import QDialog
+from traits.api import Bool, Instance
 
-from karabogui import messagebox
-from karabogui.binding.api import VectorHashBinding
-from karabogui.controllers.api import (
-    register_binding_controller, with_display_type)
-from karabogui.controllers.table.api import (
-    BaseFilterTableController, TableButtonDelegate)
-from karabogui.events import KaraboEvent, broadcast_event
-from karabogui.singletons.api import get_network
+from karabo.common.api import WeakMethodRef
+from karabogui.api import (
+    BaseFilterTableController, VectorHashBinding, call_device_slot,
+    get_reason_parts, icons, is_device_online, messagebox,
+    register_binding_controller, retrieve_default_scene, with_display_type)
 
+from .dialogs.api import DeviceConfigurationPreview
 from .models.api import RecoveryReportTableModel
-
-LOAD_CONFIG_COLUMN = 7
-
-
-class ButtonDelegate(TableButtonDelegate):
-
-    def get_button_text(self, index):
-        """Reimplemented function of `TableButtonDelegate`"""
-        text = "Edit"
-        return text
-
-    def click_action(self, index):
-        """Reimplemented function of `TableButtonDelegate`"""
-        if not index.isValid():
-            return
-
-        device_id = index.model().index(index.row(), 0).data()
-        config_source = index.model().index(index.row(),
-                                            LOAD_CONFIG_COLUMN).data()
-
-        # The config_name stored in the Table Model is composed of two
-        # parts separated by a '|'. The first part indicates the configuration
-        # type and can have values 'time' for configurations from past and
-        # 'name' for named configurations.
-        config_source_parts = config_source.split("|")
-
-        if len(config_source_parts) == 2:
-            norm_config_type = config_source_parts[0].lower().strip()
-
-            if norm_config_type == "time":
-                # For by "time" configs, the second part is the timestamp of
-                # the configuration.
-                get_network().onGetConfigurationFromPast(
-                    device_id, time=config_source_parts[1], preview=False)
-            elif norm_config_type == "name":
-                get_network().onGetConfigurationFromName(
-                    device_id, name=config_source_parts[1], preview=False)
-            else:
-                messagebox.show_warning(
-                    text=f"Configurations of type {config_source_parts[0]} "
-                         "cannot be loaded in the Configuration Editor.")
-                return
-
-            broadcast_event(KaraboEvent.ShowDevice,
-                            {'deviceId': device_id, 'showTopology': True})
 
 
 @register_binding_controller(
@@ -69,11 +23,83 @@ class ButtonDelegate(TableButtonDelegate):
     can_show_nothing=False)
 class DisplayRecoveryReportTable(BaseFilterTableController):
     model = Instance(RecoveryReportTableModel, args=())
+    hasCustomMenu = Bool(True)
 
-    def create_delegates(self):
-        bindings = self.getBindings()
-        for col in range(len(bindings)):
-            self.tableWidget().setItemDelegateForColumn(col, None)
-        btn_delegate = ButtonDelegate()
-        self.tableWidget().setItemDelegateForColumn(LOAD_CONFIG_COLUMN,
-                                                    btn_delegate)
+    def create_widget(self, parent):
+        table_widget = super().create_widget(parent)
+        self.tableWidget().doubleClicked.connect(self.action_get_config)
+        return table_widget
+
+    def custom_menu(self, pos):
+        """Subclassed method for own custom menu
+
+        :param: pos: The position of the context menu event
+        """
+        menu = self.get_basic_menu()
+        if self.currentIndex().isValid():
+            # Enable this when retrieve_default_scene works correctly
+            # open_scene_action = menu.addAction("Open Device Scene")
+            # open_scene_action.setIcon(icons.scenelink)
+            # open_scene_action.triggered.connect(self.action_open_device_scene)
+            menu.addSeparator()
+            apply_config_action = menu.addAction(
+                "View and Apply Configuration")
+            apply_config_action.setIcon(icons.enum)
+            apply_config_action.triggered.connect(self.action_get_config)
+        menu.exec_(self.tableWidget().viewport().mapToGlobal(pos))
+
+    def action_get_config(self):
+        device_id = self._get_selected_device()
+        call_device_slot(WeakMethodRef(self.handle_get_configuration),
+                         self.getInstanceId(), "requestAction",
+                         deviceId=device_id,
+                         action="getConfiguration")
+
+    def action_open_device_scene(self):
+        device_id = self._get_selected_device()
+        if is_device_online(device_id):
+            retrieve_default_scene(device_id)
+        else:
+            msg = ("Unable to retrieve default scene. "
+                   f"Device {device_id} is not reachable.")
+            messagebox.show_warning(msg)
+
+    def handle_get_configuration(self, success, reply):
+        """Handler for request `getConfiguration`"""
+        if not success:
+            # In case if no success, the reply is the reason
+            reason, details = get_reason_parts(reply)
+            messagebox.show_error(
+                "Get Configuration request could not be fulfilled: "
+                f"{reason}", details=details, parent=self.widget)
+        else:
+            data = reply["payload"]["data"]
+            device_id = data["deviceId"]
+            current_config = data["new"]
+            requested_config = data["old"]
+            dialog = DeviceConfigurationPreview(device_id, current_config,
+                                                requested_config,
+                                                parent=self.widget)
+            if dialog.exec() == QDialog.Accepted:
+                call_device_slot(WeakMethodRef(self.handle_config_apply),
+                                 self.getInstanceId(), "requestAction",
+                                 deviceId=device_id,
+                                 action="applyConfiguration")
+
+    def handle_config_apply(self, success, reply):
+        """Handler for request `applyConfiguration`"""
+        if not success:
+            # In case if no success, the reply is the reason
+            reason, details = get_reason_parts(reply)
+            messagebox.show_error(
+                "Apply Configuration request could not be fulfilled: "
+                f"{reason}", details=details, parent=self.widget)
+        else:
+            messagebox.show_information("Configuration applied")
+
+    def _get_selected_device(self):
+        header = list(self.getBindings().keys())
+        model = self.tableWidget().model()
+        row = self.currentIndex().row()
+        _, device_id = model.get_model_data(row, header.index("deviceId"))
+        return device_id
