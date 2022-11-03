@@ -43,6 +43,7 @@ class ScantoolDynamicWidget(BaseBindingController):
 
     _is_scanning = Bool(False)
     _first_proxy_received = Bool(False)
+    _plot_available = Bool(False)
 
     def create_widget(self, parent):
         self._controller = ScanController(parent=parent)
@@ -131,6 +132,7 @@ class ScantoolDynamicWidget(BaseBindingController):
             self._controller.use_multicurve_plot()
         else:
             self._controller.use_heatmap_plot()
+        self._plot_available = True
 
         return scan
 
@@ -184,6 +186,7 @@ class ScantoolDynamicWidget(BaseBindingController):
                         device.add(value[index], [col, row])
                         self._controller.update(device)
                     index += 1
+        self._plot_available = True
 
         return scan
 
@@ -193,13 +196,13 @@ class ScantoolDynamicWidget(BaseBindingController):
         if state is None:
             return
 
+        self._is_scanning = False
         if state == State.ON.value:
             # # Try to plot last value
             # if self._is_scanning:
             #     self.value_update(proxy)
             # Scan is done or not started yet.
             self._scan = None
-            self._is_scanning = False
         elif state == State.ACQUIRING.value and self._scan is None:
             # Scan has just started.
             self._scan = self._setup_new_scan(proxy)
@@ -207,7 +210,8 @@ class ScantoolDynamicWidget(BaseBindingController):
 
     @on_trait_change("_controller:_plot_double_clicked")
     def _plot_doube_clicked(self, data):
-        if not self._is_scanning:
+        enabled = self._get_state(self.proxy) == State.ON.value
+        if enabled and not self._is_scanning and self._plot_available:
             positions = data['coord'][:len(data['aliases'])]
             text = f"Move motor(s) {data['aliases']} to {positions} ?"
             msg_box = QMessageBox(QMessageBox.Question, 'Move Motors',
