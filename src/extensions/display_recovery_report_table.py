@@ -5,6 +5,7 @@ from qtpy.QtWidgets import QDialog
 from traits.api import Bool, Instance
 
 from karabo.common.api import WeakMethodRef
+from karabo.native import Hash
 from karabogui.api import (
     BaseFilterTableController, VectorHashBinding, call_device_slot,
     get_reason_parts, icons, is_device_online, messagebox,
@@ -75,15 +76,15 @@ class DisplayRecoveryReportTable(BaseFilterTableController):
         else:
             data = reply["payload"]["data"]
             device_id = data["deviceId"]
-            current_config = data["new"]
-            requested_config = data["old"]
+            current_config = data.get("new", Hash())
+            requested_config = data.get("old", Hash())
             dialog = DeviceConfigurationPreview(device_id, current_config,
                                                 requested_config,
                                                 parent=self.widget)
             if dialog.exec() == QDialog.Accepted:
                 call_device_slot(WeakMethodRef(self.handle_config_apply),
                                  self.getInstanceId(), "requestAction",
-                                 deviceId=device_id,
+                                 deviceId=device_id, config=requested_config,
                                  action="applyConfiguration")
 
     def handle_config_apply(self, success, reply):
