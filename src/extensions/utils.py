@@ -1,3 +1,6 @@
+from collections import namedtuple
+from importlib.metadata import version
+
 import numpy as np
 import pyqtgraph as pg
 from qtpy.QtCore import Qt, Slot
@@ -10,6 +13,8 @@ try:
     from karabogui.controllers.api import REFERENCE_TYPENUM_TO_DTYPE
 except ImportError:
     from karabogui.binding.api import REFERENCE_TYPENUM_TO_DTYPE
+
+VERSION = namedtuple("VERSION", ["major", "minor"])
 
 
 def get_array_data(binding, default=None):
@@ -152,3 +157,31 @@ def add_twinx(plotItem, data_item=None, y_label=None):
     if data_item is not None:
         viewBox.addItem(data_item)
     return viewBox
+
+
+class CompatibilityError(RuntimeError):
+    pass
+
+
+def check_gui_compat(major, minor):
+    """
+    Check if the given version is not newer than the running Karabo GUI
+    version.
+    Take two integers - major and minor - which denote the Karabo GUI
+    version to which the current GUI version will be compared.
+    """
+    current_gui_version = get_gui_version()
+    module_sem_version = VERSION(major=major, minor=minor)
+    if module_sem_version > current_gui_version:
+        raise CompatibilityError(f"The KaraboGui of version {major}.{minor} or"
+                                 " later is required")
+
+
+def get_gui_version():
+    """
+    Return the running Karabo GUI version as a named tuple.
+    """
+    gui_version = version("karabogui")
+    major, minor = gui_version.split(".")[:2]
+
+    return VERSION(major=int(major), minor=int(minor))
