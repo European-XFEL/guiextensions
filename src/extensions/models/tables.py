@@ -102,6 +102,8 @@ def _built_table_readers_writers():
         return base_writer if not has_filter else filter_writer
 
     for model_name, has_filter in TABLE_WIDGET_MODELS:
+        # if a model name does not end with "Model" the name will be clipped.
+        assert model_name.endswith("Model")
         klass = globals()[model_name]
         file_name = model_name[:-len("Model")]
         register_scene_reader(file_name)(
