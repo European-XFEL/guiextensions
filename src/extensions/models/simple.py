@@ -1,6 +1,6 @@
 from xml.etree.ElementTree import SubElement
 
-from traits.api import Enum, String
+from traits.api import Bool, Enum, String
 
 from karabo.common.scenemodel.api import (
     BaseDisplayEditableWidget, BaseWidgetObjectData)
@@ -15,6 +15,11 @@ from karabo.common.scenemodel.registry import (
 
 class IPMQuadrantModel(BaseWidgetObjectData):
     """ A model for the Intensity Position Monitor"""
+
+
+class EditableTextOptionsModel(BaseEditWidget):
+    """A model for the editable options text field"""
+    strict = Bool(True)
 
 
 class EditableDateTimeModel(BaseEditWidget):
@@ -111,6 +116,22 @@ def _date_time_edit_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, "EditableDateTime")
     element.set(NS_KARABO + "time_format", str(model.time_format))
+
+
+@register_scene_reader("EditableTextOptions")
+def _editable_options_reader(element):
+    traits = read_base_widget_data(element)
+    strict = element.get(NS_KARABO + "strict", "")
+    strict = strict.lower() == "true"
+    traits["strict"] = strict
+    return EditableTextOptionsModel(**traits)
+
+
+@register_scene_writer(EditableTextOptionsModel)
+def _editable_options_writer(model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_widget_data(model, element, "EditableTextOptions")
+    element.set(NS_KARABO + "strict", str(model.strict).lower())
 
 
 # ----------------------------------------------------------------------------

@@ -11,9 +11,9 @@ from .plots import (
     XasGraphModel)
 from .simple import (
     DetectorCellsModel, DisplayConditionCommandModel, DynamicPulseIdMapModel,
-    EditableDateTimeModel, IPMQuadrantModel, PointAndClickModel,
-    PulseIdMapModel, ScantoolBaseModel, ScantoolDeviceViewModel,
-    StateAwareComponentManagerModel)
+    EditableDateTimeModel, EditableTextOptionsModel, IPMQuadrantModel,
+    PointAndClickModel, PulseIdMapModel, ScantoolBaseModel,
+    ScantoolDeviceViewModel, StateAwareComponentManagerModel)
 from .tables import (
     CriticalCompareViewModel, DoocsLocationTableModel, DoocsMirrorTableModel,
     MotorAssignmentTableModel, RecoveryReportTableModel, SelectionTableModel)

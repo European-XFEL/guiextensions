@@ -12,6 +12,15 @@ def test_ipm_quadrant_model():
     _assert_geometry_traits(read_model)
 
 
+def test_editable_text_options():
+    traits = _geometry_traits()
+    traits["strict"] = False
+    model = api.EditableTextOptionsModel(**traits)
+    read_model = single_model_round_trip(model)
+    _assert_geometry_traits(read_model)
+    assert not read_model.strict
+
+
 def test_pnc_model():
     model = api.PointAndClickModel(klass="EditablePointAndClick")
     read_model = single_model_round_trip(model)
