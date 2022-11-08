@@ -1,6 +1,6 @@
 from qtpy import uic
 from qtpy.QtCore import Qt, Slot
-from qtpy.QtWidgets import QDialog
+from qtpy.QtWidgets import QDialog, QDialogButtonBox
 
 from karabo.native import Hash, create_html_hash, has_changes
 from karabogui.api import icons
@@ -58,6 +58,9 @@ class DeviceConfigurationPreview(QDialog):
         # New Configuration
         html = create_html_hash(requested_config, include_attributes=False)
         self.configuration_view.setHtml(html)
+
+        self.buttonBox.button(QDialogButtonBox.Apply).clicked.connect(
+            self.accept)
 
     def _get_html_configuration(self, config):
         """Provide the html view of a `config` hash"""
