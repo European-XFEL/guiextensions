@@ -5,6 +5,7 @@
 #############################################################################
 from itertools import cycle
 
+from qtpy.QtGui import QColor
 from traits.api import DictStrAny, Instance, List, Property
 
 from karabogui.graph.common.api import KaraboLegend, get_pen_cycler
@@ -50,8 +51,12 @@ class MultiCurvePlot(GraphPlot):
             item = self._items.use(name)
             self._legend.addItem(item, name)
         else:
+            pen = next(self._pens)
+            # Yellow color is almost not visible on the white background
+            if pen.color() == QColor(255, 255, 153, 255):
+                pen = next(self._pens)
             item = self.widget.add_curve_item(name=name,
-                                              pen=next(self._pens))
+                                              pen=pen)
 
         return item
 
