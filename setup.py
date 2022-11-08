@@ -12,6 +12,7 @@ entries = {
         'DynamicDigitizer = extensions.display_dynamic_digitizer',
         'DynamicGraph = extensions.display_dynamic_graph',
         'ExtendedVectorXYGraph = extensions.display_extended_vector_xy_graph',
+        'EditableTextOptions = extensions.edit_text_options',
         'IPMQuadrant = extensions.display_ipm_quadrant',
         'MetroZonePlate = extensions.metro.zone_plate',
         'MetroXasGraph = extensions.metro.xas_graph',
