@@ -22,7 +22,7 @@ class EditableDateTimeModel(BaseEditWidget):
     time_format = String("yyyy-M-dThh:mm:ss")
 
 
-class DisplayConditionCommand(BaseWidgetObjectData):
+class DisplayConditionCommandModel(BaseWidgetObjectData):
     """ A model for the Condition Command Base Widget """
 
 
@@ -64,7 +64,7 @@ class DetectorCellsModel(BaseWidgetObjectData):
 # Model must have __NAME__Model. Widget must have __NAME__ as class name
 _SIMPLE_WIDGET_MODELS = (
     "IPMQuadrantModel", "PulseIdMapModel", "DynamicPulseIdMapModel",
-    "DisplayConditionCommand", "DetectorCellsModel",)
+    "DisplayConditionCommandModel", "DetectorCellsModel",)
 
 _SIMPLE_DISPLAY_EDIT_MODELS = (
     "StateAwareComponentManagerModel", "PointAndClickModel")
@@ -140,6 +140,8 @@ def _build_empty_widget_readers_and_writers():
         return writer
 
     for model_name in _SIMPLE_WIDGET_MODELS:
+        # if a model name does not end with "Model" the name will be clipped.
+        assert model_name.endswith("Model")
         klass = globals()[model_name]
         file_name = model_name[:-len("Model")]
         register_scene_reader(file_name)(_build_reader_func(klass))
@@ -164,6 +166,8 @@ def _build_empty_display_editable_readers_and_writers():
         return element
 
     for model_name in _SIMPLE_DISPLAY_EDIT_MODELS:
+        # if a model name does not end with "Model" the name will be clipped.
+        assert model_name.endswith("Model")
         klass = globals()[model_name]
         file_name = model_name[:-len("Model")]
         reader = _build_reader_func(klass)

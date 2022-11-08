@@ -9,7 +9,7 @@ from karabogui.binding.api import (
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
 
-from .models.api import DisplayConditionCommand
+from .models.api import DisplayConditionCommandModel
 
 BUTTON_STYLE = """
 QPushButton::enabled{
@@ -72,7 +72,7 @@ def is_compatible(binding):
                              can_show_nothing=False)
 class DisplayConditionCommand(BaseBindingController):
     # The scene model class for this controller
-    model = Instance(DisplayConditionCommand, args=())
+    model = Instance(DisplayConditionCommandModel, args=())
     # Internal traits
     _button = WeakRef(QPushButton)
 

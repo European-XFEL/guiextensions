@@ -10,7 +10,7 @@ from .plots import (
     PeakIntegrationGraphModel, ScatterPositionModel, TableVectorXYGraphModel,
     XasGraphModel)
 from .simple import (
-    DetectorCellsModel, DisplayConditionCommand, DynamicPulseIdMapModel,
+    DetectorCellsModel, DisplayConditionCommandModel, DynamicPulseIdMapModel,
     EditableDateTimeModel, IPMQuadrantModel, PointAndClickModel,
     PulseIdMapModel, ScantoolBaseModel, ScantoolDeviceViewModel,
     StateAwareComponentManagerModel)
