@@ -16,7 +16,7 @@ def test_check_gui_compatibility():
 def test_get_gui_version():
     from karabogui._version import version_tuple
 
-    major, minor, _, _ = version_tuple
+    major, minor, = version_tuple[:2]
     version = utils.get_gui_version()
     assert version.major == major
     assert version.minor == minor
