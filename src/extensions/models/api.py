@@ -15,5 +15,6 @@ from .simple import (
     PointAndClickModel, PulseIdMapModel, ScantoolBaseModel,
     ScantoolDeviceViewModel, StateAwareComponentManagerModel)
 from .tables import (
-    CriticalCompareViewModel, DoocsLocationTableModel, DoocsMirrorTableModel,
-    MotorAssignmentTableModel, RecoveryReportTableModel, SelectionTableModel)
+    CriticalCompareViewModel, DeviceReconfigurationTableModel,
+    DoocsLocationTableModel, DoocsMirrorTableModel, MotorAssignmentTableModel,
+    SelectionTableModel)

@@ -31,12 +31,12 @@ def test_critical_compare_view():
     assert read_model.resizeToContents
 
 
-def test_recovery_report_table_model():
+def test_device_reconfiguration_table_model():
     traits = _geometry_traits()
     traits["resizeToContents"] = True
     traits["filterKeyColumn"] = 1
     traits["sortingEnabled"] = True
-    model = api.RecoveryReportTableModel(**traits)
+    model = api.DeviceReconfigurationTableModel(**traits)
     read_model = single_model_round_trip(model)
     _assert_geometry_traits(read_model)
     assert read_model.resizeToContents

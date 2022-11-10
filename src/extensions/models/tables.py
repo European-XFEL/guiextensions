@@ -23,7 +23,7 @@ TABLE_WIDGET_MODELS = (
     ("CriticalCompareViewModel", False),
     ("DoocsLocationTableModel", False),
     ("DoocsMirrorTableModel", False),
-    ("RecoveryReportTableModel", True),
+    ("DeviceReconfigurationTableModel", True),
     ("MotorAssignmentTableModel", False),
     ("SelectionTableModel", True),
 )
@@ -49,8 +49,8 @@ class MotorAssignmentTableModel(BaseEditWidget):
     resizeToContents = Bool(False)
 
 
-class RecoveryReportTableModel(BaseWidgetObjectData):
-    """A model for the Report Table of the RecoveryPortal"""
+class DeviceReconfigurationTableModel(BaseWidgetObjectData):
+    """A model for the Device Reconfiguration Table"""
     resizeToContents = Bool(False)
     filterKeyColumn = Int(0)
     sortingEnabled = Bool(True)

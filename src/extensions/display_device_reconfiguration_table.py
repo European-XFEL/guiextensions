@@ -12,18 +12,18 @@ from karabogui.api import (
     register_binding_controller, retrieve_default_scene, with_display_type)
 
 from .dialogs.api import DeviceConfigurationPreview
-from .models.api import RecoveryReportTableModel
+from .models.api import DeviceReconfigurationTableModel
 
 
 @register_binding_controller(
-    ui_name="Recovery Report Table",
-    klassname="RecoveryReportTable",
+    ui_name="Device Reconfiguration Table",
+    klassname="DeviceReconfigurationTable",
     binding_type=VectorHashBinding,
-    is_compatible=with_display_type("RecoveryReportTable"),
+    is_compatible=with_display_type("DeviceReconfigurationTable"),
     priority=-10,
     can_show_nothing=False)
-class DisplayRecoveryReportTable(BaseFilterTableController):
-    model = Instance(RecoveryReportTableModel, args=())
+class DisplayDeviceReconfigurationTable(BaseFilterTableController):
+    model = Instance(DeviceReconfigurationTableModel, args=())
     hasCustomMenu = Bool(True)
 
     def create_widget(self, parent):
@@ -99,8 +99,8 @@ class DisplayRecoveryReportTable(BaseFilterTableController):
             messagebox.show_information("Configuration applied")
 
     def _get_selected_device(self):
-        header = list(self.getBindings().keys())
-        model = self.tableWidget().model()
+        # header = list(self.getBindings().keys())
         row = self.currentIndex().row()
-        _, device_id = model.get_model_data(row, header.index("deviceId"))
+        # Device id should be in the first column
+        _, device_id = self.sourceModel().get_model_data(row, 0)
         return device_id
