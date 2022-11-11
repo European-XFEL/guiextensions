@@ -62,6 +62,10 @@ class DetectorCellsModel(BaseWidgetObjectData):
     """A model for the AgipdLitFrameFinder"""
 
 
+class VectorLimitedIntLineEditModel(BaseEditWidget):
+    """A model for Int Line edit with min and max defined"""
+
+
 # Reader and writers ...
 # --------------------------------------------------------------------------
 
@@ -69,7 +73,8 @@ class DetectorCellsModel(BaseWidgetObjectData):
 # Model must have __NAME__Model. Widget must have __NAME__ as class name
 _SIMPLE_WIDGET_MODELS = (
     "IPMQuadrantModel", "PulseIdMapModel", "DynamicPulseIdMapModel",
-    "DisplayConditionCommandModel", "DetectorCellsModel",)
+    "DisplayConditionCommandModel", "DetectorCellsModel",
+    "VectorLimitedIntLineEditModel")
 
 _SIMPLE_DISPLAY_EDIT_MODELS = (
     "StateAwareComponentManagerModel", "PointAndClickModel")
