@@ -2,11 +2,12 @@ from xml.etree.ElementTree import SubElement
 
 from traits.api import Int
 
-from karabo.common.scenemodel.api import (
-    NS_KARABO, WIDGET_ELEMENT_TAG, BaseEditWidget, register_scene_reader,
-    register_scene_writer)
+from karabo.common.scenemodel.bases import BaseEditWidget
+from karabo.common.scenemodel.const import NS_KARABO, WIDGET_ELEMENT_TAG
 from karabo.common.scenemodel.io_utils import (
     read_base_widget_data, write_base_widget_data)
+from karabo.common.scenemodel.registry import (
+    register_scene_reader, register_scene_writer)
 
 
 class VectorLimitedDoubleLineEditModel(BaseEditWidget):
