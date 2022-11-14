@@ -126,7 +126,7 @@ class EditableTextOptions(BaseLineEditController):
 
     @on_trait_change("model:strict")
     def _strict_change(self):
-        self.validator.strict = self.model.strict
+        self.validator.setStrict(self.model.strict)
         self.value_update(self.proxy)
 
     # Qt Slots

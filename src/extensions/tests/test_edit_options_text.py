@@ -102,6 +102,12 @@ def test_editable_options(gui_app: gui_app):
     assert not controller.remove_additional_property(options_proxy)
     assert controller.validator._options == []
 
+    # Changing  model value should update the validator.
+    controller.model.strict = True
+    assert controller.validator._strict
+    controller.model.strict = False
+    assert not controller.validator._strict
+
 
 def test_options_validator(gui_app):
     validator = OptionValidator(strict=True)
