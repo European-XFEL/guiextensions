@@ -9,7 +9,7 @@ from karabo.native import Hash
 from karabogui.api import (
     BaseFilterTableController, VectorHashBinding, call_device_slot,
     get_reason_parts, icons, is_device_online, messagebox,
-    register_binding_controller, retrieve_default_scene, with_display_type)
+    register_binding_controller, with_display_type)
 
 from .dialogs.api import DeviceConfigurationPreview
 from .models.api import DeviceReconfigurationTableModel
@@ -59,11 +59,16 @@ class DisplayDeviceReconfigurationTable(BaseFilterTableController):
     def action_open_device_scene(self):
         device_id = self._get_selected_device()
         if is_device_online(device_id):
-            retrieve_default_scene(device_id)
+            try:
+                from karabogui.api import retrieve_default_scene
+                retrieve_default_scene(device_id)
+            except ImportError:
+                msg = "Retrieving device scene requires gui version 2.16"
+                messagebox.show_warning(msg, parent=self.widget)
         else:
             msg = ("Unable to retrieve default scene. "
                    f"Device {device_id} is not reachable.")
-            messagebox.show_warning(msg)
+            messagebox.show_warning(msg, parent=self.widget)
 
     def handle_get_configuration(self, success, reply):
         """Handler for request `getConfiguration`"""
