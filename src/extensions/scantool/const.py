@@ -23,6 +23,7 @@ MOTOR_IDS = "motorIds"
 SOURCE_IDS = "sourceIds"
 
 # Scan types
+TSCANS = ["tscan"]
 ASCANS = ["ascan", "a2scan", "a3scan", "a4scan"]
 DSCANS = ["dscan", "d2scan", "d3scan", "d4scan"]
 CSCANS = ["cscan", "c2scan", "c3scan", "c4scan"]
@@ -38,7 +39,7 @@ REMOVE = "remove"
 
 # build {scan type: number of motors} lookup table
 NUM_MOTORS_TABLE = {}
-for index, motors in enumerate(zip(ASCANS, DSCANS, CSCANS), start=1):
+for index, motors in enumerate(zip(TSCANS, ASCANS, DSCANS, CSCANS), start=1):
     for motor in motors:
         NUM_MOTORS_TABLE[motor] = index
 
