@@ -17,9 +17,9 @@ from karabogui.controllers.api import (
 
 from .models.api import ScantoolBaseModel
 from .scantool.const import (
-    ACTUAL_STEP, ASCANS, CSCANS, CURRENT_INDEX, DSCANS, MOTOR_IDS, MOTOR_NAMES,
-    MOTORS, SCAN_TYPE, SOURCE_IDS, SOURCE_NAMES, SOURCES, START_POSITIONS,
-    STEPS, STOP_POSITIONS)
+    ACTUAL_STEP, CURRENT_INDEX, MESHES, MOTOR_IDS, MOTOR_NAMES, MOTORS,
+    SCAN_TYPE, SOURCE_IDS, SOURCE_NAMES, SOURCES, START_POSITIONS, STEPS,
+    STOP_POSITIONS)
 from .scantool.controller import ScanController
 from .scantool.data.scan import Scan
 
@@ -127,7 +127,7 @@ class ScantoolDynamicWidget(BaseBindingController):
         scan = self._controller.new_scan(config)
 
         # Use plot wrt scan type
-        if config[SCAN_TYPE] in ASCANS + DSCANS + CSCANS:
+        if config[SCAN_TYPE] not in MESHES:
             self._controller.use_multicurve_plot()
         else:
             self._controller.use_heatmap_plot()
