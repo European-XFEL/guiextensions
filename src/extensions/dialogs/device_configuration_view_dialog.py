@@ -59,6 +59,8 @@ class DeviceConfigurationPreview(QDialog):
         html = create_html_hash(requested_config, include_attributes=False)
         self.configuration_view.setHtml(html)
 
+        has_changes = bool(changes_a) and bool(changes_b)
+        self.buttonBox.button(QDialogButtonBox.Apply).setEnabled(has_changes)
         self.buttonBox.button(QDialogButtonBox.Apply).clicked.connect(
             self.accept)
 
