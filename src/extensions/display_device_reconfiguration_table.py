@@ -14,6 +14,10 @@ from karabogui.api import (
 from .dialogs.api import DeviceConfigurationPreview
 from .models.api import DeviceReconfigurationTableModel
 
+COMPARE_NO_CHANGES = "No changes"
+COMPARE_CHANGES = "Changes detected"
+COMPARE_UNKNOWN = "No data"
+
 
 @register_binding_controller(
     ui_name="Device Reconfiguration Table",
@@ -101,10 +105,23 @@ class DisplayDeviceReconfigurationTable(BaseFilterTableController):
                 "Apply Configuration request could not be fulfilled: "
                 f"{reason}", details=details, parent=self.widget)
         else:
-            messagebox.show_information("Configuration applied")
+            data = reply["payload"].get("data", Hash())
+            # Compatibility, always no changes
+            changes = data.get("changes", COMPARE_NO_CHANGES)
+            if changes == COMPARE_NO_CHANGES:
+                text = "all changes could be applied successfully."
+            elif changes == COMPARE_CHANGES:
+                text = ("however, there are still differences in comparing "
+                        "both actual and preset configurations.")
+            elif changes == COMPARE_UNKNOWN:
+                text = "however, no information about changes is available."
+            else:
+                text = "unknown change type"
+
+            messagebox.show_information(f"Configuration applied: {text}",
+                                        parent=self.widget)
 
     def _get_selected_device(self):
-        # header = list(self.getBindings().keys())
         row = self.currentIndex().row()
         # Device id should be in the first column
         _, device_id = self.sourceModel().get_model_data(row, 0)
