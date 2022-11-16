@@ -17,6 +17,7 @@ from .models.api import DeviceReconfigurationTableModel
 COMPARE_NO_CHANGES = "No changes"
 COMPARE_CHANGES = "Changes detected"
 COMPARE_UNKNOWN = "No data"
+DEVICE_ID_COLUMN = 0
 
 
 @register_binding_controller(
@@ -123,6 +124,6 @@ class DisplayDeviceReconfigurationTable(BaseFilterTableController):
 
     def _get_selected_device(self):
         row = self.currentIndex().row()
-        # Device id should be in the first column
-        _, device_id = self.sourceModel().get_model_data(row, 0)
+        model = self.tableWidget().model()
+        _, device_id = model.get_model_data(row, DEVICE_ID_COLUMN)
         return device_id
