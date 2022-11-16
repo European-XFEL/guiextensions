@@ -35,11 +35,13 @@ class LimitedValidator(QValidator):
     def setNativeMin(self, value):
         if self.minInc is None:
             self.minInc = value
+            self.validator.setBottom(value)
         self.nativeMin = value
 
     def setNativeMax(self, value):
         if self.maxInc is None:
             self.maxInc = value
+            self.validator.setTop(value)
         self.nativeMax = value
 
     def setDecimals(self, value):
@@ -154,8 +156,8 @@ class VectorLimitedDoubleLineEdit(VectorLimitedLineEdit):
 
     @on_trait_change("model.decimals", post_init=True)
     def _decimals_update(self):
-        self.value_update(self.proxy)
         self.validator.setDecimals(self.model.decimals)
+        self.value_update(self.proxy)
 
     def _pick_decimals(self, checked):
         num_decimals, ok = QInputDialog.getInt(
