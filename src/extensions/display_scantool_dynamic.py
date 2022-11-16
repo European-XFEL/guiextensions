@@ -162,7 +162,7 @@ class ScantoolDynamicWidget(BaseBindingController):
                        SOURCE_IDS: self._get_value(proxies, SOURCE_IDS)})
         scan = self._controller.new_scan(config)
 
-        if config[SCAN_TYPE] in ASCANS + DSCANS + CSCANS:
+        if config[SCAN_TYPE] not in MESHES:
             self._controller.use_multicurve_plot()
             for step in range(config[STEPS][0] + 1):
                 scan.actual_step = step
