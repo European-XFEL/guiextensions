@@ -43,6 +43,11 @@ def test_int_line_edit(gui_app: gui_app):
                                                    "invalid_vector_int")
     controller.set_read_only(False)
 
+    # Before any additional proxy set the Int32 max value.
+    controller.internal_widget.setText("2147483648")
+    assert "color: red" in controller.internal_widget.styleSheet()
+    assert controller.internal_widget.text() == "2147483648"
+
     # Doesn't accept VectorDouble
     assert not controller.visualize_additional_property(double_range_proxy)
     # Doesn't accept VectorInt without correct 'displayType'.
@@ -128,8 +133,12 @@ def test_double_line_edit(gui_app: gui_app):
 
     assert controller.internal_widget.text() == "6.5"
     assert controller.proxy.edit_value is None
-
     assert "color: red" in controller.internal_widget.styleSheet()
+
+    controller.internal_widget.setText("5.0")
+    assert "color: black" in controller.internal_widget.styleSheet()
+    controller.model.decimals = 4
+    assert "color: black" in controller.internal_widget.styleSheet()
 
 
 def test_remove_proxy(gui_app: gui_app):
@@ -158,6 +167,11 @@ def test_remove_proxy(gui_app: gui_app):
     # No longer validation with range_proxy value
     set_proxy_value(proxy, "int_prop", 25)
     assert "color: black" in controller.internal_widget.styleSheet()
+
+    # Still validate the Int32 native min
+    controller.internal_widget.setText("-2147483649")
+    assert "color: red" in controller.internal_widget.styleSheet()
+    assert controller.internal_widget.text() == "-2147483649"
 
 
 def test_int_validator():
