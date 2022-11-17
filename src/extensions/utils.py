@@ -162,21 +162,28 @@ class CompatibilityError(RuntimeError):
     pass
 
 
-def check_gui_compat(major, minor):
+def requires_gui_version(major: int, minor: int):
     """
-    Check if the given version is not newer than the running Karabo GUI
-    version.
-    Take two integers - major and minor - which denote the Karabo GUI
-    version to which the current GUI version will be compared.
+    Check if the given version is older than the running Karabo GUI version.
+
+    Raise a `CompatibilityError` if this is not the case
+
+    :param major: integer to compare the major version
+    :param minor: integer to compare the minor version
     """
-    current_gui_version = get_gui_version()
-    module_sem_version = VERSION(major=major, minor=minor)
-    if module_sem_version > current_gui_version:
-        raise CompatibilityError(f"The KaraboGui of version {major}.{minor} or"
-                                 " later is required")
+    if not gui_version_compatible(major, minor):
+        raise CompatibilityError(
+            f"The KaraboGui of version {major}.{minor} or later is required")
 
 
-def get_gui_version():
+def gui_version_compatible(major: int, minor: int) -> bool:
+    """Check if we are compatible to a karabo gui version"""
+    existing = _get_karabo_gui_version()
+    compare = VERSION(major=major, minor=minor)
+    return existing >= compare
+
+
+def _get_karabo_gui_version():
     """
     Return the running Karabo GUI version as a named tuple.
     """

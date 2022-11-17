@@ -13,9 +13,9 @@ from karabogui.api import (
     get_binding_value, has_options, register_binding_controller)
 
 from .models.api import EditableTextOptionsModel
-from .utils import check_gui_compat
+from .utils import requires_gui_version
 
-check_gui_compat(2, 16)
+requires_gui_version(2, 16)
 
 
 class OptionValidator(QValidator):
