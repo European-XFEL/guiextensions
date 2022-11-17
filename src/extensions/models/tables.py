@@ -22,7 +22,7 @@ TABLE_WIDGET_MODELS = (
     # (TableModelName, Filtering: Bool)
     ("CriticalCompareViewModel", False),
     ("DoocsLocationTableModel", False),
-    ("DoocsMirrorTableModel", False),
+    ("DoocsMirrorTableModel", True),
     ("DeviceReconfigurationTableModel", True),
     ("MotorAssignmentTableModel", False),
     ("SelectionTableModel", True),
@@ -42,6 +42,8 @@ class DoocsLocationTableModel(BaseWidgetObjectData):
 class DoocsMirrorTableModel(BaseWidgetObjectData):
     """ A model for the Doocs Mirror"""
     resizeToContents = Bool(False)
+    filterKeyColumn = Int(0)
+    sortingEnabled = Bool(True)
 
 
 class MotorAssignmentTableModel(BaseEditWidget):
