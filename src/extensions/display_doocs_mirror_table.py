@@ -9,9 +9,9 @@ from karabogui.api import (
 from karabogui.request import get_scene_from_server
 
 from .models.api import DoocsMirrorTableModel
-from .utils import check_gui_compat
+from .utils import requires_gui_version
 
-check_gui_compat(2, 14)
+requires_gui_version(2, 14)
 
 MIRROR_SCENELINK_COLUMN = 2
 

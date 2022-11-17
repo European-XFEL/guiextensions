@@ -1,7 +1,7 @@
 #############################################################################
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from qtpy.QtWidgets import QDialog
+from qtpy.QtWidgets import QDialog, QMenu
 from traits.api import Bool, Instance
 
 from karabo.common.api import WeakMethodRef
@@ -13,6 +13,7 @@ from karabogui.api import (
 
 from .dialogs.api import DeviceConfigurationPreview
 from .models.api import DeviceReconfigurationTableModel
+from .utils import gui_version_compatible
 
 COMPARE_NO_CHANGES = "No changes"
 COMPARE_CHANGES = "Changes detected"
@@ -41,12 +42,12 @@ class DisplayDeviceReconfigurationTable(BaseFilterTableController):
 
         :param: pos: The position of the context menu event
         """
-        menu = self.get_basic_menu()
+        menu = QMenu(self.tableWidget())
         if self.currentIndex().isValid():
-            # Enable this when retrieve_default_scene works correctly
-            # open_scene_action = menu.addAction("Open Device Scene")
-            # open_scene_action.setIcon(icons.scenelink)
-            # open_scene_action.triggered.connect(self.action_open_device_scene)
+            if gui_version_compatible(2, 16):
+                open_scene_action = menu.addAction("Open Device Scene")
+                open_scene_action.setIcon(icons.scenelink)
+                open_scene_action.triggered.connect(self.action_open_scene)
             menu.addSeparator()
             apply_config_action = menu.addAction(
                 "View and Apply Configuration")
@@ -61,15 +62,11 @@ class DisplayDeviceReconfigurationTable(BaseFilterTableController):
                          deviceId=device_id,
                          action="getConfiguration")
 
-    def action_open_device_scene(self):
+    def action_open_scene(self):
         device_id = self._get_selected_device()
         if is_device_online(device_id):
-            try:
-                from karabogui.api import retrieve_default_scene
-                retrieve_default_scene(device_id)
-            except ImportError:
-                msg = "Retrieving device scene requires gui version 2.16"
-                messagebox.show_warning(msg, parent=self.widget)
+            from karabogui.api import retrieve_default_scene
+            retrieve_default_scene(device_id)
         else:
             msg = ("Unable to retrieve default scene. "
                    f"Device {device_id} is not reachable.")
