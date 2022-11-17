@@ -2,33 +2,10 @@ from qtpy import uic
 from qtpy.QtCore import Qt, Slot
 from qtpy.QtWidgets import QDialog
 
-from karabo.native import Hash, create_html_hash, has_changes
+from karabo.native import create_html_hash
 from karabogui.api import icons
 
-from .utils import get_dialog_ui
-
-
-def get_config_changes(old, new):
-    """Extract the changes of Hash `new` with respect to Hash `old`"""
-    changes_old, changes_new = Hash(), Hash()
-
-    old_paths = old.paths(intermediate=False)
-    new_paths = new.paths(intermediate=False)
-
-    keys = sorted(set(old_paths).union(set(new_paths)))
-    for key in keys:
-        old_value = old.get(key, None)
-        new_value = new.get(key, None)
-        if old_value is None and new_value is not None:
-            changes_old[key] = "Missing from configuration"
-            changes_new[key] = new_value
-        elif old_value is not None and new_value is None:
-            changes_old[key] = "Removed from configuration"
-        elif has_changes(old_value, new_value):
-            changes_old[key] = old_value
-            changes_new[key] = new_value
-
-    return changes_old, changes_new
+from .utils import get_config_changes, get_dialog_ui
 
 
 class MotorConfigurationPreview(QDialog):

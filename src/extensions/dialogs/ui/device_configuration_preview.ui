@@ -220,7 +220,7 @@
       </font>
      </property>
      <property name="text">
-      <string>Note: Press OK to request to save the proposed configuration.</string>
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Note&lt;/span&gt;: Press &lt;span style=&quot; font-weight:600;&quot;&gt;Apply &lt;/span&gt;to request to reconfigure the displayed configuration changes.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
     </widget>
    </item>
