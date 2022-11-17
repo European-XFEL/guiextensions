@@ -11,14 +11,20 @@ from karabo.common.scenemodel.registry import (
 
 
 class VectorLimitedDoubleLineEditModel(BaseEditWidget):
-    """A model for DoubleLineEdit Widget"""
+    """A model for VectorLimitedDoubleLineEdit Widget"""
 
     # The floating point precision
     decimals = Int(-1)
 
 
+class LimitedDoubleLineEditModel(BaseEditWidget):
+    """A model for LimitedDoubleLineEdit Widget"""
+    # The floating point precision
+    decimals = Int(-1)
+
+
 @register_scene_reader("VectorLimitedDoubleLineEdit")
-def _limited_double_line_edit_reader(element):
+def _vector_limited_double_line_edit_reader(element):
     traits = read_base_widget_data(element)
     decimals = element.get(NS_KARABO + "decimals", "")
     if decimals:
@@ -27,8 +33,25 @@ def _limited_double_line_edit_reader(element):
 
 
 @register_scene_writer(VectorLimitedDoubleLineEditModel)
-def _limited_double_line_edit_writer(model, parent):
+def _vector_limited_double_line_edit_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, "VectorLimitedDoubleLineEdit")
+    element.set(NS_KARABO + "decimals", str(model.decimals))
+    return element
+
+
+@register_scene_reader("LimitedDoubleLineEdit")
+def _limited_double_line_edit_reader(element):
+    traits = read_base_widget_data(element)
+    decimals = element.get(NS_KARABO + "decimals", "")
+    if decimals:
+        traits["decimals"] = int(decimals)
+    return LimitedDoubleLineEditModel(**traits)
+
+
+@register_scene_writer(LimitedDoubleLineEditModel)
+def _limited_double_line_edit_writer(model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_widget_data(model, element, "LimitedDoubleLineEdit")
     element.set(NS_KARABO + "decimals", str(model.decimals))
     return element

@@ -63,7 +63,11 @@ class DetectorCellsModel(BaseWidgetObjectData):
 
 
 class VectorLimitedIntLineEditModel(BaseEditWidget):
-    """A model for Int Line edit with min and max defined"""
+    """A model for Int Line edit with min and max defined by a vector"""
+
+
+class LimitedIntLineEditModel(BaseEditWidget):
+    """A model for Int Line edit with min and max defined two integers"""
 
 
 # Reader and writers ...
@@ -74,7 +78,7 @@ class VectorLimitedIntLineEditModel(BaseEditWidget):
 _SIMPLE_WIDGET_MODELS = (
     "IPMQuadrantModel", "PulseIdMapModel", "DynamicPulseIdMapModel",
     "DisplayConditionCommandModel", "DetectorCellsModel",
-    "VectorLimitedIntLineEditModel")
+    "VectorLimitedIntLineEditModel", "LimitedIntLineEditModel",)
 
 _SIMPLE_DISPLAY_EDIT_MODELS = (
     "StateAwareComponentManagerModel", "PointAndClickModel")

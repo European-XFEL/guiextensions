@@ -1,6 +1,7 @@
 # flake8: noqa
 
-from .complex import VectorLimitedDoubleLineEditModel
+from .complex import (
+    LimitedDoubleLineEditModel, VectorLimitedDoubleLineEditModel)
 from .images import BeamGraphModel, RectRoiGraphModel, ROIAnnotateModel
 from .metro import (
     MetroSecAxisGraphModel, MetroTwinXGraphModel, MetroXasGraphModel,
@@ -13,9 +14,9 @@ from .plots import (
 from .simple import (
     DetectorCellsModel, DisplayConditionCommandModel, DynamicPulseIdMapModel,
     EditableDateTimeModel, EditableTextOptionsModel, IPMQuadrantModel,
-    PointAndClickModel, PulseIdMapModel, ScantoolBaseModel,
-    ScantoolDeviceViewModel, StateAwareComponentManagerModel,
-    VectorLimitedIntLineEditModel)
+    LimitedIntLineEditModel, PointAndClickModel, PulseIdMapModel,
+    ScantoolBaseModel, ScantoolDeviceViewModel,
+    StateAwareComponentManagerModel, VectorLimitedIntLineEditModel)
 from .tables import (
     CriticalCompareViewModel, DeviceReconfigurationTableModel,
     DoocsLocationTableModel, DoocsMirrorTableModel, MotorAssignmentTableModel,
