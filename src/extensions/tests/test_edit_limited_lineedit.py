@@ -1,8 +1,10 @@
 from qtpy.QtGui import QValidator
 
 from extensions.edit_limited_lineedit import (
-    LimitedValidator, VectorLimitedDoubleLineEdit, VectorLimitedIntLineEdit)
+    LimitedDoubleLineEdit, LimitedIntLineEdit, LimitedValidator,
+    VectorLimitedDoubleLineEdit, VectorLimitedIntLineEdit)
 from extensions.models.api import (
+    LimitedDoubleLineEditModel, LimitedIntLineEditModel,
     VectorLimitedDoubleLineEditModel, VectorLimitedIntLineEditModel)
 from karabo.common.states import State
 from karabo.native import (
@@ -21,9 +23,16 @@ class Object(Configurable):
     invalid_vector_int = VectorInt32()
     vector_int = VectorInt32(displayType="Range")
     vector_double = VectorDouble(displayType="Range")
+    min_int = Int32(minInc=-10, maxInc=10, allowedStates=[State.INIT],
+                    defaultValue=0)
+    max_int = Int32(minInc=-10, maxInc=10, allowedStates=[State.INIT],
+                    defaultValue=10)
+
+    min_double = Double(allowedStates=[State.INIT], defaultValue=1.0)
+    max_double = Double(allowedStates=[State.INIT], defaultValue=3.0)
 
 
-def test_int_line_edit(gui_app: gui_app):
+def test_vector_limited_int_line_edit(gui_app: gui_app):
     schema = Object.getClassSchema()
     binding = build_binding(schema)
     root_proxy = DeviceProxy(binding=binding, device_id="TestDeviceId")
@@ -92,7 +101,7 @@ def test_int_line_edit(gui_app: gui_app):
     assert not controller.internal_widget.isEnabled()
 
 
-def test_double_line_edit(gui_app: gui_app):
+def test_vector_limited_double_line_edit(gui_app: gui_app):
     schema = Object.getClassSchema()
     binding = build_binding(schema)
     root_proxy = DeviceProxy(binding=binding, device_id="TestDeviceId")
@@ -220,3 +229,131 @@ def test_double_validator():
     validator.setBottom(0.0)
     state, _, _ = validator.validate("0.5", 0)
     assert not state == QValidator.Acceptable
+
+
+def test_int_line_edit(gui_app: gui_app):
+    schema = Object.getClassSchema()
+    binding = build_binding(schema)
+    root_proxy = DeviceProxy(binding=binding, device_id="TestDeviceId")
+
+    proxy = PropertyProxy(root_proxy=root_proxy, path="int_prop")
+
+    controller = LimitedIntLineEdit(
+        proxy=proxy, model=LimitedIntLineEditModel())
+    controller.create(None)
+    controller.set_read_only(False)
+    set_proxy_value(proxy, "int_prop", 25)
+
+    # Without adding any additional proxies.
+    assert "color: black" in controller.internal_widget.styleSheet()
+    assert controller.internal_widget.text() == "25"
+    assert controller.proxy.edit_value is None
+
+    # Add one additional proxy
+    min_int_proxy = PropertyProxy(root_proxy=root_proxy, path="min_int")
+    set_proxy_value(min_int_proxy, "min_int", 1)
+    assert min_int_proxy.binding
+    assert controller.visualize_additional_property(min_int_proxy)
+    assert "color: black" in controller.internal_widget.styleSheet()
+
+    # Add one more proxy and make the current value out of range.
+    max_int_proxy = PropertyProxy(root_proxy=root_proxy, path="max_int")
+    assert max_int_proxy.binding
+    set_proxy_value(max_int_proxy, "max_int", 15)
+
+    assert controller.visualize_additional_property(max_int_proxy)
+    assert "color: red" in controller.internal_widget.styleSheet()
+    assert controller.proxy.edit_value is None
+    assert controller.internal_widget.text() == "25"
+
+    # Set the value to be in allowed range.
+    controller.internal_widget.setText("10")
+    assert "color: black" in controller.internal_widget.styleSheet()
+    assert controller.proxy.edit_value == 10
+
+    # Update max_int proxy value to make the value invalid.
+    set_proxy_value(max_int_proxy, "max_int", 5)
+    assert "color: red" in controller.internal_widget.styleSheet()
+    assert controller.internal_widget.text() == "10"
+
+    # Remove Proxy.
+    controller.remove_additional_property(min_int_proxy)
+    assert "color: black" in controller.internal_widget.styleSheet()
+    # No more validation after removing one of the additional proxies.
+    controller.internal_widget.setText("100")
+    assert controller.internal_widget.text() == "100"
+    assert controller.proxy.edit_value == 100
+
+
+def test_double_line_edit(gui_app: gui_app):
+    schema = Object.getClassSchema()
+    binding = build_binding(schema)
+    root_proxy = DeviceProxy(binding=binding, device_id="TestDeviceId")
+
+    proxy = PropertyProxy(root_proxy=root_proxy, path="double_prop")
+    controller = LimitedDoubleLineEdit(
+        proxy=proxy, model=LimitedDoubleLineEditModel())
+    controller.create(None)
+    controller.set_read_only(False)
+
+    # Add one additional proxy
+    max_double_proxy = PropertyProxy(root_proxy=root_proxy, path="max_double")
+    set_proxy_value(max_double_proxy, "max_double", 3.0)
+    assert max_double_proxy.binding
+    assert controller.visualize_additional_property(max_double_proxy)
+
+    # Add one more proxy.
+    min_double_proxy = PropertyProxy(root_proxy=root_proxy, path="min_double")
+    set_proxy_value(min_double_proxy, "min_double", 1.0)
+    assert min_double_proxy.binding
+    assert controller.visualize_additional_property(min_double_proxy)
+
+    assert "color: red" in controller.internal_widget.styleSheet()
+
+    # Update the value to be in the range.
+    controller.internal_widget.setText("2.5")
+    assert "color: black" in controller.internal_widget.styleSheet()
+    assert controller.proxy.edit_value == 2.5
+    assert controller.internal_widget.text() == "2.5"
+
+    # Update additional proxy value to make the current value invalid, again.
+    set_proxy_value(min_double_proxy, "min_double", 2.9)
+    assert controller.internal_widget.text() == "2.5"
+    assert "color: red" in controller.internal_widget.styleSheet()
+
+
+def test_decimals(gui_app, mocker):
+    schema = Object.getClassSchema()
+    binding = build_binding(schema)
+    root_proxy = DeviceProxy(binding=binding, device_id="TestDeviceId")
+
+    proxy = PropertyProxy(root_proxy=root_proxy, path="double_prop")
+    controller = LimitedDoubleLineEdit(
+        proxy=proxy, model=LimitedDoubleLineEditModel())
+    controller.create(None)
+    controller.set_read_only(False)
+    set_proxy_value(proxy, "double_prop", 9.123456789)
+    internal_widget = controller.internal_widget
+    assert internal_widget.text() == "9.123456789"
+
+    # Action menu-item
+    action = controller.widget.actions()[0]
+    assert action.text() == "Change number of decimals"
+    dialog_path = "extensions.edit_limited_lineedit.QInputDialog"
+    input_dialog = mocker.patch(dialog_path)
+    input_dialog.getInt.return_value = 5, True
+    action.trigger()
+
+    assert controller.model.decimals == 5
+
+    # test _decimal_update
+    assert internal_widget.text() == "9.12346"
+
+    controller.model.decimals = 3
+    assert internal_widget.text() == "9.123"
+
+    controller.model.decimals = 1
+    assert internal_widget.text() == "9.1"
+
+    controller.model.decimals = 8
+    assert internal_widget.text() == "9.12345679"

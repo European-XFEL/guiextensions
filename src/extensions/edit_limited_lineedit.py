@@ -3,6 +3,7 @@ from qtpy.QtWidgets import QAction, QInputDialog
 from traits.api import Instance, on_trait_change
 
 from extensions.models.api import (
+    LimitedDoubleLineEditModel, LimitedIntLineEditModel,
     VectorLimitedDoubleLineEditModel, VectorLimitedIntLineEditModel)
 from karabogui.api import (
     BaseLineEditController, FloatBinding, IntBinding, IntValidator,
@@ -192,3 +193,118 @@ class VectorLimitedIntLineEdit(VectorLimitedLineEdit):
         Check if the proxy binding is Vector int binding
         """
         return is_vector_integer(binding)
+
+
+class LimitedLineEdit(BaseLineEditController):
+    min_proxy = Instance(PropertyProxy)
+    max_proxy = Instance(PropertyProxy)
+
+    def add_proxy(self, proxy):
+        if proxy.root_proxy is not self.proxy.root_proxy:
+            return False
+        if self.min_proxy is None:
+            self.min_proxy = proxy
+            return True
+        if self.max_proxy is None:
+            self.max_proxy = proxy
+            return True
+        return False
+
+    def remove_proxy(self, proxy):
+        if proxy is self.max_proxy:
+            self.max_proxy = None
+        elif proxy is self.min_proxy:
+            self.min_proxy = None
+        self.validator.reset_to_native()
+        self.validate_text_color()
+        return True
+
+    def value_update(self, proxy):
+        if proxy is self.proxy:
+            super().value_update(proxy)
+        else:
+            value = get_binding_value(proxy.binding)
+            if value is None:
+                return
+            first_prop_value = (None if self.min_proxy is None else
+                                get_binding_value(self.min_proxy))
+            second_prop_value = (None if self.max_proxy is None else
+                                 get_binding_value(self.max_proxy))
+
+            if first_prop_value is not None and second_prop_value is not None:
+                min_value = min(first_prop_value, second_prop_value)
+                max_value = max(first_prop_value, second_prop_value)
+                self.validator.setBottom(min_value)
+                self.validator.setTop(max_value)
+        self.validate_text_color()
+
+    def binding_validator(self, proxy):
+        """Reimplemented method of `BaseLineEditController`"""
+        if proxy is not self.proxy:
+            return
+        low, high = get_native_min_max(proxy.binding)
+        self.validator.setNativeMin(low)
+        self.validator.setNativeMax(high)
+
+
+@register_binding_controller(ui_name="Limited DoubleField",
+                             klassname="LimitedDoubleLineEdit",
+                             binding_type=FloatBinding,
+                             is_compatible=is_compatible,
+                             can_edit=True, priority=0,
+                             can_show_nothing=False)
+class LimitedDoubleLineEdit(LimitedLineEdit):
+    model = Instance(LimitedDoubleLineEditModel, args=())
+
+    def create_widget(self, parent):
+        widget = super().create_widget(parent)
+        decimal_action = QAction("Change number of decimals", widget)
+        decimal_action.triggered.connect(self._pick_decimals)
+        widget.addAction(decimal_action)
+        return widget
+
+    def create_validator(self):
+        validator = LimitedValidator(NumberValidator(
+            decimals=self.model.decimals))
+        return validator
+
+    def toString(self, value):
+        """Reimplemented method of `BaseLineEditController`"""
+        format_str = ("{}" if self.model.decimals == -1
+                      else "{{:.{}f}}".format(self.model.decimals))
+        return format_str.format(float(str(value)))
+
+    def fromString(self, value):
+        """Reimplemented method of `BaseLineEditController`"""
+        return float(value)
+
+    # ----------------------------------------------------------------------
+
+    @on_trait_change("model.decimals", post_init=True)
+    def _decimals_update(self):
+        self.value_update(self.proxy)
+        self.validator.setDecimals(self.model.decimals)
+
+    def _pick_decimals(self, checked):
+        num_decimals, ok = QInputDialog.getInt(
+            self.widget, "Decimal", "Floating point precision:",
+            self.model.decimals, -1, MAX_FLOATING_PRECISION)
+        if ok:
+            self.model.decimals = num_decimals
+
+
+@register_binding_controller(ui_name="Limited Integer Field",
+                             klassname="LimitedIntLineEdit",
+                             binding_type=IntBinding,
+                             is_compatible=is_compatible,
+                             can_edit=True, priority=0,
+                             can_show_nothing=False)
+class LimitedIntLineEdit(LimitedLineEdit):
+    model = Instance(LimitedIntLineEditModel, args=())
+
+    def create_validator(self):
+        validator = LimitedValidator(validator=IntValidator())
+        return validator
+
+    def fromString(self, value):
+        return int(value)
