@@ -1,5 +1,4 @@
 from collections import namedtuple
-from importlib.metadata import version
 
 import numpy as np
 import pyqtgraph as pg
@@ -181,6 +180,7 @@ def get_gui_version():
     """
     Return the running Karabo GUI version as a named tuple.
     """
+    from importlib_metadata import version
     gui_version = version("karabogui")
     major, minor = gui_version.split(".")[:2]
 
