@@ -212,3 +212,31 @@ needs to be exposed as another Bool that then can be used for the ``Conditional 
 Note that, in contrast to the protection of allowed states, the disabling of the ``Conditional Button``
 is only active for buttons in scenes. The Bool property has no influence whether the slot can be
 called via the configuration editor of the GUI or from other devices or macros.
+
+
+Custom Limited Fields
+=====================
+
+"Custom Limited Field" controllers  allow to set custom minimum and maximum values for ``Int``, ``Float`` or ``Double`` properties. The custom limits will be applied independently from its Schema attribute.  The limits can be applied either as a Vector property with two values or as two separate properties.
+
+The controller expects the following:
+
+* The ``Int`` or ``Double`` property should not already have  ``minInc``/``maxInc`` or ``minExc``/``maxExc`` defined.
+* Both the initial property and the limit property(ies) have to be in the same Karabo device.
+
+
+Once the limit is applied, the controller doesn't accept the user-entered value to the property, if it is not within the custom limits. In this case, it also shows the values in red color in the editor. If the value is updated by the device, the controller accepts even if it is not within the custom limits. However, it still shows the value in red color as visual indicator.
+
+The custom limit can be removed using the ``"Remove additional property"`` right click menu-item of the controller.
+
+Vector Limited Field
+~~~~~~~~~~~~~~~~~~~~
+If the limits are defined in a Vector property, then the Int or Double property can be converted to ``"Vector Limited Integer Field"`` or ``"Vector Limited Double Field"`` respectively. Then drag and drop the Vector to the controller to apply the limits.
+
+The Vector should have a property ``displayType`` defined with a value as ``"Range"``. Also, its two values have to be the same type as the initial property to which the limits are defined. For example, for ``Int`` property, the Vector should also have two ``Int`` values as the limits. The order of the values in the Vector doesn't matter.
+
+Limited Field
+~~~~~~~~~~~~~
+The limits can be from two different properties and in this case, the ``Int`` or ``Double`` property can be converted to ``"Limited Integer Field"`` or ``"Limited Double Field"`` respectively. Drag and drop two limit properties to the controller one after the other, to apply the limit. The limits will be applied only after adding both the limit properties.
+
+Both the initial property and limit properties must have the same type. For example, for a Double property the limit properties should also be Double.
