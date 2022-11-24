@@ -20,7 +20,7 @@ from .utils import (
 # and writer must be created.
 TABLE_WIDGET_MODELS = (
     # (TableModelName, Filtering: Bool)
-    ("CriticalCompareViewModel", False),
+    ("CriticalCompareViewModel", True),
     ("DoocsLocationTableModel", False),
     ("DoocsMirrorTableModel", True),
     ("DeviceReconfigurationTableModel", True),
@@ -31,7 +31,9 @@ TABLE_WIDGET_MODELS = (
 
 class CriticalCompareViewModel(BaseWidgetObjectData):
     """ A model for the Operational Historian Table Element"""
-    resizeToContents = Bool(False)
+    resizeToContents = Bool(True)
+    filterKeyColumn = Int(0)
+    sortingEnabled = Bool(True)
 
 
 class DoocsLocationTableModel(BaseWidgetObjectData):
