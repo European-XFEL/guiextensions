@@ -240,3 +240,35 @@ Limited Field
 The limits can be from two different properties and in this case, the ``Int`` or ``Double`` property can be converted to ``"Limited Integer Field"`` or ``"Limited Double Field"`` respectively. Drag and drop two limit properties to the controller one after the other, to apply the limit. The limits will be applied only after adding both the limit properties.
 
 Both the initial property and limit properties must have the same type. For example, for a Double property the limit properties should also be Double.
+
+
+Image Crosshair Graph
+=====================
+
+``Image Crosshair Graph`` allows to move the Crosshair displayed on the image graph to the
+mouse clicked position.  To attain this feature,
+
+#. Convert an image graph widget to ``Image Cross Hair Graph`` by right click context menu.
+#. Add a Vector property with two integers, to define the initial position of the crosshair.
+
+The Vector property has to be from the same device and it should have a special
+`displayType` defined as "crosshair". An icon in the toolbar indicates whether
+the position Vector is added or not.
+
+.. figure:: images/crosshair_icons.png
+   :alt: crosshair_icons.png
+   :align: center
+
+A) Before the initial position Vector is added.
+B) After the initial position Vector is added.
+
+
+On mouse click, the Crosshair in the image will be moved to clicked position.
+A confirmation dialog box shows up with clicked position, before moving the crosshair.
+
+.. figure:: images/crosshair_on_image.png
+   :alt: crosshair_on_image.png
+   :align: center
+
+   Image Crosshair Graph with a crosshair.
+    
