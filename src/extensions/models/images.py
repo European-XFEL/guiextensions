@@ -1,7 +1,8 @@
 from xml.etree.ElementTree import SubElement
 
-from traits.api import Bool
+from traits.api import Bool, String
 
+from karabo.common.scenemodel.bases import BaseWidgetObjectData
 from karabo.common.scenemodel.const import NS_KARABO, WIDGET_ELEMENT_TAG
 from karabo.common.scenemodel.io_utils import (
     read_base_widget_data, write_base_widget_data)
@@ -30,7 +31,12 @@ class ROIAnnotateModel(ImageGraphModel):
     """ A model for Image Annotation"""
 
 
-@register_scene_reader("RectRoiGraph")
+class ImageCrossHairGraphModel(BaseWidgetObjectData):
+    """ A model for the beam graph """
+    colormap = String("none")
+
+
+@register_scene_reader('RectRoiGraph')
 def _roi_graph_reader(element):
     traits = read_base_karabo_image_model(element)
     return RectRoiGraphModel(**traits)
@@ -78,5 +84,19 @@ def _image_annotate_writer(model, parent):
     element.set(NS_KARABO + "aspect_ratio", str(model.aspect_ratio))
     show_scale = str(int(model.show_scale))
     element.set(NS_KARABO + "show_scale", show_scale)
+    return element
 
+
+@register_scene_reader('ImageCrossHairGraph')
+def _crosshair_graph_reader(element):
+    traits = read_base_widget_data(element)
+    traits["colormap"] = element.get(NS_KARABO + "colormap", "viridis")
+    return ImageCrossHairGraphModel(**traits)
+
+
+@register_scene_writer(ImageCrossHairGraphModel)
+def _crosshair_graph_writer(model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    element.set(NS_KARABO + "colormap", model.colormap)
+    write_base_widget_data(model, element, 'ImageCrossHairGraph')
     return element
