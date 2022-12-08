@@ -15,6 +15,7 @@ entries = {
         'ExtendedVectorXYGraph = extensions.display_extended_vector_xy_graph',
         'EditableTextOptions = extensions.edit_text_options',
         'IPMQuadrant = extensions.display_ipm_quadrant',
+        'ImageCrossHairGraph = extensions.display_image_crosshair_graph',
         'VectorLimitedDoubleLineEdit = extensions.edit_limited_lineedit',
         'VectorLimitedIntLineEdit = extensions.edit_limited_lineedit',
         'LimitedDoubleLineEdit = extensions.edit_limited_lineedit',

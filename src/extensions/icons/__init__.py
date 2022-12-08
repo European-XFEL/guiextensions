@@ -25,3 +25,4 @@ class Icon(object):
 deselect_all = Icon("deselect_all.svg")
 invert_select = Icon("invert_select.svg")
 select_all = Icon("select_all.svg")
+crosshair_available = Icon("crosshair-available.svg")

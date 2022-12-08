@@ -18,3 +18,12 @@ def test_rect_roi_model():
     model = api.RectRoiGraphModel(**traits)
     read_model = single_model_round_trip(model)
     _assert_geometry_traits(read_model)
+
+
+def test_image_graph_model():
+    traits = _geometry_traits()
+    traits["colormap"] = "plasma"
+    model = api.ImageCrossHairGraphModel(**traits)
+    read_model = single_model_round_trip(model)
+    _assert_geometry_traits(read_model)
+    assert read_model.colormap == "plasma"
