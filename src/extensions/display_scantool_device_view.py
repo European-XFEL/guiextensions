@@ -189,7 +189,9 @@ class ScantoolDeviceView(BaseBindingController):
             for index in reversed(range(group_item.childCount())):
                 if group_item.child(index).checkState(0) != Qt.Checked:
                     unchecked_items.append(group_item.takeChild(index))
-            for item in unchecked_items:
+            # As we removed items in the reverse order, we have to put them
+            # back in the reverse order
+            for item in reversed(unchecked_items):
                 group_item.addChild(item)
         self._apply_changes()
 
