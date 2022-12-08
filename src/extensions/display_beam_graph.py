@@ -334,7 +334,8 @@ class BeamGraph(BaseBindingController):
         self._plot.setData(array)
 
     def add_proxy(self, proxy):
-        if isinstance(proxy.binding, NodeBinding):
+        binding = proxy.binding
+        if binding is None or isinstance(binding, NodeBinding):
             if self._ellipse is None:
                 self._ellipse = EllipseNode(proxy=proxy,
                                             color='g',
