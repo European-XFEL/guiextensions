@@ -5,20 +5,23 @@
 #############################################################################
 from itertools import cycle
 
-from qtpy.QtGui import QColor
 from traits.api import DictStrAny, Instance, List, Property
 
-from karabogui.graph.common.api import KaraboLegend, get_pen_cycler
+from karabogui.graph.common.api import KaraboLegend, make_pen
 
 from ..const import Y_DATA
 from .base import GraphPlot
+
+PEN_CYCLER = cycle([make_pen('b'), make_pen('r'), make_pen('g'), make_pen('c'),
+                    make_pen('p'), make_pen('n'), make_pen('w'), make_pen('o'),
+                    make_pen('s'), make_pen('d'), make_pen('k')])
 
 
 class MultiCurvePlot(GraphPlot):
 
     config = Property(List(DictStrAny), depends_on="_items")
 
-    _pens = Instance(cycle, factory=get_pen_cycler, args=())
+    _pens = Instance(cycle, factory=PEN_CYCLER, args=())
     _legend = Instance(KaraboLegend)
 
     def __init__(self, parent=None):
@@ -30,7 +33,7 @@ class MultiCurvePlot(GraphPlot):
               config = {x_data: Device, y_data: Device}
            We utilize an ItemRegistry to bookkeep all the PlotDataItems"""
 
-        # Attach a PlotDataItem to the config
+        # Attach a PlotDataItem to the config.
         item = self._get_item(config[Y_DATA].device_id)
         self._items.add(item, config)
 
@@ -52,9 +55,6 @@ class MultiCurvePlot(GraphPlot):
             self._legend.addItem(item, name)
         else:
             pen = next(self._pens)
-            # Yellow color is almost not visible on the white background
-            if pen.color() == QColor(255, 255, 153, 255):
-                pen = next(self._pens)
             item = self.widget.add_curve_item(name=name,
                                               pen=pen)
 
