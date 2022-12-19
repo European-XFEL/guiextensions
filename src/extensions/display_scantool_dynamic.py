@@ -133,7 +133,6 @@ class ScantoolDynamicWidget(BaseBindingController):
         else:
             self._controller.use_heatmap_plot()
         self._plot_available = True
-
         return scan
 
     def _plot_history_scan(self, proxy):
@@ -203,9 +202,10 @@ class ScantoolDynamicWidget(BaseBindingController):
             #     self.value_update(proxy)
             # Scan is done or not started yet.
             self._scan = None
-        elif state == State.ACQUIRING.value and self._scan is None:
-            # Scan has just started.
-            self._scan = self._setup_new_scan(proxy)
+        elif state == State.ACQUIRING.value:
+            if self._scan is None:
+                # Scan has just started.
+                self._scan = self._setup_new_scan(proxy)
             self._is_scanning = True
 
     @on_trait_change("_controller:_plot_double_clicked")

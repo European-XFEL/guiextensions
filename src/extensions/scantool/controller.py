@@ -64,25 +64,10 @@ class ScanController(HasStrictTraits):
         """Uses the multicurve plot controller for 1D data.
            By default, all devices are used.
            Motor 1 (pos0) is x_data, others are y_data"""
-
-        config = self._config[MultiCurvePlot]
-
-        # Check if previously selected devices are present in the new scan.
-        # Remove from the config if not.
-        for conf in config[:]:
-            if (conf[X_DATA] not in self.scan.motor_ids
-                    or conf[Y_DATA] not in self.scan.data_source_ids):
-                config.remove(conf)
-
-        if not config:
-            # Set up default plot config by using pos0 as x_data
-            # and others as y_data
-            x_data = self.scan.motor_ids[0]
-            source_ids = self.scan.data_source_ids
-
-            # Populate the plot by specifying x_data and y_data
-            self._config[MultiCurvePlot] = [
-                {X_DATA: x_data, Y_DATA: y_data} for y_data in source_ids]
+        x_data = self.scan.motor_ids[0]
+        source_ids = self.scan.data_source_ids
+        self._config[MultiCurvePlot] = [
+            {X_DATA: x_data, Y_DATA: y_data} for y_data in source_ids]
 
         return self._use_plot(MultiCurvePlot)
 
@@ -165,7 +150,7 @@ class ScanController(HasStrictTraits):
         # 2. Set axes labels based on plot config
         self._set_axes_labels(config)
 
-        # 3, Finalize plot setup by informing listeners
+        # 3. Finalize plot setup by informing listeners
         self._plot_refreshed = klass
 
         # 4. Reimplement mouseDoubleCkickedEvent
