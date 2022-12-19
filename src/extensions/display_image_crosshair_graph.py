@@ -12,6 +12,9 @@ from .models.api import ImageCrossHairGraphModel
 # Note: MouseTool is missing from `api` until 2.16.X. This is our protection
 # here as the clickModes on the image item are provided then
 
+DISABLED_TOOLTIP = "Add a vector property with position of crosshair"
+TOOLTIP = "Click on the image to move the crosshair"
+
 
 def is_compatible(binding):
     """Only allowed for image bindings"""
@@ -48,8 +51,9 @@ class ImageCrossHairGraph(BaseBindingController):
         indicator = QToolButton()
         indicator.setIcon(crosshair_available.icon)
         indicator.setEnabled(False)
+        indicator.setToolTip(DISABLED_TOOLTIP)
         # Removing the border so that it doesn't look like a clickable button
-        indicator.setStyleSheet("border: none;")
+        indicator.setStyleSheet("QToolButton{border:none}")
         widget.toolbar.add_button(indicator, separator=True)
         self._indicator = indicator
 
@@ -67,6 +71,7 @@ class ImageCrossHairGraph(BaseBindingController):
             # Must be a crosshair!
             self._crosshairs.append(proxy)
             self._indicator.setEnabled(True)
+            self._indicator.setToolTip(TOOLTIP)
             return True
 
         if binding.display_type.split("|")[0] != "crosshair":
@@ -75,6 +80,7 @@ class ImageCrossHairGraph(BaseBindingController):
         if isinstance(binding, VectorBinding):
             self._crosshairs.append(proxy)
             self._indicator.setEnabled(True)
+            self._indicator.setToolTip(TOOLTIP)
             return True
         return False
 
