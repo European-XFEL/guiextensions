@@ -109,7 +109,7 @@ class Builder:
         """We use the Framework master to test against with."""
         print(f"Running tests for {self.args.module}")
         token = os.environ.get('XFEL_TOKEN')
-        git_path = f"https://{token}@git.xfel.eu/gitlab/Karabo/Framework.git"
+        git_path = f"https://{token}@git.xfel.eu/Karabo/Framework.git"
         # Clone Framework master
         framework_dir = op.join(self.root_path, 'Framework')
         command_run(['git', 'clone', git_path, framework_dir])
