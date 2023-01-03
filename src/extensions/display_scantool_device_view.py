@@ -26,12 +26,12 @@ from .scantool.device_tree import ButtonToolbar, DeviceTreeWidget
 
 HEADER_LABELS = ["Alias", "Device", "Axis/Source"]
 DEVICE_PROXY_MAP = OrderedDict()
-DEVICE_PROXY_MAP["motorEnv"] = {"title": "Motors",
-                                "rows": ["alias", "deviceId", "axis"]}
-DEVICE_PROXY_MAP["dataEnv"] = {"title": "Sources",
-                               "rows": ["alias", "deviceId", "source"]}
-DEVICE_PROXY_MAP["triggerEnv"] = {"title": "Triggers",
-                                  "rows": ["alias", "deviceId"]}
+DEVICE_PROXY_MAP["deviceEnv.motors"] = {
+    "title": "Motors", "rows": ["alias", "deviceId", "axis"]}
+DEVICE_PROXY_MAP["deviceEnv.sources"] = {
+    "title": "Sources", "rows": ["alias", "deviceId", "source"]}
+DEVICE_PROXY_MAP["deviceEnv.triggers"] = {
+    "title": "Triggers", "rows": ["alias", "deviceId"]}
 
 BRUSH_NOT_ACTIVE = QBrush(Qt.white)
 BRUSH_GROUP = QBrush(QColor(240, 240, 240))
@@ -92,13 +92,13 @@ class ScantoolDeviceView(BaseBindingController):
 
     def add_proxy(self, proxy):
         # motorEnv should be defined as first proxy
-        if proxy.path == "dataEnv":
+        if proxy.path == "deviceEnv.sources":
             if self._data_env_proxy is None:
                 self._data_env_proxy = PropertyProxy(
                     root_proxy=proxy.root_proxy,
                     path=proxy.path)
                 return True
-        elif proxy.path == "triggerEnv":
+        elif proxy.path == "deviceEnv.triggers":
             if self._trigger_env_proxy is None:
                 self._trigger_env_proxy = PropertyProxy(
                     root_proxy=proxy.root_proxy,

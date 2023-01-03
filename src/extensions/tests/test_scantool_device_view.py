@@ -5,7 +5,7 @@ except ImportError:
     # compatibility with GUI version < 2.16
     from karabo.common.api import ProxyStatus
 
-from karabo.native import Bool, Configurable, Hash, String, VectorHash
+from karabo.native import Bool, Configurable, Hash, Node, String, VectorHash
 from karabogui.binding.api import (
     DeviceClassProxy, PropertyProxy, build_binding)
 from karabogui.testing import GuiTestCase, get_property_proxy, set_proxy_value
@@ -63,25 +63,24 @@ class TriggerRow(Configurable):
         defaultValue=False)
 
 
-class MotorEnvSchema(Configurable):
+class DeviceEnvSchema(Configurable):
 
-    motorEnv = VectorHash(
+    motors = VectorHash(
         rows=MotorRow,
         defaultValue=[])
 
-
-class DataEnvSchema(Configurable):
-
-    dataEnv = VectorHash(
+    sources = VectorHash(
         rows=DataSourceRow,
         defaultValue=[])
 
-
-class TriggerEnvSchema(Configurable):
-
-    triggerEnv = VectorHash(
+    triggers = VectorHash(
         rows=TriggerRow,
         defaultValue=[])
+
+
+class DeviceEnv(Configurable):
+
+    deviceEnv = Node(DeviceEnvSchema)
 
 
 class TestScantoolDeviceViewWidget(GuiTestCase):
@@ -89,19 +88,17 @@ class TestScantoolDeviceViewWidget(GuiTestCase):
     def setUp(self):
         super(TestScantoolDeviceViewWidget, self).setUp()
 
-        schema = MotorEnvSchema.getClassSchema()
+        schema = DeviceEnv.getClassSchema()
         self.binding = build_binding(schema)
         device = DeviceClassProxy(binding=self.binding,
                                   server_id='KarabaconServer',
                                   status=ProxyStatus.ONLINE)
         self.motor_env_proxy = PropertyProxy(root_proxy=device,
-                                             path='motorEnv')
+                                             path='deviceEnv.motors')
 
-        schema = DataEnvSchema.getClassSchema()
-        self.data_env_proxy = get_property_proxy(schema, 'dataEnv')
-
-        schema = TriggerEnvSchema.getClassSchema()
-        self.trigger_env_proxy = get_property_proxy(schema, 'triggerEnv')
+        self.data_env_proxy = get_property_proxy(schema, 'deviceEnv.sources')
+        self.trigger_env_proxy = get_property_proxy(
+            schema, 'deviceEnv.triggers')
 
         # Create the controllers and initialize their widgets
         self.controller = ScantoolDeviceView(proxy=self.motor_env_proxy)
@@ -122,18 +119,18 @@ class TestScantoolDeviceViewWidget(GuiTestCase):
     def test_env(self):
         data = [Hash("alias", "m1", "deviceId", "TEST_DEVICE", "axis",
                      "default", "active", "True")]
-        set_proxy_value(self.motor_env_proxy, "motorEnv", data)
+        set_proxy_value(self.motor_env_proxy, "deviceEnv.motors", data)
 
         self.assertTrue(self._has_group_item_child("Motors", "m1"))
 
         data = [Hash("alias", "s1", "deviceId", "TEST_SOURCE_1",
                      "source", "value", "active", "True")]
-        set_proxy_value(self.data_env_proxy, "dataEnv", data)
+        set_proxy_value(self.data_env_proxy, "deviceEnv.sources", data)
         self.assertTrue(self._has_group_item_child("Sources", "s1"))
 
         data = [Hash("alias", "t1", "deviceId", "TEST_TRIGGER_1", "active",
                      "True")]
-        set_proxy_value(self.trigger_env_proxy, "triggerEnv", data)
+        set_proxy_value(self.trigger_env_proxy, "deviceEnv.triggers", data)
         self.assertTrue(self._has_group_item_child("Sources", "s1"))
 
     def _has_group_item_child(self, parent_text, child_text):
