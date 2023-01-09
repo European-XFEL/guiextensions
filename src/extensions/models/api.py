@@ -17,7 +17,7 @@ from .simple import (
     DetectorCellsModel, DisplayConditionCommandModel, DynamicPulseIdMapModel,
     EditableDateTimeModel, EditableTextOptionsModel, IPMQuadrantModel,
     LimitedIntLineEditModel, PointAndClickModel, PulseIdMapModel,
-    ScantoolBaseModel, ScantoolDeviceViewModel,
+    ScantoolBaseModel, ScantoolDeviceViewModel, ScantoolTemplatesModel,
     StateAwareComponentManagerModel, VectorLimitedIntLineEditModel)
 from .tables import (
     CriticalCompareViewModel, DeviceReconfigurationTableModel,
