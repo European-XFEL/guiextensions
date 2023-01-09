@@ -36,7 +36,11 @@ class ScantoolBaseModel(BaseWidgetObjectData):
 
 
 class ScantoolDeviceViewModel(BaseEditWidget):
-    """A model for the ScantoolDeviceViewModel device"""
+    """A model to represend scantool device environment"""
+
+
+class ScantoolTemplatesModel(BaseEditWidget):
+    """A model to represent scantool scan templates"""
 
 
 class StateAwareComponentManagerModel(BaseDisplayEditableWidget):
@@ -109,6 +113,19 @@ def _scantool_device_view_reader(element):
 def _scantool_device_view_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, "Scantool-Device-View")
+    return element
+
+
+@register_scene_reader("ScantoolTemplates")
+def _scantool_templates_reader(element):
+    traits = read_base_widget_data(element)
+    return ScantoolTemplatesModel(**traits)
+
+
+@register_scene_writer(ScantoolTemplatesModel)
+def _scantool_templates_writer(model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_widget_data(model, element, "ScantoolTemplates")
     return element
 
 
