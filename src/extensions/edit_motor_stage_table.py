@@ -9,9 +9,9 @@ from traits.api import Bool, Instance
 from karabo.common.api import Interfaces, WeakMethodRef
 from karabo.native import Hash, is_equal
 from karabogui.api import (
-    BaseTableController, PropertyProxy, VectorHashBinding, call_device_slot,
-    get_binding_value, get_reason_parts, get_topology, icons, messagebox,
-    register_binding_controller, with_display_type)
+    BaseFilterTableController, PropertyProxy, VectorHashBinding,
+    call_device_slot, get_binding_value, get_reason_parts, get_topology, icons,
+    messagebox, register_binding_controller, with_display_type)
 
 from .dialogs.api import MotorConfigurationPreview
 from .models.api import MotorAssignmentTableModel
@@ -77,7 +77,7 @@ class MotorCompleterDelegate(QStyledItemDelegate):
     binding_type=VectorHashBinding,
     is_compatible=with_display_type("MotorStageAssignmentTable"),
     can_edit=True, priority=-10, can_show_nothing=True)
-class EditableAssignmentTable(BaseTableController):
+class EditableAssignmentTable(BaseFilterTableController):
     model = Instance(MotorAssignmentTableModel, args=())
 
     # Implement own custom menu
