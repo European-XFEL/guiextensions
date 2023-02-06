@@ -5,16 +5,18 @@
 #############################################################################
 from traits.api import Instance, List, on_trait_change
 
-from extensions.display_roi_graph import BaseRoiGraph, RectRoiProperty
 from extensions.models.metro import MetroZonePlateModel
+from extensions.roi_graph import BaseRoiGraph
 from karabogui.binding.api import (
-    FloatBinding, IntBinding, WidgetNodeBinding, get_binding_value)
+    FloatBinding, ImageBinding, IntBinding, WidgetNodeBinding,
+    get_binding_value)
 from karabogui.controllers.api import (
     register_binding_controller, with_display_type)
 from karabogui.graph.common.api import AuxPlots, ImageRegion, make_pen
 from karabogui.graph.image.api import ProfileAggregator
 
-from ..utils import guess_path
+from ..utils import get_node_value, guess_path
+from .utils import MetroRectRoiProperty
 
 NUMBER_BINDINGS = (IntBinding, FloatBinding)
 
@@ -29,9 +31,9 @@ class MetroZonePlate(BaseRoiGraph):
     # Our Image Graph Model
     model = Instance(MetroZonePlateModel, args=())
 
-    roi_n = Instance(RectRoiProperty, kw={'color': 'p', 'label': 'n'})
-    roi_0 = Instance(RectRoiProperty, kw={'color': 'g', 'label': '0'})
-    roi_p = Instance(RectRoiProperty, kw={'color': 'r', 'label': 'p'})
+    roi_n = Instance(MetroRectRoiProperty, kw={'color': 'p', 'label': 'n'})
+    roi_0 = Instance(MetroRectRoiProperty, kw={'color': 'g', 'label': '0'})
+    roi_p = Instance(MetroRectRoiProperty, kw={'color': 'r', 'label': 'p'})
 
     _aux_plots = Instance(ProfileAggregator)
     _n_lines = List
@@ -43,6 +45,11 @@ class MetroZonePlate(BaseRoiGraph):
 
     def create_widget(self, parent):
         widget = super(MetroZonePlate, self).create_widget(parent)
+
+        # Add ROIs to plot
+        for roi in (self.roi_n, self.roi_0, self.roi_p):
+            roi.add_to(self._plot)
+
         # Setup aux plots
         controller = widget.add_aux(plot=AuxPlots.ProfilePlot, smooth=True)
         controller.current_plot = AuxPlots.ProfilePlot
@@ -67,7 +74,11 @@ class MetroZonePlate(BaseRoiGraph):
         return widget
 
     def binding_update(self, proxy):
-        super(MetroZonePlate, self).binding_update(proxy)
+        if not self._image_path or self._image_path not in proxy.value:
+            self._image_path = guess_path(proxy,
+                                          klass=ImageBinding,
+                                          output=True)
+
         rois = (self.roi_n, self.roi_0, self.roi_p)
         for roi in rois:
             path = guess_path(proxy,
@@ -76,7 +87,8 @@ class MetroZonePlate(BaseRoiGraph):
             roi.set_proxy(path, proxy)
 
     def value_update(self, proxy):
-        super(MetroZonePlate, self).value_update(proxy)  # update image and ROI
+        self._set_image(proxy)
+        self._set_roi(proxy)
         self._set_aux()
 
     # -----------------------------------------------------------------------
@@ -115,6 +127,18 @@ class MetroZonePlate(BaseRoiGraph):
     # -----------------------------------------------------------------------
     # Qt Slots
 
+    def _set_image(self, proxy):
+        # Sometimes the image_data.pixels.data.value is Undefined.
+        # We catch and ignore that exception.
+        try:
+            node = get_node_value(proxy, key=self._image_path)
+            image_data = get_binding_value(node.value.image)
+            if image_data is None:
+                return
+            self._update_image(image_data)
+        except (AttributeError, TypeError):
+            return
+
     def _set_roi(self, proxy):
         for roi in (self.roi_n, self.roi_0, self.roi_p):
             try:
@@ -135,7 +159,3 @@ class MetroZonePlate(BaseRoiGraph):
                              x_slice=slice(image.shape[1]),
                              y_slice=slice(image.shape[0]))
         self._aux_plots.process(region)
-
-    def _add_roi(self):
-        for roi in (self.roi_n, self.roi_0, self.roi_p):
-            roi.add_to(self._plot)
