@@ -1,23 +1,24 @@
 #############################################################################
 # Author: <cammille.carinan@xfel.eu>
-# Created on July 2021
+# Created on January 2023
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from contextlib import contextmanager
+from itertools import cycle
 
 import pyqtgraph as pg
 from traits.api import (
-    Bool, Event, HasStrictTraits, Instance, Property, String, Tuple, Type,
-    WeakRef, cached_property, on_trait_change)
+    Bool, Event, HasStrictTraits, Instance, List, Property, String, Tuple,
+    Type, WeakRef, cached_property, on_trait_change)
 
 from karabo.common.scenemodel.api import (
     build_graph_config, restore_graph_config)
 from karabo.native import EncodingType
 from karabogui.binding.api import (
-    FloatBinding, ImageBinding, IntBinding, PropertyProxy, VectorNumberBinding,
-    WidgetNodeBinding, get_binding_value)
+    FloatBinding, ImageBinding, IntBinding, PropertyProxy, VectorBoolBinding,
+    VectorNumberBinding, get_binding_value)
 from karabogui.controllers.api import (
-    BaseBindingController, register_binding_controller, with_display_type)
+    BaseBindingController, register_binding_controller)
 from karabogui.graph.common.api import make_pen
 from karabogui.graph.image.api import (
     KaraboImageNode, KaraboImagePlot, KaraboImageView)
@@ -25,7 +26,6 @@ from karabogui.request import send_property_changes
 from karabogui.util import SignalBlocker
 
 from .models.api import RectRoiGraphModel
-from .utils import get_node_value, guess_path
 
 NUMBER_BINDINGS = (IntBinding, FloatBinding)
 
@@ -184,16 +184,11 @@ class RectRoiController(BaseRoiController):
 
 
 class RectRoiProperty(RectRoiController):
-    path = String
+    """A Rect ROI controller with an attached Karabo `PropertyProxy`"""
+
     proxy = Instance(PropertyProxy)
     binding_type = Type(VectorNumberBinding)
     is_waiting = Bool(False)
-
-    def set_proxy(self, path, proxy):
-        if self.path != path:
-            self.path = path
-            self.proxy = PropertyProxy(path=f"{proxy.path}.{path}",
-                                       root_proxy=proxy.root_proxy,)
 
     @on_trait_change("geometry_updated")
     def _send_roi(self, value):
@@ -201,12 +196,9 @@ class RectRoiProperty(RectRoiController):
         send_property_changes((self.proxy,))
         self.is_waiting = True
 
-# --------------------------------------------------------------------------
-
 
 class BaseRoiGraph(BaseBindingController):
     grayscale = Bool(True)
-    roi = Instance(BaseRoiController)
 
     # Image plots
     _plot = WeakRef(KaraboImagePlot)
@@ -225,28 +217,15 @@ class BaseRoiGraph(BaseBindingController):
 
         # Get a reference for our plotting
         self._plot = widget.plot()
-        self._add_roi()
 
         # QActions
         widget.add_axes_labels_dialog()
+        widget.add_transforms_dialog()
 
         # Restore the model information
         widget.restore(build_graph_config(self.model))
 
         return widget
-
-    def binding_update(self, proxy):
-        if not self._image_path or self._image_path not in proxy.value:
-            self._image_path = guess_path(proxy,
-                                          klass=ImageBinding,
-                                          output=True)
-
-    def value_update(self, proxy):
-        self._set_image(proxy)
-        self._set_roi(proxy)
-
-    def _add_roi(self):
-        self.roi.add_to(self._plot)
 
     def _set_roi(self, proxy):
         pass
@@ -270,25 +249,18 @@ class BaseRoiGraph(BaseBindingController):
     def _change_model(self, content):
         self.model.trait_set(**restore_graph_config(content))
 
-    def _set_image(self, proxy):
-        # Sometimes the image_data.pixels.data.value is Undefined.
-        # We catch and ignore that exception.
-        try:
-            node = get_node_value(proxy, key=self._image_path)
-            image_data = get_binding_value(node.value.image)
-            if image_data is None:
-                return
-            self._image_node.set_value(image_data)
-        except (AttributeError, TypeError):
+    def _update_image(self, image=None):
+        image_node = self._image_node
+        if image is not None:
+            image_node.set_value(image)
+
+        if not image_node.is_valid:
             return
 
-        if not self._image_node.is_valid:
-            return
-
-        array = self._image_node.get_data()
+        array = image_node.get_data()
 
         # Enable/disable some widget features depending on the encoding
-        self.grayscale = (self._image_node.encoding == EncodingType.GRAY
+        self.grayscale = (image_node.encoding == EncodingType.GRAY
                           and array.ndim == 2)
 
         self._plot.setData(array)
@@ -303,35 +275,60 @@ class BaseRoiGraph(BaseBindingController):
             self.widget.disable_aux()
 
 
+def _is_compatible(binding):
+    """Only instantiate the widget with an ImageBinding"""
+    return isinstance(binding, ImageBinding)
+
+
 @register_binding_controller(
     ui_name='Rect ROI Graph',
-    klassname='RectRoiGraph',
-    binding_type=WidgetNodeBinding,
-    is_compatible=with_display_type('WidgetNode|RectRoiGraph'),
-    priority=0, can_show_nothing=False)
+    klassname='Rect Roi Graph',
+    binding_type=(ImageBinding, VectorNumberBinding),
+    priority=-200, can_show_nothing=False)
 class RectRoiGraph(BaseRoiGraph):
     # Our Image Graph Model
     model = Instance(RectRoiGraphModel, args=())
-    _roi = Instance(RectRoiProperty, kw={'color': 'r'})
+    _rois = List(Instance(RectRoiProperty))
+
+    _colors = Instance(cycle, allow_none=False)
 
     # -----------------------------------------------------------------------
     # Binding methods
 
-    def binding_update(self, proxy):
-        super(RectRoiGraph, self).binding_update(proxy)
-        path = guess_path(proxy, klass=self._roi.binding_type)
-        self._roi.set_proxy(path, proxy)
+    def add_proxy(self, proxy):
+        binding = proxy.binding
+        if isinstance(binding, (ImageBinding, VectorBoolBinding)):
+            return
+
+        roi = RectRoiProperty(color=next(self._colors),
+                              label=proxy.path,
+                              proxy=proxy)
+        roi.add_to(self._plot)
+        self._rois.append(roi)
+
+        return True
+
+    def value_update(self, proxy):
+        # Update image
+        if proxy is self.proxy:
+            self._update_image(proxy.value)
+            return
+
+        roi = self._get_roi(proxy)
+        if roi is not None:
+            self._update_roi(roi, get_binding_value(proxy))
 
     # -----------------------------------------------------------------------
-    # Qt Slots
+    # Helper methods
 
-    def _set_roi(self, proxy):
-        try:
-            geometry = get_binding_value(getattr(proxy.value, self._roi.path))
-        except AttributeError:
-            geometry = None
+    def _get_roi(self, proxy):
+        # Get the respective ROI
+        for roi in self._rois:
+            if proxy is roi.proxy:
+                return roi
 
-        self._update_roi(self._roi, geometry)
+    # -----------------------------------------------------------------------
+    # Trait methods
 
-    def _add_roi(self):
-        self._roi.add_to(self._plot)
+    def __colors_default(self):
+        return cycle(['b', 'r', 'g', 'c', 'p', 'y'])
