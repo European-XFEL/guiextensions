@@ -24,7 +24,8 @@ from karabogui.binding.api import (
     get_binding_value)
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller, with_display_type)
-from karabogui.graph.common.api import create_tool_button, get_pen_cycler
+from karabogui.graph.common.api import (
+    create_tool_button, get_pen_cycler, make_brush, make_pen)
 from karabogui.graph.plots.api import (
     KaraboPlotView as KrbPlotView, generate_down_sample, get_view_range)
 from karabogui.request import send_property_changes
@@ -367,11 +368,14 @@ class BaseTableVectorXYGraph(BaseVectorXYGraph):
     label: string
     x: any VectorNumberBinding
     y: any VectorNumberBinding
-
+    plotType (optional): string (from: ['line', 'scatter']
     """
 
     model = Instance(TableVectorXYGraphModel, args=())
     _curves = Dict(key_trait=String)
+    _scatters = Dict(key_trait=String)
+
+    _colors = Instance(cycle, allow_none=False)
 
     # ----------------------------------------------------------------
     # Controller methods
@@ -383,35 +387,81 @@ class BaseTableVectorXYGraph(BaseVectorXYGraph):
 
     def value_update(self, proxy):
         value = get_binding_value(proxy.binding, [])
-        num_values = len(value)
 
         # Clear values
-        if num_values == 0:
+        if len(value) == 0:
             return
 
-        # Resolve number of curves
-        num_curves = len(self._curves)
-        if num_values > num_curves:
-            # Add more curves
-            for _ in range(num_values - num_curves):
-                curve = self.widget.add_curve_item(pen=next(self._pens))
-                self._curves[str(uuid.uuid4())] = curve
-        elif num_values < num_curves:
-            # Remove unused curves
-            curves = list(self._curves.items())[:num_values]
-            self._curves = {label: curve for label, curve in curves}
+        # Get lines and scatter plots
+        lines, scatters = [], []
+        for hsh in value:
+            plot_type = hsh.get('plotType', default='')
+            lst = scatters if plot_type == 'scatter' else lines
+            lst.append(hsh)
 
-        # Update curves
-        curves = {}
-        for hsh, (label, curve) in zip(value, self._curves.items()):
-            label = hsh['label']
-            curve.setData(hsh['x'], hsh['y'])
-            curve.opts["name"] = label
-            curves[label] = curve
-        self._curves = curves
+        # Update plot data items
+        self._update_scatters(values=scatters)
+        self._update_lines(values=lines)
 
         # Finalize changes
         self.refresh_plot()
+
+    def _update_lines(self, *, values):
+        # Resolve number of data items
+        num_items, num_values = len(self._curves), len(values)
+        if num_values > num_items:
+            # Add more data items
+            for _ in range(num_values - num_items):
+                pen = make_pen(next(self._colors))
+                item = self.widget.add_curve_item(pen=pen)
+                self._curves[str(uuid.uuid4())] = item
+        elif num_values < num_items:
+            # Remove unused data items
+            data_items = list(self._curves.items())[:num_values]
+            self._curves = {label: item for label, item in data_items}
+
+        # Update data items
+        data_items = {}
+        for hsh, (label, item) in zip(values, self._curves.items()):
+            label = hsh['label']
+            item.setData(hsh['x'], hsh['y'])
+            item.opts["name"] = label
+            data_items[label] = item
+        self._curves = data_items
+
+    def _update_scatters(self, *, values):
+        # Resolve number of data items
+        num_items, num_values = len(self._scatters), len(values)
+        if num_values > num_items:
+            # Add more data items
+            for _ in range(num_values - num_items):
+                self._scatters[str(uuid.uuid4())] = self._add_scatter_item()
+        elif num_values < num_items:
+            # Remove unused data items
+            data_items = list(self._scatters.items())[:num_values]
+            self._scatters = {label: item for label, item in data_items}
+
+        # Update data items
+        data_items = {}
+        for hsh, (label, item) in zip(values, self._scatters.items()):
+            label = hsh['label']
+            item.setData(hsh['x'], hsh['y'])
+            item.opts["name"] = label
+            data_items[label] = item
+        self._scatters = data_items
+
+    def __colors_default(self):
+        return cycle(['b', 'r', 'g', 'c', 'p', 'y', 'n', 'w',
+                      'o', 's', 'd', 'k'])
+
+    def _add_scatter_item(self):
+        color = next(self._colors)
+        pen = make_pen(color, alpha=100)
+        brush = make_brush(color, alpha=100)
+        item = self.widget.add_scatter_item(pen=pen, cycle=False)
+        item.points_brush = brush
+        item.setSize(5)
+        return item
 
     def set_read_only(self, readonly):
         self._edit_button.setEnabled(not readonly)
@@ -441,6 +491,17 @@ class BaseTableVectorXYGraph(BaseVectorXYGraph):
 
         self.proxy.edit_value = new_value
         send_property_changes((self.proxy,))
+
+    def refresh_plot(self, restore_curves=True):
+        # Save reference before removing from plot
+        lines = list(self._curves.values())
+        scatters = list(self._scatters.values())
+        # Remove all curves
+        self.widget.plotItem.clearPlots()
+        # Restore specified curves
+        if restore_curves:
+            for item in scatters + lines:
+                self.widget.plotItem.addItem(item)
 
 
 @register_binding_controller(
