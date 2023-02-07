@@ -472,3 +472,191 @@ class TestConfigureTableVectorXYGraph(BaseTableVectorXYGraphTest):
         second = self.controller._curves['second']
         assert_array_equal(second.xData, [10, 11, 12, 13])
         assert_array_equal(second.yData, [14, 15, 16, 17])
+
+
+class TablePlotTypeSchema(Configurable):
+    label = String()
+    x = VectorUInt32()
+    y = VectorUInt32()
+    plotType = String()
+
+
+class DeviceWithTablePlotType(Configurable):
+    prop = VectorHash(rows=TablePlotTypeSchema)
+
+
+class TestPlotTypeTableVectorXYGraph(Base):
+    """"""
+
+    def setUp(self):
+        super(Base, self).setUp()
+        schema = DeviceWithTablePlotType.getClassSchema()
+        binding = build_binding(schema)
+        root_proxy = DeviceProxy(binding=binding, device_id='TestDevice')
+        root_proxy.status = ProxyStatus.ONLINE
+        self.prop_proxy = PropertyProxy(root_proxy=root_proxy, path='prop')
+
+        self.controller = EditableTableVectorXYGraph(proxy=self.prop_proxy)
+        self.controller.create(None)
+
+    def test_basics(self):
+        # Send two scatters, one line data
+        first_data = [
+            Hash('label', 'scatter 1',
+                 'x', np.arange(5),
+                 'y', np.arange(5) * 2,
+                 'plotType', 'scatter'),
+            Hash('label', 'scatter 2',
+                 'x', np.arange(10),
+                 'y', np.arange(10) * 2,
+                 'plotType', 'scatter'),
+            Hash('label', 'line 1',
+                 'x', np.arange(15),
+                 'y', np.arange(15) * 2,
+                 'plotType', 'line'),
+        ]
+        set_proxy_value(self.prop_proxy, 'prop', first_data)
+        assert len(self.controller._scatters) == 2
+        assert len(self.controller._curves) == 1
+
+        # Check data
+        scatter_1 = self.controller._scatters['scatter 1']
+        assert_array_equal(scatter_1.data['x'], np.arange(5))
+        assert_array_equal(scatter_1.data['y'], np.arange(5) * 2)
+
+        scatter_2 = self.controller._scatters['scatter 2']
+        assert_array_equal(scatter_2.data['x'], np.arange(10))
+        assert_array_equal(scatter_2.data['y'], np.arange(10) * 2)
+
+        line_1 = self.controller._curves['line 1']
+        assert_array_equal(line_1.xData, np.arange(15))
+        assert_array_equal(line_1.yData, np.arange(15) * 2)
+
+    def test_same_change(self):
+        first_data = [
+            Hash('label', 'scatter 1 bad',
+                 'x', np.random.randint(10, size=5),
+                 'y', np.random.randint(10, size=5),
+                 'plotType', 'scatter'),
+            Hash('label', 'line 1 bad',
+                 'x', np.random.randint(10, size=5),
+                 'y', np.random.randint(10, size=5),
+                 'plotType', 'line'),
+            Hash('label', 'line 2 bad',
+                 'x', np.random.randint(10, size=5),
+                 'y', np.random.randint(10, size=5),
+                 'plotType', 'line'),
+        ]
+        set_proxy_value(self.prop_proxy, 'prop', first_data)
+
+        second_data = [
+            Hash('label', 'scatter 1',
+                 'x', np.arange(5),
+                 'y', np.arange(5) * 2,
+                 'plotType', 'scatter'),
+            Hash('label', 'scatter 2',
+                 'x', np.arange(10),
+                 'y', np.arange(10) * 2,
+                 'plotType', 'scatter'),
+            Hash('label', 'line 1',
+                 'x', np.arange(15),
+                 'y', np.arange(15) * 2,
+                 'plotType', 'line'),
+        ]
+        set_proxy_value(self.prop_proxy, 'prop', second_data)
+        assert len(self.controller._scatters) == 2
+        assert len(self.controller._curves) == 1
+
+        # Check data
+        scatter_1 = self.controller._scatters['scatter 1']
+        assert_array_equal(scatter_1.data['x'], np.arange(5))
+        assert_array_equal(scatter_1.data['y'], np.arange(5) * 2)
+
+        scatter_2 = self.controller._scatters['scatter 2']
+        assert_array_equal(scatter_2.data['x'], np.arange(10))
+        assert_array_equal(scatter_2.data['y'], np.arange(10) * 2)
+
+        line_1 = self.controller._curves['line 1']
+        assert_array_equal(line_1.xData, np.arange(15))
+        assert_array_equal(line_1.yData, np.arange(15) * 2)
+
+    def test_different_change(self):
+        first_data = [
+            Hash('label', 'scatter 1 bad',
+                 'x', np.random.randint(10, size=5),
+                 'y', np.random.randint(10, size=5),
+                 'plotType', 'scatter'),
+            Hash('label', 'line 1 bad',
+                 'x', np.random.randint(10, size=5),
+                 'y', np.random.randint(10, size=5),
+                 'plotType', 'line'),
+            Hash('label', 'line 2 bad',
+                 'x', np.random.randint(10, size=5),
+                 'y', np.random.randint(10, size=5),
+                 'plotType', 'line'),
+        ]
+        set_proxy_value(self.prop_proxy, 'prop', first_data)
+
+        second_data = [
+            Hash('label', 'scatter 1',
+                 'x', np.arange(5),
+                 'y', np.arange(5) * 2,
+                 'plotType', 'scatter'),
+            Hash('label', 'scatter 2',
+                 'x', np.arange(10),
+                 'y', np.arange(10) * 2,
+                 'plotType', 'scatter'),
+            Hash('label', 'line 1',
+                 'x', np.arange(15),
+                 'y', np.arange(15) * 2,
+                 'plotType', 'line'),
+        ]
+        set_proxy_value(self.prop_proxy, 'prop', second_data)
+        assert len(self.controller._scatters) == 2
+        assert len(self.controller._curves) == 1
+
+        # Check data
+        scatter_1 = self.controller._scatters['scatter 1']
+        assert_array_equal(scatter_1.data['x'], np.arange(5))
+        assert_array_equal(scatter_1.data['y'], np.arange(5) * 2)
+
+        scatter_2 = self.controller._scatters['scatter 2']
+        assert_array_equal(scatter_2.data['x'], np.arange(10))
+        assert_array_equal(scatter_2.data['y'], np.arange(10) * 2)
+
+        line_1 = self.controller._curves['line 1']
+        assert_array_equal(line_1.xData, np.arange(15))
+        assert_array_equal(line_1.yData, np.arange(15) * 2)
+
+    def test_invalid_plottype(self):
+        # Send two scatters, one line data
+        first_data = [
+            Hash('label', 'scatter 1',
+                 'x', np.arange(5),
+                 'y', np.arange(5) * 2,
+                 'plotType', 'bad scatter'),
+            Hash('label', 'scatter 2',
+                 'x', np.arange(10),
+                 'y', np.arange(10) * 2,
+                 'plotType', 'badScatter'),
+            Hash('label', 'line 1',
+                 'x', np.arange(15),
+                 'y', np.arange(15) * 2,
+                 'plotType', 'badLine'),
+        ]
+        set_proxy_value(self.prop_proxy, 'prop', first_data)
+        assert len(self.controller._scatters) == 0
+        assert len(self.controller._curves) == 3
+
+        # Check data
+        scatter_1 = self.controller._curves['scatter 1']
+        assert_array_equal(scatter_1.xData, np.arange(5))
+        assert_array_equal(scatter_1.yData, np.arange(5) * 2)
+
+        scatter_2 = self.controller._curves['scatter 2']
+        assert_array_equal(scatter_2.xData, np.arange(10))
+        assert_array_equal(scatter_2.yData, np.arange(10) * 2)
+
+        line_1 = self.controller._curves['line 1']
+        assert_array_equal(line_1.xData, np.arange(15))
+        assert_array_equal(line_1.yData, np.arange(15) * 2)
