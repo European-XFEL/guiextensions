@@ -11,9 +11,10 @@ from qtpy.QtWidgets import (
 from traits.api import Instance, List, String, WeakRef
 
 from karabo.common.api import WeakMethodRef
+from karabo.common.states import State
 from karabogui.api import (
     BaseBindingController, SignalBlocker, VectorHashBinding, call_device_slot,
-    get_binding_value, get_reason_parts, icons, is_proxy_allowed, messagebox,
+    get_binding_value, get_reason_parts, icons, messagebox,
     register_binding_controller, with_display_type)
 
 from .models.api import ScantoolTemplatesModel
@@ -87,8 +88,9 @@ class ScantoolTemplates(BaseBindingController):
         self.load_button.setEnabled(self.templates_cbox.count() > 0)
 
     def state_update(self, proxy):
-        enable = is_proxy_allowed(proxy)
-        self.widget.setEnabled(enable)
+        root_proxy = proxy.root_proxy
+        state = get_binding_value(root_proxy.state_binding)
+        self.widget.setEnabled(state == State.ON.value)
 
     def template_name_changed(self, text):
         self.add_button.setEnabled(len(text) > 0)

@@ -5,7 +5,7 @@ from qtpy.QtCore import Slot
 
 from karabogui.util import SignalBlocker
 
-from ..const import ADD, MOTOR_NAMES, REMOVE, X_DATA, Y_DATA
+from ..const import ADD, ALIGNER, MOTOR_NAMES, REMOVE, X_DATA, Y_DATA
 from .base import BaseSelectionWidget
 
 
@@ -24,6 +24,8 @@ class XYDataSelectionWidget(BaseSelectionWidget):
         # Disable selection on default x_data
         self.ui_x_combobox.addItems(MOTOR_NAMES)
         self.ui_x_combobox.currentIndexChanged.connect(self._x_axis_changed)
+        self.aligner_cbox.clicked.connect(
+            self._show_aligner_results_clicked)
 
     # ---------------------------------------------------------------------
     # Public methods
@@ -61,8 +63,15 @@ class XYDataSelectionWidget(BaseSelectionWidget):
     def get_selected_motors(self):
         return [self.ui_x_combobox.currentText()]
 
+    def are_aligner_results_enabled(self):
+        return self.aligner_cbox.isChecked()
+
     # ---------------------------------------------------------------------
     # Qt slots
+
+    @Slot()
+    def _show_aligner_results_clicked(self):
+        self._emit_changes()
 
     @Slot(int, bool)
     def _checkboxes_clicked(self, index):
@@ -72,38 +81,24 @@ class XYDataSelectionWidget(BaseSelectionWidget):
             self._checkboxes[index].setChecked(True)
             return
 
-        changes = ADD if self._checkboxes[index].isChecked() else REMOVE
-        x_data = self._motor_ids[self.ui_x_combobox.currentIndex()]
-        y_data = self._source_ids[index]
-        self.changed.emit({changes: [{X_DATA: x_data, Y_DATA: y_data}]})
+        self._emit_changes()
 
     @Slot(int)
     def _x_axis_changed(self, index):
-        # 1. Get relevant values
-        x_current = self._motor_ids[self._current_index]
-        x_data = self._motor_ids[index]
-        y_data_list = self._get_all_y_data()
+        self._emit_changes()
 
-        # 2. Get to-remove configs
+    def _emit_changes(self):
+        # Remove all configs and add selected motors and sources
         removed = []
-        for y_data in y_data_list:
-            removed.append({X_DATA: x_current, Y_DATA: y_data})
-
-        # 3. Get to-add configs
         added = []
-        for y_data in y_data_list:
-            added.append({X_DATA: x_data, Y_DATA: y_data})
 
-        # 5. Finalize changes
-        self._current_index = index
-        self.changed.emit({REMOVE: removed, ADD: added})
+        for motor_index, motor_id in enumerate(self._motor_ids):
+            for source_index, source_id in enumerate(self._source_ids):
+                removed.append({X_DATA: motor_id, Y_DATA: source_id})
+                if (self.ui_x_combobox.currentIndex() == motor_index
+                   and self._checkboxes[source_index].isChecked()):
+                    added.append({X_DATA: motor_id, Y_DATA: source_id})
 
-    # ---------------------------------------------------------------------
-    # Private methods
-
-    def _get_all_y_data(self):
-        y_data = []
-        for index, source in enumerate(self._source_ids):
-            if self._checkboxes[index].isChecked():
-                y_data.append(source)
-        return y_data
+        # Emit config
+        self.changed.emit({REMOVE: removed, ADD: added,
+                           ALIGNER: self.aligner_cbox.isChecked()})

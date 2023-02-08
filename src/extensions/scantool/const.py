@@ -12,6 +12,7 @@ START_POSITIONS = "startPositions"
 STOP_POSITIONS = "stopPositions"
 POS = "pos"
 Y = "y"
+ALIGNER = "aligner"
 MOTOR_NAMES = [f"pos{index}" for index in range(NR_MOTORS)]
 SOURCE_NAMES = [f"y{index}" for index in range(NR_VALUES)]
 TEST_MOTOR_IDS = [f"TEST/DEVICE/MOTOR{index}" for index in range(NR_MOTORS)]

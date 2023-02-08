@@ -156,7 +156,6 @@ class TestXYDataSelectionController(GuiTestCase):
         if changes is not None and X_DATA in changes:
             self.assertNotEqual(x_remove, x_add)
             self.assertEqual(changes[X_DATA], next(iter(x_add)))
-            self.assertSetEqual(y_remove, y_add)
         elif removed is not None and Y_DATA in removed:
             self.assertTrue(removed[Y_DATA] in y_remove)
         elif added is not None and Y_DATA in added:

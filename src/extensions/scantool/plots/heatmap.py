@@ -4,7 +4,9 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 import numpy as np
-from traits.api import ArrayOrNone, Bool, Dict, Int, ListBool, on_trait_change
+from pyqtgraph import ArrowItem, TextItem
+from traits.api import (
+    ArrayOrNone, Bool, Dict, Int, List, ListBool, on_trait_change)
 
 from ..const import MOTOR_NAMES, X_DATA, Y_DATA, Z_DATA
 from .base import ImagePlot
@@ -20,6 +22,7 @@ class HeatmapPlot(ImagePlot):
     _reversed = ListBool
     _offset = ArrayOrNone
     _transposed = Bool(False)
+    _labels = List()
 
     def __init__(self, parent=None):
         super(HeatmapPlot, self).__init__(parent)
@@ -33,6 +36,32 @@ class HeatmapPlot(ImagePlot):
         self.config.update(config)
         if update:
             self.update(config[Z_DATA])
+
+    def add_aligner_result(self, motor, source, positions, label):
+        # To avoid overlaping textItem and arrows check if there is a textItem
+        # with the same devices and coordinates.
+        # If yes we update the existing label and do not add a new TextItem
+        for item in self._aligner_results:
+            if (item["motor"] != motor or item["source"] != source or
+               not isinstance(item["plot_item"], TextItem)):
+                continue
+            if (item["plot_item"].pos().x() == positions[0]
+               and item["plot_item"].pos().y() == positions[1]):
+                label = f"{label}, {item['plot_item'].toPlainText()}"
+                item["plot_item"].setText(label)
+                return
+
+        label = f"{label} ({source})"
+        text_item = TextItem(html=label, anchor=(-0.3, -0.3), angle=0,
+                             border="w", fill=(255, 255, 255))
+        text_item.setPos(positions[0], positions[1])
+        self.widget.plotItem.addItem(text_item)
+
+        arrow_item = ArrowItem(pos=(positions[0], positions[1]), angle=-45)
+        self.widget.plotItem.addItem(arrow_item)
+        for plot_item in [text_item, arrow_item]:
+            self._aligner_results.append({"motor": motor, "source": source,
+                                          "plot_item": plot_item})
 
     def update(self, device):
         """For now, this heatmap only considers updates from the z_data.

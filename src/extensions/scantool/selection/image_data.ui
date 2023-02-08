@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>150</width>
-    <height>198</height>
+    <height>326</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -118,6 +118,22 @@
       <string>Z-data</string>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_2"/>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="tools_gbox">
+     <property name="title">
+      <string>Tools</string>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_5">
+      <item>
+       <widget class="QCheckBox" name="aligner_cbox">
+        <property name="text">
+         <string>Aligner</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </widget>
    </item>
    <item>

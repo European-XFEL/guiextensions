@@ -5,6 +5,7 @@
 #############################################################################
 from itertools import cycle
 
+from pyqtgraph import InfiniteLine
 from traits.api import DictStrAny, Instance, List, Property
 
 from karabogui.graph.common.api import KaraboLegend, make_pen
@@ -13,8 +14,7 @@ from ..const import Y_DATA
 from .base import GraphPlot
 
 PEN_CYCLER = cycle([make_pen('b'), make_pen('r'), make_pen('g'), make_pen('c'),
-                    make_pen('p'), make_pen('n'), make_pen('w'), make_pen('o'),
-                    make_pen('s'), make_pen('d'), make_pen('k')])
+                    make_pen('p'), make_pen('n')])
 
 
 class MultiCurvePlot(GraphPlot):
@@ -39,6 +39,28 @@ class MultiCurvePlot(GraphPlot):
 
         if update:
             self._plot_data(item, config)
+
+    def add_aligner_result(self, motor, source, positions, label):
+        # To avoid overlaping lines and labels check if there is a textItem
+        # with the same devices and coordinates.
+        # If yes we add label to the existing label and do not a new line
+        for item in self._aligner_results:
+            if (item["motor"] != motor or item["source"] != source or
+               not isinstance(item["plot_item"], InfiniteLine)):
+                continue
+            if item["plot_item"].pos().x() == positions[0]:
+                label = f"{label}, {item['plot_item'].label.toPlainText()}"
+                item["plot_item"].label.setText(label)
+                return
+
+        label = f"{label} ({source}/{motor})"
+        line = InfiniteLine(pos=positions[0], movable=False, angle=90,
+                            label=label, labelOpts={
+                                "position": 0.1, "color": (0, 0, 0),
+                                "fill": (100, 100, 100, 50), "movable": True})
+        self.widget.plotItem.addItem(line)
+        self._aligner_results.append({"motor": motor, "source": source,
+                                      "plot_item": line})
 
     def remove(self, config):
         item = self._items.get_item_by_config(config)
