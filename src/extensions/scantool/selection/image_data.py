@@ -19,11 +19,10 @@ class ImageDataSelectionWidget(BaseSelectionWidget):
         uic.loadUi(ui_path, self)
 
         button_group = QButtonGroup(parent)
-        button_group.setExclusive(True)
-        checkboxes = self._init_checkboxes()
-        for checkbox in checkboxes:
-            self.z_groupbox.layout().addWidget(checkbox)
-            button_group.addButton(checkbox)
+        self._init_source_widgets(as_radio_buttons=True)
+        for radio_button in self._source_widgets:
+            self.z_groupbox.layout().addWidget(radio_button)
+            button_group.addButton(radio_button)
 
         # Initialize axes data
         self.ui_x_combobox.addItems(self._motors)
@@ -64,7 +63,7 @@ class ImageDataSelectionWidget(BaseSelectionWidget):
         with SignalBlocker(self.ui_y_combobox):
             self.ui_y_combobox.setCurrentIndex(y_index)
 
-        for index, checkbox in enumerate(self._checkboxes):
+        for index, checkbox in enumerate(self._source_widgets):
             checked = checkbox.text() == config[Z_DATA]
             checkbox.setChecked(checked)
             if checked:
@@ -81,7 +80,7 @@ class ImageDataSelectionWidget(BaseSelectionWidget):
     # Qt slots
 
     @Slot(int, bool)
-    def _checkboxes_clicked(self, index):
+    def _source_widgets_clicked(self, index):
         # Do not do anything if same index is clicked
         if index == self._current_index:
             return

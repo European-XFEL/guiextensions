@@ -90,7 +90,7 @@ class TestImageDataSelectionController(GuiTestCase):
         self._widget.set_config(config)
 
         # Add z_data by checking one source
-        checkbox = self._widget._checkboxes[z_index]
+        checkbox = self._widget._source_widgets[z_index]
         self.assertTrue(checkbox.isChecked())
         checkbox.click()
         self._assert_changes(changes=None)
@@ -113,7 +113,7 @@ class TestImageDataSelectionController(GuiTestCase):
                    Z_DATA: source_ids[z_index]}]
         self._widget.set_config(config)
 
-        checkbox = self._widget._checkboxes[z_index]
+        checkbox = self._widget._source_widgets[z_index]
         self.assertTrue(checkbox.isChecked())
         checkbox.click()
         self._assert_changes(changes=None)
@@ -130,7 +130,7 @@ class TestImageDataSelectionController(GuiTestCase):
         self.assertEqual(y_combobox.currentIndex(), y_index)
 
     def _assert_sources(self, *, names, checked):
-        checkboxes = [checkbox for checkbox in self._widget._checkboxes
+        checkboxes = [checkbox for checkbox in self._widget._source_widgets
                       if checkbox.isVisible()]
         self.assertListEqual([checkbox.text() for checkbox in checkboxes],
                              names)
