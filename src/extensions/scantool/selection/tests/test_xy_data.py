@@ -88,14 +88,14 @@ class TestXYDataSelectionController(GuiTestCase):
 
         # Remove y_data by unchecking one source
         y_index = 1
-        checkbox = self._widget._checkboxes[y_index]
+        checkbox = self._widget._source_widgets[y_index]
         self.assertTrue(checkbox.isChecked())
         checkbox.click()
         self._assert_changes(removed={Y_DATA: source_ids[y_index]})
 
         # Add y_data by checking one source
         y_index = 1
-        checkbox = self._widget._checkboxes[y_index]
+        checkbox = self._widget._source_widgets[y_index]
         self.assertFalse(checkbox.isChecked())
         checkbox.click()
         self._assert_changes(added={Y_DATA: source_ids[y_index]})
@@ -115,7 +115,7 @@ class TestXYDataSelectionController(GuiTestCase):
         self._widget.set_config(config)
 
         y_index = 1
-        checkbox = self._widget._checkboxes[y_index]
+        checkbox = self._widget._source_widgets[y_index]
         self.assertTrue(checkbox.isChecked())
         checkbox.click()
         self._assert_changes(changes=None)
@@ -127,7 +127,7 @@ class TestXYDataSelectionController(GuiTestCase):
         self.assertEqual(combobox.currentIndex(), index)
 
     def _assert_sources(self, *, names, checked):
-        checkboxes = [checkbox for checkbox in self._widget._checkboxes
+        checkboxes = [checkbox for checkbox in self._widget._source_widgets
                       if checkbox.isVisible()]
         self.assertListEqual([checkbox.text() for checkbox in checkboxes],
                              names)

@@ -17,8 +17,8 @@ class XYDataSelectionWidget(BaseSelectionWidget):
                                'xy_data.ui')
         uic.loadUi(ui_path, self)
 
-        checkboxes = self._init_checkboxes()
-        for checkbox in checkboxes:
+        self._init_source_widgets()
+        for checkbox in self._source_widgets:
             self.y_groupbox.layout().addWidget(checkbox)
 
         # Disable selection on default x_data
@@ -57,7 +57,7 @@ class XYDataSelectionWidget(BaseSelectionWidget):
             self.ui_x_combobox.setCurrentIndex(x_index)
             self._current_index = x_index
 
-        for checkbox in self._checkboxes:
+        for checkbox in self._source_widgets:
             checkbox.setChecked(checkbox.text() in y_data)
 
     def get_selected_motors(self):
@@ -74,11 +74,11 @@ class XYDataSelectionWidget(BaseSelectionWidget):
         self._emit_changes()
 
     @Slot(int, bool)
-    def _checkboxes_clicked(self, index):
+    def _source_widgets_clicked(self, index):
         checked = [checkbox.isChecked() for checkbox in
-                   self._checkboxes[:len(self._sources)]]
+                   self._source_widgets[:len(self._sources)]]
         if not any(checked):
-            self._checkboxes[index].setChecked(True)
+            self._source_widgets[index].setChecked(True)
             return
 
         self._emit_changes()
@@ -96,7 +96,7 @@ class XYDataSelectionWidget(BaseSelectionWidget):
             for source_index, source_id in enumerate(self._source_ids):
                 removed.append({X_DATA: motor_id, Y_DATA: source_id})
                 if (self.ui_x_combobox.currentIndex() == motor_index
-                   and self._checkboxes[source_index].isChecked()):
+                   and self._source_widgets[source_index].isChecked()):
                     added.append({X_DATA: motor_id, Y_DATA: source_id})
 
         # Emit config
