@@ -46,6 +46,9 @@ class DataSelectionController(HasStrictTraits):
     def get_selected_motors(self):
         return self._selection_widget.get_selected_motors()
 
+    def aligner_results_enabled(self):
+        return self._selection_widget.are_aligner_results_enabled()
+
     # ---------------------------------------------------------------------
     # Private methods
 

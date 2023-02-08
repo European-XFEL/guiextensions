@@ -2,9 +2,9 @@ from qtpy.QtWidgets import QGraphicsScene, QGridLayout, QWidget
 from traits.api import Dict, Event, HasStrictTraits, Instance, on_trait_change
 
 from .const import (
-    A4SCAN_CONFIG, ACTUAL_STEP, ADD, CURRENT_INDEX, MOTOR_IDS, MOTORS, REMOVE,
-    SCAN_TYPE, SOURCE_IDS, SOURCES, START_POSITIONS, STEPS, STOP_POSITIONS,
-    X_DATA, Y_DATA, Z_DATA)
+    A4SCAN_CONFIG, ACTUAL_STEP, ADD, ALIGNER, CURRENT_INDEX, MESHES, MOTOR_IDS,
+    MOTORS, REMOVE, SCAN_TYPE, SOURCE_IDS, SOURCES, START_POSITIONS, STEPS,
+    STOP_POSITIONS, X_DATA, Y_DATA, Z_DATA)
 from .data.scan import Scan
 from .plots.base import BasePlot
 from .plots.heatmap import HeatmapPlot
@@ -111,6 +111,37 @@ class ScanController(HasStrictTraits):
 
         return self._data_selection
 
+    def update_aligner_results(self, data):
+        self._current_plot.remove_aligner_results()
+        if data is None:
+            return
+
+        for item in data:
+            # Add valid positions
+            if not item["moveToPositions"]:
+                continue
+            if self.scan.scan_type in MESHES:
+                source_id = item["sourceId"]
+                self._current_plot.add_aligner_result(
+                    motor=self.scan.motor_ids[0],
+                    source=source_id,
+                    positions=item["motorPositions"],
+                    label=item["name"])
+            else:
+                for index, motor_pos in enumerate(item["motorPositions"]):
+                    motor_id = self.scan.motor_ids[index]
+                    source_id = item["sourceId"]
+                    self._current_plot.add_aligner_result(
+                        motor=motor_id,
+                        source=source_id,
+                        positions=[motor_pos],
+                        label=item["name"])
+        self._current_plot.hide_aligner_results()
+        if self._data_selection.aligner_results_enabled():
+            self._current_plot.show_aligner_result(
+                motor_id=self.scan.motor_ids[0],
+                source_id=self.scan.data_source_ids[0])
+
     # ---------------------------------------------------------------------
     # Private methods
 
@@ -209,6 +240,7 @@ class ScanController(HasStrictTraits):
             return
         config = self._config[type(self._current_plot)]
 
+        self._current_plot.hide_aligner_results()
         if REMOVE in changes:
             for removed in changes[REMOVE]:
                 if removed in config:
@@ -219,6 +251,13 @@ class ScanController(HasStrictTraits):
             for added in changes[ADD]:
                 config.append(added)
                 self._current_plot.add(self._map_to_devices(added))
+                if changes.get(ALIGNER):
+                    if self.scan.scan_type in MESHES:
+                        self._current_plot.show_aligner_result(
+                            motor_id=None, source_id=added[Z_DATA])
+                    else:
+                        self._current_plot.show_aligner_result(
+                            motor_id=added[X_DATA], source_id=added[Y_DATA])
 
             self._set_axes_labels(config)
 

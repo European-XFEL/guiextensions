@@ -6,7 +6,7 @@ from qtpy.QtWidgets import QButtonGroup
 
 from karabogui.util import SignalBlocker
 
-from ..const import ADD, REMOVE, X_DATA, Y_DATA, Z_DATA
+from ..const import ADD, ALIGNER, REMOVE, X_DATA, Y_DATA, Z_DATA
 from .base import BaseSelectionWidget
 
 
@@ -32,6 +32,8 @@ class ImageDataSelectionWidget(BaseSelectionWidget):
 
         self.ui_x_combobox.currentIndexChanged.connect(self._x_axis_changed)
         self.ui_y_combobox.currentIndexChanged.connect(self._y_axis_changed)
+        self.aligner_cbox.clicked.connect(
+            self._show_aligner_results_clicked)
 
     # ---------------------------------------------------------------------
     # Public methods
@@ -72,6 +74,9 @@ class ImageDataSelectionWidget(BaseSelectionWidget):
         return [self.ui_x_combobox.currentText(),
                 self.ui_y_combobox.currentText()]
 
+    def are_aligner_results_enabled(self):
+        return self.aligner_cbox.isChecked()
+
     # ---------------------------------------------------------------------
     # Qt slots
 
@@ -81,19 +86,8 @@ class ImageDataSelectionWidget(BaseSelectionWidget):
         if index == self._current_index:
             return
 
-        x_data = self._motor_ids[self.ui_x_combobox.currentIndex()]
-        y_data = self._motor_ids[self.ui_y_combobox.currentIndex()]
-
-        removed = [{X_DATA: x_data,
-                    Y_DATA: y_data,
-                    Z_DATA: self._source_ids[self._current_index]}]
-
-        added = [{X_DATA: x_data,
-                  Y_DATA: y_data,
-                  Z_DATA: self._source_ids[index]}]
-
         self._current_index = index
-        self.changed.emit({REMOVE: removed, ADD: added})
+        self._emit_changes()
 
     @Slot(int)
     def _x_axis_changed(self, x_index):
@@ -104,19 +98,28 @@ class ImageDataSelectionWidget(BaseSelectionWidget):
         with SignalBlocker(self.ui_y_combobox):
             self.ui_y_combobox.setCurrentIndex(y_index)
 
-        x_data = self._motor_ids[x_index]
-        y_data = self._motor_ids[y_index]
-        z_data = self._source_ids[self._current_index]
-
-        removed = [{X_DATA: y_data, Y_DATA: x_data, Z_DATA: z_data}]
-        added = [{X_DATA: x_data, Y_DATA: y_data, Z_DATA: z_data}]
-
-        self.changed.emit({REMOVE: removed, ADD: added})
+        self._emit_changes()
 
     @Slot(int)
     def _y_axis_changed(self, index):
         """Changes for the x- and y-axis are coupled, so when the y-axis is
            changed, we just change the x-axis and let the logic there dictate
            our fate."""
-
         self.ui_x_combobox.setCurrentIndex(int(not index))
+        self._emit_changes()
+
+    @Slot()
+    def _show_aligner_results_clicked(self):
+        self._emit_changes()
+
+    def _emit_changes(self):
+        x_data = self._motor_ids[self.ui_x_combobox.currentIndex()]
+        y_data = self._motor_ids[self.ui_y_combobox.currentIndex()]
+        z_data = self._source_ids[self._current_index]
+
+        removed = [{X_DATA: y_data, Y_DATA: x_data, Z_DATA: z_data}]
+        added = [{X_DATA: x_data, Y_DATA: y_data, Z_DATA: z_data}]
+
+        # Emit config
+        self.changed.emit({REMOVE: removed, ADD: added,
+                           ALIGNER: self.aligner_cbox.isChecked()})

@@ -1,6 +1,7 @@
 import numpy as np
+from pyqtgraph import TextItem
 from qtpy.QtWidgets import QWidget
-from traits.api import Array, HasStrictTraits, Instance
+from traits.api import Array, HasStrictTraits, Instance, List
 
 from karabogui.graph.image.api import KaraboImageView
 from karabogui.graph.plots.api import KaraboPlotView
@@ -13,6 +14,7 @@ class BasePlot(HasStrictTraits):
 
     widget = Instance(QWidget)
     current_index = Array
+    _aligner_results = List()
 
     def __init__(self):
         super(BasePlot, self).__init__()
@@ -37,6 +39,38 @@ class BasePlot(HasStrictTraits):
         """Destroys the plot widget properly"""
         self.widget.setParent(None)
         self.widget.destroy()
+
+    def add_aligner_result(self, motor, source, positions, label):
+        pass
+
+    def do_result_item_exist(self, motor, source, positions, label):
+        # Check if there is a textItem with the same coordinates
+        # If yes we add label to the existing label
+        for item in self._aligner_results:
+            if item["motor"] != motor or item["source"] != source:
+                continue
+            if not isinstance(item["plot_item"], TextItem):
+                continue
+            if (item["plot_item"].pos().x() == positions[0]
+               and item["plot_item"].pos().y() == positions[1]):
+                label = f"{label}, {item['plot_item'].toPlainText()}"
+                item["plot_item"].setText(label)
+                return True
+
+    def remove_aligner_results(self):
+        for item in self._aligner_results:
+            self.widget.plotItem.removeItem(item["plot_item"])
+        self._aligner_results.clear()
+
+    def hide_aligner_results(self):
+        for item in self._aligner_results:
+            item["plot_item"].setVisible(False)
+
+    def show_aligner_result(self, motor_id, source_id):
+        for item in self._aligner_results:
+            if motor_id is None or item["motor"] == motor_id:
+                if source_id is None or item["source"] == source_id:
+                    item["plot_item"].setVisible(True)
 
 
 class ImagePlot(BasePlot):

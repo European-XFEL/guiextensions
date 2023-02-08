@@ -17,9 +17,9 @@ from karabogui.controllers.api import (
 
 from .models.api import ScantoolBaseModel
 from .scantool.const import (
-    ACTUAL_STEP, CURRENT_INDEX, MESHES, MOTOR_IDS, MOTOR_NAMES, MOTORS,
-    SCAN_TYPE, SOURCE_IDS, SOURCE_NAMES, SOURCES, START_POSITIONS, STEPS,
-    STOP_POSITIONS)
+    ACTUAL_STEP, ALIGNER, CURRENT_INDEX, MESHES, MOTOR_IDS, MOTOR_NAMES,
+    MOTORS, SCAN_TYPE, SOURCE_IDS, SOURCE_NAMES, SOURCES, START_POSITIONS,
+    STEPS, STOP_POSITIONS)
 from .scantool.controller import ScanController
 from .scantool.data.scan import Scan
 
@@ -63,17 +63,22 @@ class ScantoolDynamicWidget(BaseBindingController):
         # This is for initialization.
         # binding_update only gives undefined proxies
         # Update only when Karabacon is in ACQUIRING state
-
         # TODO: Change default type in Karabacon
 
         # Reject first node proxy from first widget creation,
         # This contains unwanted default values. Still thinking about this.
         if proxy.path == HISTORY_PROXY_PATH:
             self._history_scan = self._plot_history_scan(proxy)
-        elif not self._first_proxy_received:
+
+        proxies = proxy.value
+        # Add aligner results
+        if hasattr(proxies, ALIGNER):
+            self._controller.update_aligner_results(
+                get_binding_value(getattr(proxies, ALIGNER)))
+
+        if not self._first_proxy_received:
             self._first_proxy_received = True
             return
-
         if not self._is_scanning:
             return
 
@@ -81,7 +86,6 @@ class ScantoolDynamicWidget(BaseBindingController):
             self._scan = self._setup_new_scan(proxy)
 
         # Update actual step to check for data consistency of all devices
-        proxies = proxy.value
         actual_step = get_binding_value(getattr(proxies, ACTUAL_STEP))
         current_index = get_binding_value(getattr(proxies, CURRENT_INDEX))
         self._scan.actual_step = actual_step
