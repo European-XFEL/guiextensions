@@ -1,6 +1,6 @@
 from xml.etree.ElementTree import SubElement
 
-from traits.api import Bool, Float, List, String
+from traits.api import Bool, Float, Instance, List, String
 
 from karabo.common.savable import BaseSavableModel
 from karabo.common.scenemodel.api import BaseWidgetObjectData
@@ -23,8 +23,8 @@ class FilterInstance(BaseSavableModel):
 
 
 class NetworkXModel(BaseWidgetObjectData):
-    nodePositions = List(NodePosition)
-    filterInstances = List(FilterInstance)
+    nodePositions = List(Instance(NodePosition))
+    filterInstances = List(Instance(FilterInstance))
 
 
 def read_node_positions(element):
