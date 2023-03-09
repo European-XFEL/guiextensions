@@ -57,7 +57,11 @@ class XasGraphModel(BasePlotModel):
 
 
 class PeakIntegrationGraphModel(BasePlotModel):
-    """ A model for the metro XAS graph """
+    """ A model for the peak integration graph """
+
+
+class UncertaintyGraphModel(BasePlotModel):
+    """ A model for the uncertainty graph """
 
 
 @register_scene_reader("ScatterPosition")
@@ -180,3 +184,15 @@ def _peak_integration_graph_reader(element):
 def _peak_integration_graph_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_plot(model, element, "PeakIntegrationGraph")
+
+
+@register_scene_reader("UncertaintyGraph")
+def _uncertainty_graph_reader(element):
+    traits = read_base_plot(element)
+    return UncertaintyGraphModel(**traits)
+
+
+@register_scene_writer(UncertaintyGraphModel)
+def _uncertainty_graph_writer(model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_plot(model, element, "UncertaintyGraph")
