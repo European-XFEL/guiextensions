@@ -15,8 +15,8 @@ class TerminalAssignment(Configurable):
         description="Karabo device ID associated to the PLC terminal",
         defaultValue="")
 
-    stageQrCode = String(
-        displayedName="Stage QR Code",
+    stagePresetId = String(
+        displayedName="Stage Preset ID",
         description="Inventory QR code of the stage plugged to the PLC "
                     "terminal",
         defaultValue="")
@@ -39,7 +39,7 @@ def get_table_hash(num=1):
     hash_list = []
     for i in range(num):
         row = Hash("terminalId", f"Terminal{i}",
-                   "stageQrCode", f"QR{i}")
+                   "stagePresetId", f"QR{i}")
         hash_list.append(row)
 
     h["prop"] = hash_list

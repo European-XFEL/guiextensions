@@ -118,10 +118,10 @@ class EditableAssignmentTable(BaseFilterTableController):
         row = self.currentIndex().row()
         model = self.sourceModel()
         terminalId = model.index(row, TERMINAL_COLUMN).data(Qt.DisplayRole)
-        stageQrCode = model.index(row, STAGE_COLUMN).data(Qt.DisplayRole)
+        stagePresetId = model.index(row, STAGE_COLUMN).data(Qt.DisplayRole)
         call_device_slot(WeakMethodRef(self.handle_view_configuration),
                          self.getInstanceId(), "requestAction",
-                         terminalId=terminalId, stageQrCode=stageQrCode,
+                         terminalId=terminalId, stagePresetId=stagePresetId,
                          action="viewConfiguration")
 
     def handle_view_configuration(self, success, reply):
@@ -137,14 +137,14 @@ class EditableAssignmentTable(BaseFilterTableController):
             old = payload["old"]
             new = payload["new"]
             terminalId = payload["terminalId"]
-            stageQrCode = payload["stageQrCode"]
+            stagePresetId = payload["stagePresetId"]
             dialog = MotorConfigurationPreview(
-                old, new, terminalId, stageQrCode, parent=self.widget)
+                old, new, terminalId, stagePresetId, parent=self.widget)
             if dialog.exec() == QDialog.Accepted:
                 call_device_slot(WeakMethodRef(self.handle_config_save),
                                  self.getInstanceId(), "requestAction",
                                  terminalId=terminalId,
-                                 stageQrCode=stageQrCode,
+                                 stagePresetId=stagePresetId,
                                  configuration=new,
                                  action="saveConfiguration")
 
