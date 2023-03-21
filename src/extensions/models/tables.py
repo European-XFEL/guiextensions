@@ -25,6 +25,7 @@ TABLE_WIDGET_MODELS = (
     ("DoocsMirrorTableModel", True),
     ("DeviceReconfigurationTableModel", True),
     ("MotorAssignmentTableModel", True),
+    ("MotorParametersTableModel", True),
     ("SelectionTableModel", True),
 )
 
@@ -50,6 +51,13 @@ class DoocsMirrorTableModel(BaseWidgetObjectData):
 
 class MotorAssignmentTableModel(BaseEditWidget):
     """A model for the Assignment Table device"""
+    resizeToContents = Bool(False)
+    filterKeyColumn = Int(0)
+    sortingEnabled = Bool(True)
+
+
+class MotorParametersTableModel(BaseEditWidget):
+    """A model for the Motor Parameters Table"""
     resizeToContents = Bool(False)
     filterKeyColumn = Int(0)
     sortingEnabled = Bool(True)
