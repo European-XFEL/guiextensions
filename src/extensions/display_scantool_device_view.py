@@ -18,19 +18,23 @@ from karabogui.binding.api import (
     PropertyProxy, VectorHashBinding, get_binding_value)
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller, with_display_type)
-from karabogui.request import send_property_changes
 
 from .dialogs.scantool_device_dialog import ScantoolDeviceDialog
 from .models.api import ScantoolDeviceViewModel
+from .scantool.const import BUTTON_DEV_DIALOG, BUTTON_REMOVE_ALL, BUTTON_SORT
 from .scantool.device_tree import ButtonToolbar, DeviceTreeWidget
 
 HEADER_LABELS = ["Alias", "Device", "Axis/Source"]
+MOTORS_PROXY_PATH = "deviceEnv.motors"
+SOURCES_PROXY_PATH = "deviceEnv.sources"
+TRIGGERS_PROXY_PATH = "deviceEnv.triggers"
+
 DEVICE_PROXY_MAP = OrderedDict()
-DEVICE_PROXY_MAP["deviceEnv.motors"] = {
+DEVICE_PROXY_MAP[MOTORS_PROXY_PATH] = {
     "title": "Motors", "rows": ["alias", "deviceId", "axis"]}
-DEVICE_PROXY_MAP["deviceEnv.sources"] = {
+DEVICE_PROXY_MAP[SOURCES_PROXY_PATH] = {
     "title": "Sources", "rows": ["alias", "deviceId", "source"]}
-DEVICE_PROXY_MAP["deviceEnv.triggers"] = {
+DEVICE_PROXY_MAP[TRIGGERS_PROXY_PATH] = {
     "title": "Triggers", "rows": ["alias", "deviceId"]}
 
 BRUSH_NOT_ACTIVE = QBrush(Qt.white)
@@ -40,10 +44,10 @@ COLUMN_COUNT = 3
 
 
 @register_binding_controller(
-    ui_name='Scantool Device View',
-    klassname='Scantool-Device-View',
+    ui_name="Scantool Device View",
+    klassname="Scantool-Device-View",
     binding_type=VectorHashBinding,
-    is_compatible=with_display_type('ScantoolDeviceView'),
+    is_compatible=with_display_type("ScantoolDeviceView"),
     can_show_nothing=True, can_edit=True)
 class ScantoolDeviceView(BaseBindingController):
     # The scene model class used by this controller
@@ -55,7 +59,6 @@ class ScantoolDeviceView(BaseBindingController):
     _data_env_proxy = Instance(PropertyProxy)
     _trigger_env_proxy = Instance(PropertyProxy)
     _group_refs = Dict(String, WeakRef(QTreeWidgetItem))
-    _changed_groups = Dict(String, Bool)
     _is_editing = Bool(False)
     _is_updating = Bool(False)
 
@@ -72,7 +75,6 @@ class ScantoolDeviceView(BaseBindingController):
             dev_group_item = QTreeWidgetItem([dev_type["title"]])
             self._treewidget.addTopLevelItem(dev_group_item)
             self._group_refs[dev_proxy_path] = dev_group_item
-            self._changed_groups[dev_proxy_path] = False
 
         self._treewidget.itemChanged.connect(self._item_changed)
         self._toolbar.buttonClicked.connect(self._toolbar_button_clicked)
@@ -92,17 +94,13 @@ class ScantoolDeviceView(BaseBindingController):
 
     def add_proxy(self, proxy):
         # motorEnv should be defined as first proxy
-        if proxy.path == "deviceEnv.sources":
+        if proxy.path == SOURCES_PROXY_PATH:
             if self._data_env_proxy is None:
-                self._data_env_proxy = PropertyProxy(
-                    root_proxy=proxy.root_proxy,
-                    path=proxy.path)
+                self._data_env_proxy = proxy
                 return True
-        elif proxy.path == "deviceEnv.triggers":
+        elif proxy.path == TRIGGERS_PROXY_PATH:
             if self._trigger_env_proxy is None:
-                self._trigger_env_proxy = PropertyProxy(
-                    root_proxy=proxy.root_proxy,
-                    path=proxy.path)
+                self._trigger_env_proxy = proxy
                 return True
         return False
 
@@ -126,7 +124,6 @@ class ScantoolDeviceView(BaseBindingController):
         group_item.setExpanded(True)
         group_item.setSelected(False)
 
-        self._toolbar.set_apply_button_enabled(False)
         self._is_updating = False
         self._treewidget.setUpdatesEnabled(True)
 
@@ -145,30 +142,25 @@ class ScantoolDeviceView(BaseBindingController):
             tree_item.setBackground(col, brush)
         group_item.addChild(tree_item)
 
+        self._apply_changes()
+
     def _item_changed(self, item):
         if self.proxy.binding is None or self._is_updating:
             return
 
         self._is_editing = True
-
-        group_item = item.parent()
-        for key, value in self._group_refs.items():
-            if value == group_item:
-                self._changed_groups[key] = True
-
-        self._treewidget.setUpdatesEnabled(True)
-        self._toolbar.set_apply_button_enabled(True)
+        self._apply_changes()
         self._is_updating = False
         self._is_editing = False
 
     def _toolbar_button_clicked(self, button_type):
-        if button_type == "add":
+        if button_type == BUTTON_DEV_DIALOG:
             self._device_dialog.show()
-        elif button_type == "sort":
+        elif button_type == BUTTON_SORT:
             self._sort_devices()
-        elif button_type == "remove_all":
+        elif button_type == BUTTON_REMOVE_ALL:
             self._remove_devices()
-        elif button_type == "apply":
+        else:
             self._apply_changes()
 
     def _add_devices_from_dialog(self, device_type, devices):
@@ -179,8 +171,7 @@ class ScantoolDeviceView(BaseBindingController):
                         self.add_device_tree_item(device,
                                                   group_item,
                                                   proxy_path)
-                    self._changed_groups[proxy_path] = True
-                    self._toolbar.set_apply_button_enabled(True)
+                    self._apply_changes()
                     break
 
     def _sort_devices(self):
@@ -207,32 +198,22 @@ class ScantoolDeviceView(BaseBindingController):
             self._apply_changes()
 
     def _apply_changes(self):
-        proxies = []
+        if self._is_updating:
+            return
+
         for proxy_path, group_item in self._group_refs.items():
-            if self._changed_groups[proxy_path]:
-                for proxy in self.proxies:
-                    if proxy.path == proxy_path:
-                        break
+            for proxy in self.proxies:
+                if proxy.path == proxy_path:
+                    break
 
-                devices = HashList()
-                for child_index in range(group_item.childCount()):
-                    child = group_item.child(child_index)
-                    device = Hash()
-                    for row, key in enumerate(
-                            DEVICE_PROXY_MAP[proxy_path]["rows"]):
-                        device[key] = child.text(row)
-                    device["active"] = child.checkState(0) == Qt.Checked
-                    devices.append(device)
+            devices = HashList()
+            for child_index in range(group_item.childCount()):
+                child = group_item.child(child_index)
+                device = Hash()
+                for row, key in enumerate(
+                        DEVICE_PROXY_MAP[proxy_path]["rows"]):
+                    device[key] = child.text(row)
+                device["active"] = child.checkState(0) == Qt.Checked
+                devices.append(device)
 
-                proxy.edit_value = devices
-                proxies.append(proxy)
-
-        # This do not work. Proxy references differ
-        # proxies = [proxy for proxy in self.proxies
-        #           if proxy.edit_value is not None]
-
-        if proxies:
-            send_property_changes(proxies)
-
-        self._toolbar.set_apply_button_enabled(False)
-        self._changed_groups = dict.fromkeys(self._changed_groups, False)
+            proxy.edit_value = devices

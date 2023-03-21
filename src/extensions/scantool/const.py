@@ -23,11 +23,8 @@ SOURCES = "sources"
 MOTOR_IDS = "motorIds"
 SOURCE_IDS = "sourceIds"
 
-# Scan types
-TSCANS = ["tscan"]
-ASCANS = ["ascan", "a2scan", "a3scan", "a4scan"]
-DSCANS = ["dscan", "d2scan", "d3scan", "d4scan"]
-CSCANS = ["cscan", "c2scan", "c3scan", "c4scan"]
+TSCAN = "tscan"
+CSCAN = "cscan"
 MESHES = ["mesh", "dmesh"]
 
 # Plot config keys
@@ -38,19 +35,9 @@ Z_DATA = "z_data"
 ADD = "add"
 REMOVE = "remove"
 
-# build {scan type: number of motors} lookup table
-NUM_MOTORS_TABLE = {}
-for index, motors in enumerate(zip(TSCANS, ASCANS, DSCANS, CSCANS), start=1):
-    for motor in motors:
-        NUM_MOTORS_TABLE[motor] = index
-
-for mesh in MESHES:
-    NUM_MOTORS_TABLE[mesh] = 2
-
-
 # default scan
 A4SCAN_CONFIG = {
-    SCAN_TYPE: "a4scan",
+    SCAN_TYPE: "ascan",
     MOTORS: MOTOR_NAMES,
     SOURCES: SOURCE_NAMES,
     MOTOR_IDS: MOTOR_NAMES,
@@ -60,3 +47,7 @@ A4SCAN_CONFIG = {
     CURRENT_INDEX: [0],
     START_POSITIONS: [0],
     STOP_POSITIONS: [10]}
+
+BUTTON_DEV_DIALOG = "device_dialog"
+BUTTON_SORT = "sort"
+BUTTON_REMOVE_ALL = "remove_all"

@@ -8,6 +8,8 @@ from qtpy.QtWidgets import (
 import karabogui.icons as icons
 from karabogui.itemtypes import NavigationItemTypes, ProjectItemTypes
 
+from ..scantool.const import BUTTON_DEV_DIALOG, BUTTON_REMOVE_ALL, BUTTON_SORT
+
 
 class ButtonToolbar(QWidget):
 
@@ -16,8 +18,10 @@ class ButtonToolbar(QWidget):
     def __init__(self, tree_widget, parent):
         super(ButtonToolbar, self).__init__(parent)
 
+        self.device_dialog_button = QPushButton(icons.zoom, "", self)
+        self.device_dialog_button.setToolTip("Device view dialog")
         self.add_button = QPushButton(icons.add, "", self)
-        self.add_button.setToolTip("Add new device")
+        self.add_button.setToolTip("Add device")
         self.copy_button = QPushButton(icons.editCopy, "", self)
         self.copy_button.setToolTip("Copy device")
         self.up_button = QPushButton(icons.arrowFancyUp, "", self)
@@ -26,29 +30,27 @@ class ButtonToolbar(QWidget):
         self.down_button = QPushButton(icons.arrowFancyDown, "", self)
         self.down_button.setToolTip("Move selected item down")
         self.down_button.setEnabled(False)
+        self.sort_button = QPushButton(icons.reset, "", self)
+        self.sort_button.setToolTip("Sort items by active")
         self.remove_button = QPushButton(icons.no, "", self)
         self.remove_button.setToolTip("Remove selected item")
         self.remove_button.setEnabled(False)
         self.remove_all_button = QPushButton(icons.delete, "", self)
         self.remove_all_button.setToolTip("Remove all items")
-        self.sort_button = QPushButton(icons.reset, "", self)
-        self.sort_button.setToolTip("Sort items by active")
-        self.apply_button = QPushButton(icons.yes, "Apply", self)
-        self.apply_button.setToolTip("Apply changes")
-        self.apply_button.setEnabled(False)
 
         hlayout = QHBoxLayout(self)
+        hlayout.addWidget(self.device_dialog_button)
         hlayout.addWidget(self.add_button)
-        hlayout.addWidget(self.sort_button)
         hlayout.addWidget(self.copy_button)
         hlayout.addWidget(self.up_button)
         hlayout.addWidget(self.down_button)
+        hlayout.addWidget(self.sort_button)
         hlayout.addWidget(self.remove_button)
         hlayout.addWidget(self.remove_all_button)
         hlayout.addStretch(10)
-        hlayout.addWidget(self.apply_button)
         hlayout.setContentsMargins(0, 0, 0, 0)
 
+        self.device_dialog_button.clicked.connect(self._device_dialog_clicked)
         self.add_button.clicked.connect(self._add_clicked)
         self.copy_button.clicked.connect(self._copy_clicked)
         self.up_button.clicked.connect(self._up_clicked)
@@ -56,14 +58,32 @@ class ButtonToolbar(QWidget):
         self.remove_button.clicked.connect(self._remove_clicked)
         self.sort_button.clicked.connect(self._sort_clicked)
         self.remove_all_button.clicked.connect(self._remove_all_clicked)
-        self.apply_button.clicked.connect(self._apply_clicked)
 
         self.tree_widget = tree_widget
         self.tree_widget.itemSelectionChanged.connect(
             self._item_selection_changed)
 
+    def _device_dialog_clicked(self):
+        self.buttonClicked.emit(BUTTON_DEV_DIALOG)
+
     def _add_clicked(self):
-        self.buttonClicked.emit("add")
+        item = self.tree_widget.currentItem()
+        if item is None:
+            # No item selected, add to motors
+            parent = self.tree_widget.topLevelItem(0)
+        else:
+            parent = item.parent()
+
+        new_item = QTreeWidgetItem(["ALIAS", "DEVICE_ID", "default"])
+        new_item.setFlags(new_item.flags() | Qt.ItemIsEditable)
+        if parent is None:
+            # Top level item, insert as a first item
+            item.insertChild(0, new_item)
+        else:
+            # Child item, add next to it
+            index = parent.indexOfChild(item)
+            parent.insertChild(index + 1, new_item)
+        self.buttonClicked.emit("")
 
     def _copy_clicked(self):
         item = self.tree_widget.currentItem()
@@ -72,7 +92,7 @@ class ButtonToolbar(QWidget):
         new_item = item.clone()
         parent.insertChild(index + 1, new_item)
         self.tree_widget.setCurrentItem(new_item)
-        self.set_apply_button_enabled(True)
+        self.buttonClicked.emit("")
 
     def _up_clicked(self):
         self.move_current_item(-1)
@@ -87,28 +107,21 @@ class ButtonToolbar(QWidget):
         parent.takeChild(index)
         parent.insertChild(index + direction, item)
         self.tree_widget.setCurrentItem(item)
-        self.set_apply_button_enabled(True)
+        self.buttonClicked.emit("")
 
     def _remove_clicked(self):
         item = self.tree_widget.currentItem()
         parent = item.parent()
         parent.removeChild(item)
-        self.set_apply_button_enabled(True)
+        self.buttonClicked.emit("")
         self.set_button_states()
 
     def _sort_clicked(self):
-        self.buttonClicked.emit("sort")
+        self.buttonClicked.emit(BUTTON_SORT)
 
     def _remove_all_clicked(self):
-        self.buttonClicked.emit("remove_all")
-        self.set_apply_button_enabled(True)
+        self.buttonClicked.emit(BUTTON_REMOVE_ALL)
         self.set_button_states()
-
-    def _apply_clicked(self):
-        self.buttonClicked.emit("apply")
-
-    def _item_added(self):
-        self.set_apply_button_enabled(True)
 
     def _item_selection_changed(self):
         self.set_button_states()
@@ -129,9 +142,6 @@ class ButtonToolbar(QWidget):
         else:
             self.up_button.setEnabled(False)
             self.down_button.setEnabled(False)
-
-    def set_apply_button_enabled(self, state):
-        self.apply_button.setEnabled(state)
 
 
 class DeviceTreeWidget(QTreeWidget):
@@ -189,14 +199,14 @@ class DeviceTreeWidget(QTreeWidget):
         This method returns a success boolean and a tuple of meta data when
         successful (drop_item: QTreeWidgetItem, device_id: str)
         """
-        items = event.mimeData().data('treeItems').data()
+        items = event.mimeData().data("treeItems").data()
         if not items:
             event.ignore()
             return False, ()
 
         # Check if a device was dragged in the item
         item = json.loads(items.decode())[0]
-        item_type = item.get('type')
+        item_type = item.get("type")
         from_navigation = item_type == NavigationItemTypes.DEVICE
         from_project = item_type == ProjectItemTypes.DEVICE
         from_device = from_navigation or from_project
@@ -204,7 +214,7 @@ class DeviceTreeWidget(QTreeWidget):
         drop_item = self.itemAt(event.pos())
         if from_device and drop_item is not None:
             event.accept()
-            device_id = item.get('deviceId', 'None')
+            device_id = item.get("deviceId", "None")
             return True, (drop_item, device_id)
         else:
             event.ignore()
