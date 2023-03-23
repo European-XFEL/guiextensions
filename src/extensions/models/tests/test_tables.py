@@ -53,6 +53,15 @@ def test_motor_assignment_table():
     assert read_model.resizeToContents
 
 
+def test_motor_parameters_table():
+    traits = _geometry_traits()
+    traits["resizeToContents"] = True
+    model = api.MotorParametersTableModel(**traits)
+    read_model = single_model_round_trip(model)
+    _assert_geometry_traits(read_model)
+    assert read_model.resizeToContents
+
+
 def test_selection_convenience_table_model():
     traits = _geometry_traits()
     traits["resizeToContents"] = True

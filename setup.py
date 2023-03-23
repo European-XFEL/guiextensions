@@ -25,6 +25,7 @@ entries = {
         'MetroSecAxisGraph = extensions.metro.secaxis_graph',
         'MetroTwinXGraph = extensions.metro.twinx_graph',
         'MotorStageAssignmentTable = extensions.edit_motor_stage_table',
+        'MotorParametersTable = extensions.edit_motor_parameters_table',
         'NetworkX = extensions.display_networkx',
         'PeakIntegrationGraph = extensions.peak_integration_graph',
         'PointAndClick = extensions.point_and_click',
