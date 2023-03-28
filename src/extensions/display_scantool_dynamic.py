@@ -3,7 +3,6 @@
 # Created on September 2019
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-import numpy as np
 from qtpy.QtWidgets import QMessageBox
 from traits.api import Bool, Instance, on_trait_change
 
@@ -112,23 +111,12 @@ class ScantoolDynamicWidget(BaseBindingController):
             config.update({prop: self._get_value(proxies, prop)})
 
         # Get active motor and data sources
-        motors = [motor for motor in MOTOR_NAMES
-                  if not np.isnan(self._get_value(proxies, motor))]
-        sources = [source for source in SOURCE_NAMES
-                   if not np.isnan(self._get_value(proxies, source))]
-        config.update({MOTORS: motors, SOURCES: sources})
-
-        # Starting v2.4.7-2.13.4 Karabacon in the output schema has motorIds
-        # and sourceIds. If they are not present then x0..4, y0..6 are used
-        if hasattr(proxies, MOTOR_IDS):
-            config.update({MOTOR_IDS: self._get_value(proxies, MOTOR_IDS)})
-        else:
-            config.update({MOTOR_IDS: motors})
-        if hasattr(proxies, SOURCE_IDS):
-            config.update({SOURCE_IDS: self._get_value(proxies, SOURCE_IDS)})
-        else:
-            config.update({SOURCE_IDS: sources})
-
+        motor_ids = self._get_value(proxies, MOTOR_IDS)
+        source_ids = self._get_value(proxies, SOURCE_IDS)
+        motors = [motor for motor in MOTOR_NAMES[:len(motor_ids)]]
+        sources = [source for source in SOURCE_NAMES[:len(source_ids)]]
+        config.update({MOTOR_IDS: motor_ids, SOURCE_IDS: source_ids,
+                       MOTORS: motors, SOURCES: sources})
         scan = self._controller.new_scan(config)
 
         # Use plot wrt scan type
