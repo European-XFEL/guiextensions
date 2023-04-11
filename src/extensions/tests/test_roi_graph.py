@@ -28,10 +28,10 @@ class ObjectNode(Configurable):
     roi2 = VectorFloat()
 
 
-@mock.patch('extensions.roi_graph.send_property_changes')
-class TestRectRoiGraph(GuiTestCase):
+class BaseRoiGraphTest(GuiTestCase):
+
     def setUp(self):
-        super(TestRectRoiGraph, self).setUp()
+        super(BaseRoiGraphTest, self).setUp()
         output_schema = ChannelNode.getClassSchema()
         self.image_proxy = get_class_property_proxy(output_schema, 'data')
 
@@ -46,16 +46,28 @@ class TestRectRoiGraph(GuiTestCase):
         self.controller.destroy()
         assert self.controller.widget is None
 
+    @property
+    def model(self):
+        return self.controller.model
+
+    @contextmanager
+    def reset_mock(self, mock_obj):
+        mock_obj.reset_mock()
+        yield
+
+
+@mock.patch('extensions.roi_graph.send_property_changes')
+class TestRectRoiGraph(BaseRoiGraphTest):
     def test_basics(self, *mocks):
         # Check ROIs
-        assert len(self.controller._rois) == 0
+        assert len(self.controller.rois) == 0
 
     def test_one_roi_update(self, *mocks):
         self.controller.visualize_additional_property(self.roi1_proxy)
 
         # Mock receivng device update once
         set_proxy_value(self.roi1_proxy, 'roi1', [0, 200, 300, 600])
-        self._assert_roi(roi=self.controller._get_roi(self.roi1_proxy),
+        self._assert_roi(roi=self.controller.get_roi(self.roi1_proxy),
                          geometry=[0, 200, 300, 600])
 
     def test_two_roi_update(self, *mocks):
@@ -64,10 +76,10 @@ class TestRectRoiGraph(GuiTestCase):
 
         # Mock receivng device update once
         set_proxy_value(self.roi1_proxy, 'roi1', [0, 200, 300, 600])
-        self._assert_roi(roi=self.controller._get_roi(self.roi1_proxy),
+        self._assert_roi(roi=self.controller.get_roi(self.roi1_proxy),
                          geometry=[0, 200, 300, 600])
         set_proxy_value(self.roi2_proxy, 'roi2', [100, 500, 400, 700])
-        self._assert_roi(roi=self.controller._get_roi(self.roi2_proxy),
+        self._assert_roi(roi=self.controller.get_roi(self.roi2_proxy),
                          geometry=[100, 500, 400, 700])
 
     def test_user_update(self, *mocks):
@@ -75,7 +87,7 @@ class TestRectRoiGraph(GuiTestCase):
         self.controller.visualize_additional_property(self.roi1_proxy)
         old_geometry = (10, 20, 30, 50)
         set_proxy_value(self.roi1_proxy, 'roi1', old_geometry)
-        roi = self.controller._get_roi(self.roi1_proxy)
+        roi = self.controller.get_roi(self.roi1_proxy)
 
         # Receive one update
         set_proxy_value(self.roi1_proxy, 'roi1', [0, 200, 300, 600])
@@ -115,7 +127,7 @@ class TestRectRoiGraph(GuiTestCase):
         self.controller.visualize_additional_property(self.roi1_proxy)
         old_geometry = (10, 20, 30, 50)
         set_proxy_value(self.roi1_proxy, 'roi1', old_geometry)
-        roi = self.controller._get_roi(self.roi1_proxy)
+        roi = self.controller.get_roi(self.roi1_proxy)
 
         # Receive one update
         with self.reset_mock(mocked_send_changes):
@@ -164,7 +176,54 @@ class TestRectRoiGraph(GuiTestCase):
         assert roi._item_geometry == roi.geometry
         assert roi.roi_item.isVisible() is roi.is_visible
 
-    @contextmanager
-    def reset_mock(self, mock_obj):
-        mock_obj.reset_mock()
-        yield
+
+@mock.patch('extensions.roi_graph.LabelTableDialog')
+class TestRoiLabelChanges(BaseRoiGraphTest):
+
+    def setUp(self):
+        super().setUp()
+        for proxy in [self.roi1_proxy, self.roi2_proxy]:
+            self.controller.visualize_additional_property(proxy)
+
+    def test_basics(self, mocked_dialog):
+        self.assertListEqual(self.model.labels, ['', ''])
+
+    def test_first_call(self, mocked_dialog):
+        # Return intermittently
+        mocked_dialog.get.return_value = (None, False)
+
+        self.controller._edit_labels()
+        mocked_dialog.get.assert_called_with(
+            {"names": ['roi1', 'roi2'],
+             "labels": ['', ''], },
+            parent=self.controller.widget
+        )
+
+    def test_first_update(self, mocked_dialog):
+        # Return with proper value
+        config = {"names": ['roi1', 'roi2'],
+                  "labels": ['foo', 'bar'], }
+        mocked_dialog.get.return_value = (config, True)
+
+        self.controller._edit_labels()
+        self.assertListEqual(self.model.labels, config["labels"])
+        zipped = zip((self.roi1_proxy, self.roi2_proxy), config["labels"])
+        for proxy, label in zipped:
+            roi = self.controller.get_roi(proxy)
+            self.assertEqual(roi.label_text, label)
+
+    def test_second_call(self, mocked_dialog):
+        # First call: return with initial value
+        config = {"names": ['roi1', 'roi2'],
+                  "labels": ['foo', 'bar'], }
+        mocked_dialog.get.return_value = (config, True)
+        self.controller._edit_labels()
+
+        # Second call: return intermittently
+        mocked_dialog.reset_mock()
+        mocked_dialog.get.return_value = (None, False)
+        self.controller._edit_labels()
+        mocked_dialog.get.assert_called_with(
+            {"names": ['roi1', 'roi2'],
+             "labels": ['foo', 'bar']},
+            parent=self.controller.widget)

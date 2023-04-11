@@ -1,6 +1,6 @@
 from xml.etree.ElementTree import SubElement
 
-from traits.api import Bool, String
+from traits.api import Bool, List, String
 
 from karabo.common.scenemodel.bases import BaseWidgetObjectData
 from karabo.common.scenemodel.const import NS_KARABO, WIDGET_ELEMENT_TAG
@@ -16,10 +16,15 @@ from karabo.common.scenemodel.widgets.graph_utils import (
 class RoiGraphModel(ImageGraphModel):
     """ A base model roi graph """
     show_scale = Bool(False)
+    labels = List(String)
 
 
 class RectRoiGraphModel(RoiGraphModel):
     """ A model for the Rect ROI graph """
+
+
+class ZonePlateGraphModel(RoiGraphModel):
+    """ A model for the zone plate graph """
 
 
 class BeamGraphModel(ImageGraphModel):
@@ -36,9 +41,13 @@ class ImageCrossHairGraphModel(BaseWidgetObjectData):
     colormap = String("none")
 
 
+@register_scene_reader('Rect Roi Graph')
 @register_scene_reader('RectRoiGraph')
 def _roi_graph_reader(element):
     traits = read_base_karabo_image_model(element)
+    labels = element.get(NS_KARABO + "labels", "")
+    if labels:
+        traits["labels"] = labels.split(",")
     return RectRoiGraphModel(**traits)
 
 
@@ -47,6 +56,25 @@ def _roi_graph_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, "RectRoiGraph")
     write_base_karabo_image_model(model, element)
+    element.set(NS_KARABO + "labels", ",".join(model.labels))
+    return element
+
+
+@register_scene_reader('ZonePlateGraph')
+def _zone_plate_graph_reader(element):
+    traits = read_base_karabo_image_model(element)
+    labels = element.get(NS_KARABO + "labels", "")
+    if labels:
+        traits["labels"] = labels.split(",")
+    return ZonePlateGraphModel(**traits)
+
+
+@register_scene_writer(ZonePlateGraphModel)
+def _zone_plate_graph_writer(model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_widget_data(model, element, "ZonePlateGraph")
+    write_base_karabo_image_model(model, element)
+    element.set(NS_KARABO + "labels", ",".join(model.labels))
     return element
 
 

@@ -177,7 +177,7 @@ class EllipseNode(BaseRoiController):
     def set_info(self, center=None, axes=None):
         if self.text_item is not None and center is not None:
             center = [float_to_string(coord) for coord in center]
-            self.text_item.setHtml(roi_html(self.label, center=center))
+            self.text_item.setHtml(roi_html(self.label_text, center=center))
         if self.legend_item is not None and axes is not None:
             self.legend_item.set_value(axes)
 
@@ -339,7 +339,7 @@ class BeamGraph(BaseBindingController):
             if self._ellipse is None:
                 self._ellipse = EllipseNode(proxy=proxy,
                                             color='g',
-                                            label='Center of Mass')
+                                            label_text='Center of Mass')
                 self._ellipse.add_to(self._plot)
                 return True
 

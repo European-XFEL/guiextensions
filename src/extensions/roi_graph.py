@@ -7,19 +7,24 @@ from contextlib import contextmanager
 from itertools import cycle
 
 import pyqtgraph as pg
+from qtpy.QtCore import Qt
+from qtpy.QtWidgets import (
+    QDialog, QDialogButtonBox, QHeaderView, QLineEdit, QTableWidget,
+    QTableWidgetItem, QToolButton, QVBoxLayout)
 from traits.api import (
-    Bool, Event, HasStrictTraits, Instance, List, Property, String, Tuple,
+    Bool, Event, HasStrictTraits, Instance, Int, List, Property, String, Tuple,
     Type, WeakRef, cached_property, on_trait_change)
 
 from karabo.common.scenemodel.api import (
     build_graph_config, restore_graph_config)
 from karabo.native import EncodingType
+from karabogui import icons
 from karabogui.binding.api import (
     FloatBinding, ImageBinding, IntBinding, PropertyProxy, VectorBoolBinding,
     VectorNumberBinding, get_binding_value)
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
-from karabogui.graph.common.api import make_pen
+from karabogui.graph.common.api import create_tool_button, make_pen
 from karabogui.graph.image.api import (
     KaraboImageNode, KaraboImagePlot, KaraboImageView)
 from karabogui.request import send_property_changes
@@ -30,12 +35,12 @@ from .models.api import RectRoiGraphModel
 NUMBER_BINDINGS = (IntBinding, FloatBinding)
 
 
-def formatted_label(text):
+def formatted_label(text, size=8):
     html_list = []
 
     # Title
     html_list.append(
-        f'<span style="color: #FFF; font-size: 8pt; font-weight: bold;">'
+        f'<span style="color: #FFF; font-size: {size}pt; font-weight: bold;">'
         f'{text}</span>')
 
     html = "<br>".join(html_list)
@@ -51,18 +56,20 @@ class BaseRoiController(HasStrictTraits):
     size = Tuple(0, 0)
 
     color = String('r')
-    label = String
+    label_text = String
+    label_size = Int(8)
     is_visible = Bool(False)
 
     _is_busy = Bool(False)
     _text_direction = (0, 1)  # lower left
 
     def _text_item_default(self):
-        if not self.label:
+        if not self.label_text:
             return
 
-        item = pg.TextItem(html=formatted_label(self.label),
-                           fill=(0, 0, 0, 50))
+        item = pg.TextItem(
+            html=formatted_label(self.label_text, size=self.label_size),
+            fill=(0, 0, 0, 50))
         item.setZValue(99)
         item.setVisible(self.is_visible)
         return item
@@ -101,6 +108,11 @@ class BaseRoiController(HasStrictTraits):
             self.roi_item.setSize(size)
 
         self.is_visible = size != (0, 0)
+
+    @on_trait_change('label_text,label_size')
+    def _set_label(self):
+        self.text_item.setHtml(formatted_label(self.label_text,
+                                               size=self.label_size))
 
     @property
     def _item_position(self):
@@ -206,6 +218,10 @@ class BaseRoiGraph(BaseBindingController):
     _image_path = String
 
     _waiting = Bool(False)
+    _edit_button = WeakRef(QToolButton)
+    _colors = Instance(cycle, allow_none=False)
+
+    rois = List(Instance(RectRoiProperty))
 
     def create_widget(self, parent):
         widget = KaraboImageView(parent=parent)
@@ -213,7 +229,19 @@ class BaseRoiGraph(BaseBindingController):
         widget.add_colorbar()
 
         # Finalize and add ROI afterwards
-        widget.add_toolbar()
+        toolbar = widget.add_toolbar()
+        # Displayed data
+        self._edit_button = edit_button = create_tool_button(
+            checkable=False,
+            icon=icons.edit,
+            tooltip="Edit ROI labels",
+            on_clicked=self._edit_labels)
+        try:
+            toolbar.add_button(name=edit_button.toolTip(),
+                               button=edit_button)
+        except TypeError:
+            # The toolbar from the GUI has been changed.
+            toolbar.add_button(button=edit_button)
 
         # Get a reference for our plotting
         self._plot = widget.plot()
@@ -226,9 +254,6 @@ class BaseRoiGraph(BaseBindingController):
         widget.restore(build_graph_config(self.model))
 
         return widget
-
-    def _set_roi(self, proxy):
-        pass
 
     def _update_roi(self, roi, geometry=None):
         if geometry is None:
@@ -274,6 +299,57 @@ class BaseRoiGraph(BaseBindingController):
             self.widget.remove_colorbar()
             self.widget.disable_aux()
 
+    # -----------------------------------------------------------------------
+    # Helper methods
+
+    def get_roi(self, proxy):
+        # Get the respective ROI
+        for roi in self.rois:
+            if proxy is roi.proxy:
+                return roi
+
+    def get_label(self, proxy):
+        name = proxy.path
+        roi_proxies = self.proxies[1:]
+        index = (roi_proxies.index(proxy) if proxy in roi_proxies  # existing
+                 else len(roi_proxies))  # new proxy
+        labels = self.model.labels
+        try:
+            label = labels[index]
+            if label:
+                name = label
+        except IndexError:
+            # Ignore index error and supply missing legends
+            for _ in range(index + 1 - len(labels)):
+                labels.append('')
+        return name
+
+    # -----------------------------------------------------------------------
+    # Trait methods
+
+    def __colors_default(self):
+        return cycle(['b', 'r', 'g', 'c', 'p', 'y'])
+
+    # ----------------------------------------------------------------
+    # Editable ROI labels
+
+    def _edit_labels(self):
+        proxy_names = [proxy.path for proxy in self.proxies[1:]]
+        labels = self.model.labels
+
+        config = {"names": proxy_names,
+                  "labels": labels}
+        content, ok = LabelTableDialog.get(config, parent=self.widget)
+        if not ok:
+            return
+
+        # Update labels
+        self.model.trait_set(labels=content["labels"])
+        zipped = zip(content["names"], content["labels"])
+        for index, (name, label) in enumerate(zipped, start=1):
+            roi = self.get_roi(self.proxies[index])
+            roi.label_text = label or name
+
 
 def _is_compatible(binding):
     """Only instantiate the widget with an ImageBinding"""
@@ -282,15 +358,12 @@ def _is_compatible(binding):
 
 @register_binding_controller(
     ui_name='Rect ROI Graph',
-    klassname='Rect Roi Graph',
+    klassname='RectRoiGraph',
     binding_type=(ImageBinding, VectorNumberBinding),
     priority=-200, can_show_nothing=False)
 class RectRoiGraph(BaseRoiGraph):
     # Our Image Graph Model
     model = Instance(RectRoiGraphModel, args=())
-    _rois = List(Instance(RectRoiProperty))
-
-    _colors = Instance(cycle, allow_none=False)
 
     # -----------------------------------------------------------------------
     # Binding methods
@@ -301,10 +374,10 @@ class RectRoiGraph(BaseRoiGraph):
             return
 
         roi = RectRoiProperty(color=next(self._colors),
-                              label=proxy.path,
+                              label_text=self.get_label(proxy),
                               proxy=proxy)
         roi.add_to(self._plot)
-        self._rois.append(roi)
+        self.rois.append(roi)
 
         return True
 
@@ -314,21 +387,78 @@ class RectRoiGraph(BaseRoiGraph):
             self._update_image(proxy.value)
             return
 
-        roi = self._get_roi(proxy)
+        roi = self.get_roi(proxy)
         if roi is not None:
             self._update_roi(roi, get_binding_value(proxy))
 
-    # -----------------------------------------------------------------------
-    # Helper methods
 
-    def _get_roi(self, proxy):
-        # Get the respective ROI
-        for roi in self._rois:
-            if proxy is roi.proxy:
-                return roi
+# ----------------------------------------------------------------------------
+# ROI labels
 
-    # -----------------------------------------------------------------------
-    # Trait methods
+CONFLICT_SUFFIX = " (Conflict)"
 
-    def __colors_default(self):
-        return cycle(['b', 'r', 'g', 'c', 'p', 'y'])
+
+class LabelTableDialog(QDialog):
+    """"""
+    def __init__(self, config, parent=None):
+        super().__init__(parent=parent)
+        self.setModal(False)
+
+        # Add table
+        self._table = table = QTableWidget()
+        table.setMinimumWidth(500)
+        table.setColumnCount(2)
+        table.setRowCount(len(config["names"]))
+        table.setHorizontalHeaderLabels(["Property", "Labels"])
+        header = table.horizontalHeader()
+        header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(1, QHeaderView.Stretch)
+
+        # Add entries
+        zipped = zip(config["names"], config["labels"])
+        for row, (name, label) in enumerate(zipped):
+            # proxy
+            item = QTableWidgetItem(name)
+            item.setFlags(item.flags() ^ Qt.ItemIsEditable)
+            table.setItem(row, 0, item)
+            # label
+            line_edit = QLineEdit(label)
+            line_edit.setPlaceholderText(name)
+            table.setCellWidget(row, 1, line_edit)
+
+        # Add button boxes
+        button_box = QDialogButtonBox(QDialogButtonBox.Ok
+                                      | QDialogButtonBox.Cancel)
+        button_box.accepted.connect(self.accept)
+        button_box.rejected.connect(self.reject)
+
+        # Finalize widget
+        layout = QVBoxLayout()
+        layout.setSpacing(15)
+        layout.addWidget(table)
+        layout.addWidget(button_box)
+        self.setLayout(layout)
+
+    @staticmethod
+    def get(configuration, parent=None):
+        dialog = LabelTableDialog(configuration, parent)
+        result = dialog.exec_() == QDialog.Accepted
+        content = {"names": dialog.names,
+                   "labels": dialog.labels, }
+        return content, result
+
+    @property
+    def names(self):
+        return [self._table.item(row, 0).text()
+                for row in range(self._table.rowCount())]
+
+    @property
+    def labels(self):
+        labels = []
+        for row in range(self._table.rowCount()):
+            label = self._table.cellWidget(row, 1).text()
+            if label:
+                while label in labels:
+                    label += CONFLICT_SUFFIX
+            labels.append(label)
+        return labels
