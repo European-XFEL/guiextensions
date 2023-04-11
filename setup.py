@@ -21,7 +21,6 @@ entries = {
         'VectorLimitedIntLineEdit = extensions.edit_limited_lineedit',
         'LimitedDoubleLineEdit = extensions.edit_limited_lineedit',
         'LimitedIntLineEdit = extensions.edit_limited_lineedit',
-        'MetroZonePlate = extensions.metro.zone_plate',
         'MetroXasGraph = extensions.metro.xas_graph',
         'MetroSecAxisGraph = extensions.metro.secaxis_graph',
         'MetroTwinXGraph = extensions.metro.twinx_graph',
@@ -41,6 +40,7 @@ entries = {
         'StateAwareComponentManager = extensions.stateaware_component_manager',
         'UncertaintyGraph = extensions.display_uncertainty_graph',
         'XasGraph = extensions.display_xas_graph',
+        'ZonePlateGraph = extensions.zone_plate_graph',
     ],
 }
 
