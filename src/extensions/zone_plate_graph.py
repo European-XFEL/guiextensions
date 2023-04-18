@@ -3,19 +3,17 @@
 # Created on March 2023
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from itertools import cycle
-
 import pyqtgraph as pg
 from traits.api import Dict, Instance, List
 
 from karabogui.binding.api import (
-    ImageBinding, VectorBoolBinding, VectorNumberBinding, get_binding_value)
+    ImageBinding, VectorBoolBinding, VectorNumberBinding)
 from karabogui.controllers.api import register_binding_controller
 from karabogui.graph.common.api import AuxPlots, ImageRegion, make_pen
 from karabogui.graph.image.api import ProfileAggregator
 
 from .models.images import ZonePlateGraphModel
-from .roi_graph import BaseRoiGraph, RectRoiProperty
+from .roi_graph import BaseRoiGraph, RectRoi
 
 
 @register_binding_controller(
@@ -25,10 +23,9 @@ from .roi_graph import BaseRoiGraph, RectRoiProperty
     priority=-1000, can_show_nothing=False)
 class ZonePlateGraph(BaseRoiGraph):
     model = Instance(ZonePlateGraphModel, args=())
-    rois = Dict(key_trait=Instance(RectRoiProperty),
+    rois = Dict(key_trait=Instance(RectRoi),
                 value_trait=List(Instance(pg.InfiniteLine)))
 
-    _colors = Instance(cycle, allow_none=False)
     _aux_plots = Instance(ProfileAggregator)
 
     def create_widget(self, parent):
@@ -51,10 +48,10 @@ class ZonePlateGraph(BaseRoiGraph):
             return
 
         color = next(self._colors)
-        roi = RectRoiProperty(color=color,
-                              label_text=self.get_label(proxy),
-                              label_size=16,
-                              proxy=proxy)
+        roi = RectRoi(color=color,
+                      label_text=self.get_label(proxy),
+                      label_size=16,
+                      proxy=proxy)
         roi.on_trait_change(self._set_line_visibility, 'is_visible')
         roi.on_trait_change(self._set_line_position, 'geometry')
         roi.add_to(self._plot)
@@ -64,14 +61,9 @@ class ZonePlateGraph(BaseRoiGraph):
 
     def value_update(self, proxy):
         # Update image
+        super().value_update(proxy)
         if proxy is self.proxy:
-            self._update_image(proxy.value)
             self._update_aux()
-            return
-
-        roi = self.get_roi(proxy)
-        if roi is not None:
-            self._update_roi(roi, get_binding_value(proxy))
 
     # -----------------------------------------------------------------------
     # Helper methods
@@ -111,9 +103,6 @@ class ZonePlateGraph(BaseRoiGraph):
 
     # -----------------------------------------------------------------------
     # Trait methods
-
-    def __colors_default(self):
-        return cycle(['b', 'r', 'g', 'c', 'p', 'y'])
 
     def _set_line_position(self, obj, name, value):
         for line, pos in zip(self.rois[obj], value):

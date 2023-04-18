@@ -4,6 +4,7 @@ entries = {
     'karabogui.gui_extensions': [
         'Amore = extensions.amore.display_roi_annotate',
         'BeamGraph = extensions.display_beam_graph',
+        'CircleRoiGraph = extensions.roi_graph',
         'ConditionCommand = extensions.display_condition',
         'DateTimeEdit = extensions.edit_datetime_label',
         'DetectorCells = extensions.display_detector_cells',

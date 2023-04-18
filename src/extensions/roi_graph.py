@@ -30,7 +30,7 @@ from karabogui.graph.image.api import (
 from karabogui.request import send_property_changes
 from karabogui.util import SignalBlocker
 
-from .models.api import RectRoiGraphModel
+from .models.api import CircleRoiGraphModel, RectRoiGraphModel
 
 NUMBER_BINDINGS = (IntBinding, FloatBinding)
 
@@ -49,18 +49,24 @@ def formatted_label(text, size=8):
 
 class BaseRoiController(HasStrictTraits):
 
+    # Qt items
+    roi_klass = Type()
     roi_item = Instance(pg.ROI)
     text_item = Instance(pg.TextItem)
 
+    # geometry
     position = Tuple(0, 0)
     size = Tuple(0, 0)
+    geometry = Property(Tuple, depends_on="position,size")
+    geometry_updated = Event
 
+    # formatting
     color = String('r')
     label_text = String
     label_size = Int(8)
     is_visible = Bool(False)
 
-    _is_busy = Bool(False)
+    # internal
     _text_direction = (0, 1)  # lower left
 
     def _text_item_default(self):
@@ -74,19 +80,20 @@ class BaseRoiController(HasStrictTraits):
         item.setVisible(self.is_visible)
         return item
 
-    def _is_visible_changed(self, visible):
-        self.roi_item.setVisible(visible)
-        if self.text_item is not None:
-            self.text_item.setVisible(visible)
+    def _roi_item_default(self):
+        x0, x1, y0, y1 = self.geometry
+        roi = self.roi_klass(pos=(x0, y0),
+                             size=(x1-x0, y1-y0),
+                             scaleSnap=True,
+                             translateSnap=True,
+                             pen=make_pen(self.color, width=3))
+        roi.setVisible(self.is_visible)
+        roi.sigRegionChanged.connect(self.currently_moving)
+        roi.sigRegionChangeFinished.connect(self.finished_moving)
+        return roi
 
-    @on_trait_change('position,size')
-    def _update_text_position(self):
-        if self.text_item is None:
-            return
-
-        (x, y), (w, h) = self.position, self.size
-        w, h = self._text_direction[0] * w, self._text_direction[1] * h
-        self.text_item.setPos(x + w, y + h)
+    # -----------------------------------------------------------------------
+    # Outer methods
 
     def add_to(self, plotItem):
         plotItem.vb.addItem(self.roi_item, ignoreBounds=False)
@@ -109,73 +116,6 @@ class BaseRoiController(HasStrictTraits):
 
         self.is_visible = size != (0, 0)
 
-    @on_trait_change('label_text,label_size')
-    def _set_label(self):
-        self.text_item.setHtml(formatted_label(self.label_text,
-                                               size=self.label_size))
-
-    @property
-    def _item_position(self):
-        pos = self.roi_item.pos()
-        return (pos[0], pos[1])
-
-    @property
-    def _item_size(self):
-        size = self.roi_item.size()
-        return (size[0], size[1])
-
-    @contextmanager
-    def busy(self):
-        self._is_busy = True
-        try:
-            yield
-        finally:
-            self._is_busy = False
-
-    @contextmanager
-    def block_signals(self, qt_item, is_blocked=True):
-        if is_blocked:
-            with SignalBlocker(qt_item):
-                yield
-        else:
-            yield
-
-
-class RectRoiController(BaseRoiController):
-
-    geometry = Property(Tuple, depends_on="position,size")
-    geometry_updated = Event
-
-    def _roi_item_default(self):
-        x0, x1, y0, y1 = self.geometry
-        roi = pg.RectROI(pos=(x0, y0),
-                         size=(x1-x0, y1-y0),
-                         scaleSnap=True,
-                         translateSnap=True,
-                         pen=make_pen(self.color, width=3))
-        roi.setVisible(self.is_visible)
-        roi.sigRegionChanged.connect(self._currently_moving)
-        roi.sigRegionChangeFinished.connect(self._finished_moving)
-        return roi
-
-    def _currently_moving(self):
-        self.set_geometry(self._item_geometry, update=False)
-
-    def _finished_moving(self):
-        self.geometry_updated = self.geometry
-
-    @property
-    def _item_geometry(self):
-        x0, y0 = self._item_position
-        w, h = self._item_size
-        return (x0, x0+w, y0, y0+h)
-
-    @cached_property
-    def _get_geometry(self):
-        x0, y0 = int(self.position[0]), int(self.position[1])
-        x1, y1 = x0 + int(self.size[0]), y0 + int(self.size[1])
-        return x0, x1, y0, y1
-
     def set_geometry(self, geometry, update=True, quiet=False):
         # Only redraw if different
         has_geometry = bool(len(geometry))
@@ -194,19 +134,170 @@ class RectRoiController(BaseRoiController):
         with self.block_signals(self.roi_item, is_blocked=quiet):
             self.set_size((width, height), update=update)
 
+    # -----------------------------------------------------------------------
+    # Trait events
 
-class RectRoiProperty(RectRoiController):
-    """A Rect ROI controller with an attached Karabo `PropertyProxy`"""
+    @on_trait_change('position,size')
+    def _update_text_position(self):
+        if self.text_item is None:
+            return
+
+        (x, y), (w, h) = self.position, self.size
+        w, h = self._text_direction[0] * w, self._text_direction[1] * h
+        self.text_item.setPos(x + w, y + h)
+
+    @on_trait_change('label_text,label_size')
+    def _set_label(self):
+        self.text_item.setHtml(formatted_label(self.label_text,
+                                               size=self.label_size))
+
+    def _is_visible_changed(self, visible):
+        self.roi_item.setVisible(visible)
+        if self.text_item is not None:
+            self.text_item.setVisible(visible)
+
+    def currently_moving(self):
+        self.set_geometry(self._item_geometry, update=False)
+
+    def finished_moving(self):
+        self.geometry_updated = self.geometry
+
+    # -----------------------------------------------------------------------
+    # Properties
+
+    @property
+    def _item_position(self):
+        pos = self.roi_item.pos()
+        return (pos[0], pos[1])
+
+    @property
+    def _item_size(self):
+        size = self.roi_item.size()
+        return (size[0], size[1])
+
+    @property
+    def _item_geometry(self):
+        x0, y0 = self._item_position
+        w, h = self._item_size
+        return (x0, x0+w, y0, y0+h)
+
+    @cached_property
+    def _get_geometry(self):
+        x0, y0 = int(self.position[0]), int(self.position[1])
+        x1, y1 = x0 + int(self.size[0]), y0 + int(self.size[1])
+        return x0, x1, y0, y1
+
+    # -----------------------------------------------------------------------
+    # Context managers
+
+    @contextmanager
+    def block_signals(self, qt_item, is_blocked=True):
+        if is_blocked:
+            with SignalBlocker(qt_item):
+                yield
+        else:
+            yield
+
+
+class RectRoi(BaseRoiController):
+    """An ROI controller with an attached Karabo `PropertyProxy`"""
+
+    roi_klass = Type(pg.RectROI)
+    is_waiting = Bool(False)
 
     proxy = Instance(PropertyProxy)
-    binding_type = Type(VectorNumberBinding)
-    is_waiting = Bool(False)
 
     @on_trait_change("geometry_updated")
     def _send_roi(self, value):
+        self.is_waiting = True
         self.proxy.edit_value = value
         send_property_changes((self.proxy,))
-        self.is_waiting = True
+
+
+class CircleRoi(BaseRoiController):
+
+    roi_klass = Type(pg.CircleROI)
+    is_waiting = Bool(False)
+
+    radius = Property(Int, depends_on="size")
+    radius_proxy = Instance(PropertyProxy)
+    radius_updated = Event
+
+    center = Property(Tuple, depends_on="position")
+    center_proxy = Instance(PropertyProxy)
+    center_updated = Event
+
+    def currently_moving(self):
+        self.set_radius(self._item_radius, update=False)
+        self.set_center(self._item_center, update=False)
+
+    def finished_moving(self):
+        self.radius_updated = self.radius
+        self.center_updated = self.center
+
+    @on_trait_change("radius_updated")
+    def _send_radius(self, value):
+        proxy = self.radius_proxy
+        if proxy.value != value:
+            self.is_waiting = True
+            proxy.edit_value = value
+            send_property_changes((proxy,))
+
+    @on_trait_change("center_updated")
+    def _send_center(self, value):
+        proxy = self.center_proxy
+        if tuple(proxy.value) != value:
+            self.is_waiting = True
+            proxy.edit_value = value
+            send_property_changes((proxy,))
+
+    @property
+    def is_complete(self):
+        """Check if both the position and size proxies are supplied"""
+        return self.center_proxy is not None and self.radius_proxy is not None
+
+    # Radius
+    @property
+    def _item_radius(self):
+        return round(self._item_size[0] / 2)
+
+    @cached_property
+    def _get_radius(self):
+        return round(self.size[0] / 2)
+
+    def set_radius(self, radius, update=True, quiet=False):
+        # Only redraw if different
+        if radius == self.radius:
+            return
+
+        diameter = radius * 2
+        xc, yc = self.center
+        with self.block_signals(self.roi_item, is_blocked=quiet):
+            self.set_size((diameter, diameter), update=update)
+            self.set_position((xc-radius, yc-radius), update=update)
+
+    # Center
+    @property
+    def _item_center(self):
+        x0, y0 = self._item_position
+        r = self._item_radius
+        return (x0+r, y0+r)
+
+    @cached_property
+    def _get_center(self):
+        x0, y0 = self.position
+        r = self.radius
+        return (x0+r, y0+r)
+
+    def set_center(self, center, update=True, quiet=False):
+        # Only redraw if different
+        if tuple(center) == self.center:
+            return
+
+        xc, yc = center
+        r = self.radius
+        with self.block_signals(self.roi_item, is_blocked=quiet):
+            self.set_position((xc-r, yc-r), update=update)
 
 
 class BaseRoiGraph(BaseBindingController):
@@ -221,7 +312,11 @@ class BaseRoiGraph(BaseBindingController):
     _edit_button = WeakRef(QToolButton)
     _colors = Instance(cycle, allow_none=False)
 
-    rois = List(Instance(RectRoiProperty))
+    rois = List(Instance(BaseRoiController))
+    roi_klass = Type()
+
+    # -----------------------------------------------------------------------
+    # Binding methods
 
     def create_widget(self, parent):
         widget = KaraboImageView(parent=parent)
@@ -255,18 +350,30 @@ class BaseRoiGraph(BaseBindingController):
 
         return widget
 
-    def _update_roi(self, roi, geometry=None):
-        if geometry is None:
-            roi.is_visible = False
+    def add_proxy(self, proxy):
+        binding = proxy.binding
+        if isinstance(binding, (ImageBinding, VectorBoolBinding)):
             return
 
-        if roi.is_waiting:
-            # Check if property has arrived
-            arrived = roi.geometry == tuple(geometry)
-            roi.is_waiting = not arrived
+        roi = self.roi_klass(color=next(self._colors),
+                             label_text=self.get_label(proxy),
+                             proxy=proxy)
+        roi.add_to(self._plot)
+        self.rois.append(roi)
+
+        return True
+
+    def value_update(self, proxy):
+        value = get_binding_value(proxy)
+
+        # Update image
+        if proxy is self.proxy:
+            self._update_image(value)
             return
 
-        roi.set_geometry(geometry, quiet=True)
+        roi = self.get_roi(proxy)
+        if roi is not None:
+            self._update_roi(roi, value)
 
     # ---------------------------------------------------------------------
     # Image changes
@@ -324,13 +431,26 @@ class BaseRoiGraph(BaseBindingController):
                 labels.append('')
         return name
 
+    def _update_roi(self, roi, geometry=None):
+        if geometry is None:
+            roi.is_visible = False
+            return
+
+        if roi.is_waiting:
+            # Check if property has arrived
+            arrived = roi.geometry == tuple(geometry)
+            roi.is_waiting = not arrived
+            return
+
+        roi.set_geometry(geometry, quiet=True)
+
     # -----------------------------------------------------------------------
     # Trait methods
 
     def __colors_default(self):
         return cycle(['b', 'r', 'g', 'c', 'p', 'y'])
 
-    # ----------------------------------------------------------------
+    # -----------------------------------------------------------------------
     # Editable ROI labels
 
     def _edit_labels(self):
@@ -364,32 +484,110 @@ def _is_compatible(binding):
 class RectRoiGraph(BaseRoiGraph):
     # Our Image Graph Model
     model = Instance(RectRoiGraphModel, args=())
+    roi_klass = Type(RectRoi)
 
-    # -----------------------------------------------------------------------
-    # Binding methods
+
+@register_binding_controller(
+    ui_name='Circle ROI Graph',
+    klassname='CircleRoiGraph',
+    binding_type=(ImageBinding, VectorNumberBinding, *NUMBER_BINDINGS),
+    priority=-200, can_show_nothing=False)
+class CircleRoiGraph(BaseRoiGraph):
+    # Our Image Graph Model
+    model = Instance(CircleRoiGraphModel, args=())
+    roi_klass = Type(CircleRoi)
+
+    def binding_update(self, proxy):
+        # We now add the proxies that is postponed.
+        self.add_proxy(proxy)
 
     def add_proxy(self, proxy):
         binding = proxy.binding
+        # We postpone adding the proxy if it is still None:
+        # This is usual for properties of offline devices
+        if binding is None:
+            return True
+
+        # Ignore the bindings that we do not want:
+        # ImageBinding: already added, which is the main proxy
+        # VectorBoolBinding: does not depict center values
         if isinstance(binding, (ImageBinding, VectorBoolBinding)):
             return
 
-        roi = RectRoiProperty(color=next(self._colors),
-                              label_text=self.get_label(proxy),
-                              proxy=proxy)
-        roi.add_to(self._plot)
-        self.rois.append(roi)
+        roi = self.roi
+        if roi is None:
+            self.roi = roi = CircleRoi(color='r')
+        if roi.is_complete:
+            # Ignore additional proxies, we only support one circle ROI
+            # for each plot this time
+            return
+
+        # Set bindings
+        if isinstance(binding, NUMBER_BINDINGS):
+            if roi.radius_proxy is not None:
+                return
+            roi.radius_proxy = proxy
+        elif isinstance(binding, VectorNumberBinding):
+            if roi.center_proxy is not None:
+                return
+            roi.center_proxy = proxy
 
         return True
 
     def value_update(self, proxy):
+        # Get value
+        value = get_binding_value(proxy)
+
         # Update image
         if proxy is self.proxy:
-            self._update_image(proxy.value)
+            self._update_image(value)
             return
 
-        roi = self.get_roi(proxy)
-        if roi is not None:
-            self._update_roi(roi, get_binding_value(proxy))
+        # Set ROI values
+        roi = self.roi
+        if proxy is roi.radius_proxy:
+            self._update_radius(roi, value)
+        elif proxy is roi.center_proxy:
+            self._update_center(roi, value)
+
+        # Finalize
+        if not roi.is_complete:
+            roi.is_visible = False
+
+    @property
+    def roi(self):
+        return self.rois[0] if len(self.rois) else None
+
+    @roi.setter
+    def roi(self, value):
+        value.add_to(self._plot)
+        self.rois.append(value)
+
+    def _update_radius(self, roi, radius=None):
+        if radius is None:
+            roi.is_visible = False
+            return
+
+        if roi.is_waiting:
+            # Check if property has arrived
+            arrived = roi.radius == radius
+            roi.is_waiting = not arrived
+            return
+
+        roi.set_radius(radius, quiet=True)
+
+    def _update_center(self, roi, center=None):
+        if center is None:
+            roi.is_visible = False
+            return
+
+        if roi.is_waiting:
+            # Check if property has arrived
+            arrived = roi.center == tuple(center)
+            roi.is_waiting = not arrived
+            return
+
+        roi.set_center(center, quiet=True)
 
 
 # ----------------------------------------------------------------------------

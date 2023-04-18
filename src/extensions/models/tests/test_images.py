@@ -20,6 +20,13 @@ def test_rect_roi_model():
     _assert_geometry_traits(read_model)
 
 
+def test_circle_roi_model():
+    traits = _geometry_traits()
+    model = api.CircleRoiGraphModel(**traits)
+    read_model = single_model_round_trip(model)
+    _assert_geometry_traits(read_model)
+
+
 def test_image_graph_model():
     traits = _geometry_traits()
     traits["colormap"] = "plasma"

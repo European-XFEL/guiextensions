@@ -3,9 +3,9 @@ from unittest import mock
 
 import numpy as np
 
-from extensions.roi_graph import RectRoiGraph
+from extensions.roi_graph import CircleRoiGraph, RectRoiGraph
 from karabo.native import (
-    Configurable, EncodingType, Image, ImageData, Node, VectorFloat,
+    Configurable, EncodingType, Image, ImageData, Node, UInt32, VectorFloat,
     VectorUInt32)
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_value)
@@ -27,19 +27,32 @@ class ObjectNode(Configurable):
     roi1 = VectorUInt32()
     roi2 = VectorFloat()
 
+    center = VectorUInt32()
+    radius = UInt32()
+
+
+class AdditionalNode(Configurable):
+    center = VectorUInt32()
+    radius = UInt32()
+
 
 class BaseRoiGraphTest(GuiTestCase):
+
+    controller_klass = None
 
     def setUp(self):
         super(BaseRoiGraphTest, self).setUp()
         output_schema = ChannelNode.getClassSchema()
-        self.image_proxy = get_class_property_proxy(output_schema, 'data')
+        self.image_proxy = get_class_property_proxy(output_schema,
+                                                    'data.image')
 
         device_schema = ObjectNode.getClassSchema()
         self.roi1_proxy = get_class_property_proxy(device_schema, 'roi1')
         self.roi2_proxy = get_class_property_proxy(device_schema, 'roi2')
+        self.center_proxy = get_class_property_proxy(device_schema, 'center')
+        self.radius_proxy = get_class_property_proxy(device_schema, 'radius')
 
-        self.controller = RectRoiGraph(proxy=self.image_proxy)
+        self.controller = self.controller_klass(proxy=self.image_proxy)
         self.controller.create(None)
 
     def tearDown(self):
@@ -58,6 +71,9 @@ class BaseRoiGraphTest(GuiTestCase):
 
 @mock.patch('extensions.roi_graph.send_property_changes')
 class TestRectRoiGraph(BaseRoiGraphTest):
+
+    controller_klass = RectRoiGraph
+
     def test_basics(self, *mocks):
         # Check ROIs
         assert len(self.controller.rois) == 0
@@ -177,8 +193,116 @@ class TestRectRoiGraph(BaseRoiGraphTest):
         assert roi.roi_item.isVisible() is roi.is_visible
 
 
+@mock.patch('extensions.roi_graph.send_property_changes')
+class TestCircleRoiGraph(BaseRoiGraphTest):
+
+    controller_klass = CircleRoiGraph
+
+    def test_empty(self, *mocks):
+        # Check ROIs
+        assert len(self.controller.rois) == 0
+
+    def test_incomplete_roi_only_radius(self, *mocks):
+        self.controller.visualize_additional_property(self.radius_proxy)
+        assert len(self.controller.rois) == 1
+        self._assert_roi(roi=self.controller.roi, visible=False)
+
+        # Mock receiving device update once
+        set_proxy_value(self.radius_proxy, 'radius', 10)
+        self._assert_roi(roi=self.controller.roi, radius=10, visible=False)
+
+    def test_incomplete_roi_second_radius(self, *mocks):
+        # Check the proxies of the created ROI after adding two proxies
+        self.controller.visualize_additional_property(self.radius_proxy)
+        assert len(self.controller.rois) == 1
+        assert not self.controller.roi.is_complete
+        assert self.controller.roi.radius_proxy is self.radius_proxy
+
+        # Add a second radius: we expect for it to be ignored
+        second_radius = self._get_additional_proxy('radius')
+        self.controller.visualize_additional_property(second_radius)
+        assert len(self.controller.rois) == 1
+        assert not self.controller.roi.is_complete
+        assert self.controller.roi.radius_proxy is self.radius_proxy
+
+    def test_incomplete_roi_only_center(self, *mocks):
+        self.controller.visualize_additional_property(self.center_proxy)
+        assert len(self.controller.rois) == 1
+        self._assert_roi(roi=self.controller.roi, visible=False)
+
+        # Mock receiving device update once
+        set_proxy_value(self.center_proxy, 'center', (200, 300))
+        self._assert_roi(roi=self.controller.roi,
+                         center=(200, 300), visible=False)
+
+    def test_incomplete_roi_second_center(self, *mocks):
+        # Check the proxies of the created ROI after adding two proxies
+        self.controller.visualize_additional_property(self.center_proxy)
+        assert len(self.controller.rois) == 1
+        assert not self.controller.roi.is_complete
+        assert self.controller.roi.center_proxy is self.center_proxy
+
+        # Add a second center: we expect for it to be ignored
+        second_center = self._get_additional_proxy('center')
+        self.controller.visualize_additional_property(second_center)
+        assert len(self.controller.rois) == 1
+        assert not self.controller.roi.is_complete
+        assert self.controller.roi.center_proxy is self.center_proxy
+
+    def test_complete_roi(self, *mocks):
+        self.controller.visualize_additional_property(self.center_proxy)
+        self.controller.visualize_additional_property(self.radius_proxy)
+        assert len(self.controller.rois) == 1
+        self._assert_roi(roi=self.controller.roi, visible=False)
+
+        set_proxy_value(self.radius_proxy, 'radius', 10)
+        self._assert_roi(roi=self.controller.roi, radius=10)
+        set_proxy_value(self.center_proxy, 'center', (200, 300))
+        self._assert_roi(roi=self.controller.roi, radius=10, center=(200, 300))
+
+    def test_complete_roi_second_proxy(self, *mocks):
+        # Check the proxies of the created ROI after adding two proxies
+        self.controller.visualize_additional_property(self.radius_proxy)
+        self.controller.visualize_additional_property(self.center_proxy)
+        assert len(self.controller.rois) == 1
+        assert self.controller.roi.is_complete
+        assert self.controller.roi.center_proxy is self.center_proxy
+        assert self.controller.roi.radius_proxy is self.radius_proxy
+
+        # Add a second center: we expect for it to be ignored
+        second_center = self._get_additional_proxy('center')
+        self.controller.visualize_additional_property(second_center)
+        assert len(self.controller.rois) == 1
+        assert self.controller.roi.is_complete
+        assert self.controller.roi.center_proxy is self.center_proxy
+        assert self.controller.roi.radius_proxy is self.radius_proxy
+
+        # Add a second radius: we expect for it to be ignored
+        second_radius = self._get_additional_proxy('radius')
+        self.controller.visualize_additional_property(second_radius)
+        assert len(self.controller.rois) == 1
+        assert self.controller.roi.is_complete
+        assert self.controller.roi.center_proxy is self.center_proxy
+        assert self.controller.roi.radius_proxy is self.radius_proxy
+
+    def _assert_roi(self, roi, radius=0, center=(0, 0), visible=True):
+        assert roi.radius == radius
+        assert roi.center == tuple(center)
+        assert roi.is_visible is visible
+        # Check Qt item
+        assert roi._item_radius == roi.radius
+        assert roi._item_center == roi.center
+        assert roi.roi_item.isVisible() is roi.is_visible
+
+    @staticmethod
+    def _get_additional_proxy(prop):
+        return get_class_property_proxy(AdditionalNode.getClassSchema(), prop)
+
+
 @mock.patch('extensions.roi_graph.LabelTableDialog')
 class TestRoiLabelChanges(BaseRoiGraphTest):
+
+    controller_klass = RectRoiGraph
 
     def setUp(self):
         super().setUp()
