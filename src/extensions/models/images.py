@@ -23,6 +23,10 @@ class RectRoiGraphModel(RoiGraphModel):
     """ A model for the Rect ROI graph """
 
 
+class CircleRoiGraphModel(RoiGraphModel):
+    """ A model for the Circle ROI graph """
+
+
 class ZonePlateGraphModel(RoiGraphModel):
     """ A model for the zone plate graph """
 
@@ -43,7 +47,7 @@ class ImageCrossHairGraphModel(BaseWidgetObjectData):
 
 @register_scene_reader('Rect Roi Graph')
 @register_scene_reader('RectRoiGraph')
-def _roi_graph_reader(element):
+def _rect_roi_graph_reader(element):
     traits = read_base_karabo_image_model(element)
     labels = element.get(NS_KARABO + "labels", "")
     if labels:
@@ -52,9 +56,27 @@ def _roi_graph_reader(element):
 
 
 @register_scene_writer(RectRoiGraphModel)
-def _roi_graph_writer(model, parent):
+def _rect_roi_graph_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, "RectRoiGraph")
+    write_base_karabo_image_model(model, element)
+    element.set(NS_KARABO + "labels", ",".join(model.labels))
+    return element
+
+
+@register_scene_reader('CircleRoiGraph')
+def _circle_roi_graph_reader(element):
+    traits = read_base_karabo_image_model(element)
+    labels = element.get(NS_KARABO + "labels", "")
+    if labels:
+        traits["labels"] = labels.split(",")
+    return CircleRoiGraphModel(**traits)
+
+
+@register_scene_writer(CircleRoiGraphModel)
+def _circle_roi_graph_writer(model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_widget_data(model, element, "CircleRoiGraph")
     write_base_karabo_image_model(model, element)
     element.set(NS_KARABO + "labels", ",".join(model.labels))
     return element

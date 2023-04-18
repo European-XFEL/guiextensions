@@ -3,7 +3,7 @@ from traits.api import HasStrictTraits, String, WeakRef
 
 from karabogui.binding.api import PropertyProxy
 
-from ..roi_graph import RectRoiProperty
+from ..roi_graph import RectRoi
 
 
 class PlotData(HasStrictTraits):
@@ -11,7 +11,7 @@ class PlotData(HasStrictTraits):
     item = WeakRef(QGraphicsItem)
 
 
-class MetroRectRoiProperty(RectRoiProperty):
+class MetroRectRoi(RectRoi):
 
     path = String
 

@@ -3,8 +3,8 @@
 from .complex import (
     LimitedDoubleLineEditModel, VectorLimitedDoubleLineEditModel)
 from .images import (
-    BeamGraphModel, ImageCrossHairGraphModel, RectRoiGraphModel,
-    ROIAnnotateModel)
+    BeamGraphModel, CircleRoiGraphModel, ImageCrossHairGraphModel,
+    RectRoiGraphModel, ROIAnnotateModel)
 from .metro import (
     MetroSecAxisGraphModel, MetroTwinXGraphModel, MetroXasGraphModel,
     MetroZonePlateModel)
