@@ -115,8 +115,9 @@ class EditableAssignmentTable(BaseFilterTableController):
 
     def action_config_save(self):
         """Action to save the configuration of the current terminal"""
-        row = self.currentIndex().row()
-        model = self.sourceModel()
+        index = self.currentIndex()
+        row = index.row()
+        model = index.model()
         terminalId = model.index(row, TERMINAL_COLUMN).data(Qt.DisplayRole)
         stagePresetId = model.index(row, STAGE_COLUMN).data(Qt.DisplayRole)
         call_device_slot(WeakMethodRef(self.handle_view_configuration),
