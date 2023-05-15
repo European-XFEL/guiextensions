@@ -37,7 +37,7 @@ class EditableMotorParametersTable(BaseFilterTableController):
 
         :param: pos: The position of the context menu event
         """
-        index = self.currentIndex()
+        index = self.tableWidget().indexAt(pos)
         if index.isValid() and index.column() == 4:
             menu = self.get_available_classes_menu()
         else:
