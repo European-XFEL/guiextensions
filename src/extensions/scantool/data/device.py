@@ -15,6 +15,13 @@ class Device(HasStrictTraits):
     _data = Array
     _shape = ArrayOrNone
 
+    def new_data(self, shape=None):
+        self._shape = shape
+        # Use a default shape if not specified, usually for continuous scan
+        if shape is None:
+            shape = DEFAULT_SHAPE
+        self._data = np.full(shape, np.nan)
+
     def add(self, data, current_index):
         # No data shape means self._data is just a container of the actual
         # data. This means that the container is sometimes smaller than the
@@ -38,12 +45,9 @@ class Device(HasStrictTraits):
         self.current_index = current_index
         self._data[tuple(current_index)] = data
 
-    def new_data(self, shape=None):
-        self._shape = shape
-        # Use a default shape if not specified, usually for continuous scan
-        if shape is None:
-            shape = DEFAULT_SHAPE
-        self._data = np.full(shape, np.nan)
+    def add_data_slice(self, data, col):
+        self.current_index = [col, 0]
+        self._data[:, col] = data
 
     @cached_property
     def _get_data(self):

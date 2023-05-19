@@ -16,9 +16,9 @@ from karabogui.controllers.api import (
 
 from .models.api import ScantoolBaseModel
 from .scantool.const import (
-    ACTUAL_STEP, ALIGNER, CURRENT_INDEX, MESHES, MOTOR_IDS, MOTOR_NAMES,
-    MOTORS, SCAN_TYPE, SOURCE_IDS, SOURCE_NAMES, SOURCES, START_POSITIONS,
-    STEPS, STOP_POSITIONS)
+    ACTUAL_STEP, ALIGNER, CURRENT_INDEX, IS_SPECTRUM_DATA, MESHES, MOTOR_IDS,
+    MOTOR_NAMES, MOTORS, SCAN_TYPE, SOURCE_IDS, SOURCE_NAMES, SOURCES,
+    SPECTRUM_DATA, START_POSITIONS, STEPS, STOP_POSITIONS)
 from .scantool.controller import ScanController
 from .scantool.data.scan import Scan
 
@@ -51,9 +51,7 @@ class ScantoolDynamicWidget(BaseBindingController):
 
     def add_proxy(self, proxy):
         if proxy.path == HISTORY_PROXY_PATH and self._history_proxy is None:
-            self._history_proxy = PropertyProxy(
-                root_proxy=proxy.root_proxy,
-                path=proxy.path)
+            self._history_proxy = proxy
             return True
         else:
             return False
@@ -73,8 +71,7 @@ class ScantoolDynamicWidget(BaseBindingController):
         # Add aligner results
         if hasattr(proxies, ALIGNER):
             self._controller.update_aligner_results(
-                get_binding_value(getattr(proxies, ALIGNER)))
-
+                self._get_value(proxies, ALIGNER))
         if not self._first_proxy_received:
             self._first_proxy_received = True
             return
@@ -85,15 +82,22 @@ class ScantoolDynamicWidget(BaseBindingController):
             self._scan = self._setup_new_scan(proxy)
 
         # Update actual step to check for data consistency of all devices
-        actual_step = get_binding_value(getattr(proxies, ACTUAL_STEP))
-        current_index = get_binding_value(getattr(proxies, CURRENT_INDEX))
+        actual_step = self._get_value(proxies, ACTUAL_STEP)
+        current_index = self._get_value(proxies, CURRENT_INDEX)
         self._scan.actual_step = actual_step
         self._scan.current_index = current_index
 
         # Update values of relevant devices
-        for device in self._scan.devices:
-            value = get_binding_value(getattr(proxies, device.name))
-            device.add(value, current_index)
+        is_spectrum_data = self._get_value(proxies, IS_SPECTRUM_DATA)
+        if is_spectrum_data:
+            source = self._scan._data_sources[0]
+            spectrum_data = self._get_value(proxies, SPECTRUM_DATA)
+            source.add_data_slice(spectrum_data, current_index[0])
+            self._controller.update_spectrum(source.data)
+        else:
+            for device in self._scan.devices:
+                value = self._get_value(proxies, device.name)
+                device.add(value, current_index)
             self._controller.update(device)
 
     def _setup_new_scan(self, proxy):
@@ -107,7 +111,7 @@ class ScantoolDynamicWidget(BaseBindingController):
 
         # Get scan parameters
         for prop in [SCAN_TYPE, STEPS, ACTUAL_STEP, START_POSITIONS,
-                     STOP_POSITIONS, CURRENT_INDEX]:
+                     STOP_POSITIONS, CURRENT_INDEX, IS_SPECTRUM_DATA]:
             config.update({prop: self._get_value(proxies, prop)})
 
         # Get active motor and data sources
@@ -117,13 +121,22 @@ class ScantoolDynamicWidget(BaseBindingController):
         sources = [source for source in SOURCE_NAMES[:len(source_ids)]]
         config.update({MOTOR_IDS: motor_ids, SOURCE_IDS: source_ids,
                        MOTORS: motors, SOURCES: sources})
+
+        if config[IS_SPECTRUM_DATA]:
+            config[MOTORS] = MOTOR_NAMES[:2]
+            config[MOTOR_IDS] = ["array_index", motor_ids[0]]
+            config[START_POSITIONS] = [0, config[START_POSITIONS][0]]
+            config[STOP_POSITIONS] = [config[STEPS][0],
+                                      config[STOP_POSITIONS][0]]
+
         scan = self._controller.new_scan(config)
 
-        # Use plot wrt scan type
-        if config[SCAN_TYPE] not in MESHES:
-            self._controller.use_multicurve_plot()
-        else:
+        # Use plot  scan type
+        if config[IS_SPECTRUM_DATA] or config[SCAN_TYPE] in MESHES:
             self._controller.use_heatmap_plot()
+        else:
+            self._controller.use_multicurve_plot()
+
         self._plot_available = True
         return scan
 
@@ -142,15 +155,16 @@ class ScantoolDynamicWidget(BaseBindingController):
             ACTUAL_STEP: 0,
             CURRENT_INDEX: [0],
             START_POSITIONS: self._get_value(proxies, START_POSITIONS),
-            STOP_POSITIONS: self._get_value(proxies, STOP_POSITIONS)})
+            STOP_POSITIONS: self._get_value(proxies, STOP_POSITIONS),
+            IS_SPECTRUM_DATA: self._get_value(proxies, IS_SPECTRUM_DATA)})
         # Get active motor and data sources
-        motors = [motor for motor in MOTOR_NAMES
-                  if self._get_value(proxies, motor).size]
-        sources = [source for source in SOURCE_NAMES
-                   if self._get_value(proxies, source).size]
-        config.update({MOTORS: motors, SOURCES: sources,
-                       MOTOR_IDS: self._get_value(proxies, MOTOR_IDS),
-                       SOURCE_IDS: self._get_value(proxies, SOURCE_IDS)})
+        motor_ids = self._get_value(proxies, MOTOR_IDS)
+        source_ids = self._get_value(proxies, SOURCE_IDS)
+        motors = MOTOR_NAMES[:len(motor_ids)]
+        sources = SOURCE_NAMES[:len(source_ids)]
+        config.update({MOTOR_IDS: motor_ids, SOURCE_IDS: source_ids,
+                       MOTORS: motors, SOURCES: sources})
+
         scan = self._controller.new_scan(config)
 
         if config[SCAN_TYPE] not in MESHES:
@@ -158,9 +172,8 @@ class ScantoolDynamicWidget(BaseBindingController):
             for step in range(config[STEPS][0] + 1):
                 scan.actual_step = step
                 scan.current_index = [step]
-
                 for device in scan.devices:
-                    value = get_binding_value(getattr(proxies, device.name))
+                    value = self._get_value(proxies, device.name)
                     device.add(value[step], [step])
                     self._controller.update(device)
         else:
@@ -172,8 +185,7 @@ class ScantoolDynamicWidget(BaseBindingController):
                     scan.current_index = [col, row]
                     # Update values of relevant devices
                     for device in scan.devices:
-                        value = get_binding_value(
-                            getattr(proxies, device.name))
+                        value = self._get_value(proxies, device.name)
                         device.add(value[index], [col, row])
                         self._controller.update(device)
                     index += 1
@@ -237,4 +249,5 @@ class ScantoolDynamicWidget(BaseBindingController):
         return get_binding_value(getattr(proxy.value, SCAN_TYPE)) is not None
 
     def _get_value(self, proxy, prop):
-        return get_binding_value(getattr(proxy, prop))
+        if hasattr(proxy, prop):
+            return get_binding_value(getattr(proxy, prop))

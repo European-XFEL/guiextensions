@@ -96,6 +96,9 @@ class ScanController(HasStrictTraits):
 
         return self._use_plot(HeatmapPlot)
 
+    def update_spectrum(self, data):
+        self._current_plot.update_spectrum(data)
+
     def add_data_selection(self):
         """Adds a controller of a selection widget, which can be used to
         toggle the data to be viewed and at which axis."""
@@ -110,6 +113,9 @@ class ScanController(HasStrictTraits):
             self._on_plot_refresh(type(self._current_plot))
 
         return self._data_selection
+
+    def enable_data_selection(self, state):
+        self._data_selection.widget.setEnabled(state)
 
     def update_aligner_results(self, data):
         self._current_plot.remove_aligner_results()

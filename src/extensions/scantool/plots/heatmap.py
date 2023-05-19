@@ -114,6 +114,30 @@ class HeatmapPlot(ImagePlot):
             plotItem.set_translation(y_translate=self._offset[height - 1],
                                      update=False)
 
+    def update_spectrum(self, data):
+        # Get image properties
+        z_data = data
+        min_data = np.nanmin(z_data)
+
+        # Check if there are nans (may be due to gaps)
+        z_data[np.isnan(z_data)] = min_data
+
+        # Now, prepare the plot item
+        plotItem = self.widget.plot()
+
+        # Transpose data if x- and y-axis are interchanged/inverted
+        if self._transposed:
+            z_data = z_data.T.copy()
+
+        # Manage reversed properties
+        if self._reversed[0]:
+            z_data = np.fliplr(z_data)
+        if self._reversed[1]:
+            z_data = np.flipud(z_data)
+
+        # Set data
+        plotItem.setData(z_data, update=True)
+
     def clear(self):
         """Clear the image plot by setting empty image"""
         empty_image = np.zeros((self.height, self.width))
