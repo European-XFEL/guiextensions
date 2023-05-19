@@ -4,7 +4,8 @@ NR_MOTORS = 4
 
 # Karabacon node variables
 SCAN_TYPE = "scanType"
-NUM_DATA_SOURCES = "numDataSources"
+SPECTRUM_DATA = "spectrumData"
+IS_SPECTRUM_DATA = "isSpectrumData"
 STEPS = "steps"
 ACTUAL_STEP = "actualStep"
 CURRENT_INDEX = "currentIndex"
