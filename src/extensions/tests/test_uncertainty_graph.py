@@ -2,11 +2,12 @@ import numpy as np
 from numpy.testing import assert_array_equal
 
 from karabo.native import (
-    Configurable, Float, Hash, NDArray, Node, Type, VectorDouble)
+    Configurable, Float, Hash, NDArray, Node, VectorDouble)
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_hash, set_proxy_value)
 
 from ..display_uncertainty_graph import UncertaintyGraph
+from ..utils import get_ndarray_hash_from_data
 
 SIZE = 10
 X = np.arange(SIZE)
@@ -123,23 +124,3 @@ class TestUncertaintyGraph(GuiTestCase):
     @property
     def widget(self):
         return self.controller.widget
-
-
-def get_ndarray_hash_from_data(data, timestamp=None):
-    attrs = {} if timestamp is None else timestamp.toDict()
-
-    h = Hash()
-    h.setElement("type", get_dtype(data.dtype), attrs)
-    h.setElement("isBigEndian", data.dtype.str[0] == ">", attrs)
-    h.setElement("shape", np.array(data.shape, dtype=np.uint64),
-                 attrs)
-    h.setElement("data", data.tobytes(), attrs)
-    return h
-
-
-def get_dtype(dtype):
-    dstr = dtype.str
-    if dstr not in Type.strs:
-        dstr = dtype.newbyteorder().str
-
-    return Type.strs[dstr].number

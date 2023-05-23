@@ -67,7 +67,11 @@ class DynamicPulseIdMapModel(BaseWidgetObjectData):
 
 
 class DetectorCellsModel(BaseWidgetObjectData):
-    """A model for the AgipdLitFrameFinder"""
+    """A model for the AgipdLitFrameFinder with single pattern"""
+
+
+class MultipleDetectorCellsModel(BaseWidgetObjectData):
+    """A model for the AgipdLitFrameFinder with multiple patterns"""
 
 
 class VectorLimitedIntLineEditModel(BaseEditWidget):
@@ -86,7 +90,8 @@ class LimitedIntLineEditModel(BaseEditWidget):
 _SIMPLE_WIDGET_MODELS = (
     "IPMQuadrantModel", "PulseIdMapModel", "DynamicPulseIdMapModel",
     "DisplayConditionCommandModel", "DetectorCellsModel",
-    "VectorLimitedIntLineEditModel", "LimitedIntLineEditModel",
+    "MultipleDetectorCellsModel", "VectorLimitedIntLineEditModel",
+    "LimitedIntLineEditModel",
     "FileUploaderModel")
 
 _SIMPLE_DISPLAY_EDIT_MODELS = (
