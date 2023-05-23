@@ -5,7 +5,7 @@ import pyqtgraph as pg
 from qtpy.QtCore import Qt, Slot
 from traits.api import Undefined
 
-from karabo.native import Timestamp
+from karabo.native import Hash, Timestamp, Type
 from karabogui.binding.api import NodeBinding, get_binding_value
 
 try:
@@ -50,14 +50,33 @@ def get_array_data(binding, default=None):
     if pixels is Undefined:
         return default, Timestamp()
 
+    shape = node.shape.value
     arr_type = REFERENCE_TYPENUM_TO_DTYPE.get(node.type.value, 'float64')
-    value = np.frombuffer(pixels, dtype=arr_type)
+    value = np.frombuffer(pixels, dtype=arr_type, count=shape.prod())
+    value.shape = shape
     timestamp = node.data.timestamp
     # Note: Current traits always casts to 1dim
-    if value.ndim == 1:
-        return value, timestamp
+    return value, timestamp
 
-    return default, Timestamp()
+
+def get_ndarray_hash_from_data(data, timestamp=None):
+    attrs = {} if timestamp is None else timestamp.toDict()
+
+    h = Hash()
+    h.setElement("type", get_dtype(data.dtype), attrs)
+    h.setElement("isBigEndian", data.dtype.str[0] == ">", attrs)
+    h.setElement("shape", np.array(data.shape, dtype=np.uint64),
+                 attrs)
+    h.setElement("data", data.tobytes(), attrs)
+    return h
+
+
+def get_dtype(dtype):
+    dstr = dtype.str
+    if dstr not in Type.strs:
+        dstr = dtype.newbyteorder().str
+
+    return Type.strs[dstr].number
 
 
 def get_node_value(proxy, *, key):

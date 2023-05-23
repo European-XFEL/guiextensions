@@ -16,10 +16,10 @@ from .plots import (
 from .simple import (
     DetectorCellsModel, DisplayConditionCommandModel, DynamicPulseIdMapModel,
     EditableDateTimeModel, EditableTextOptionsModel, FileUploaderModel,
-    IPMQuadrantModel, LimitedIntLineEditModel, PointAndClickModel,
-    PulseIdMapModel, ScantoolBaseModel, ScantoolDeviceViewModel,
-    ScantoolTemplatesModel, StateAwareComponentManagerModel,
-    VectorLimitedIntLineEditModel)
+    IPMQuadrantModel, LimitedIntLineEditModel, MultipleDetectorCellsModel,
+    PointAndClickModel, PulseIdMapModel, ScantoolBaseModel,
+    ScantoolDeviceViewModel, ScantoolTemplatesModel,
+    StateAwareComponentManagerModel, VectorLimitedIntLineEditModel)
 from .tables import (
     CriticalCompareViewModel, DeviceReconfigurationTableModel,
     DoocsLocationTableModel, DoocsMirrorTableModel, MotorAssignmentTableModel,
