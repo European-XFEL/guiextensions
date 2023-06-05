@@ -1,6 +1,6 @@
 from xml.etree.ElementTree import SubElement
 
-from traits.api import Bool, List, String
+from traits.api import Bool, Int, List, String
 
 from karabo.common.scenemodel.bases import BaseWidgetObjectData
 from karabo.common.scenemodel.const import NS_KARABO, WIDGET_ELEMENT_TAG
@@ -34,6 +34,12 @@ class ZonePlateGraphModel(RoiGraphModel):
 class BeamGraphModel(ImageGraphModel):
     """ A model for the beam graph """
     show_scale = Bool(False)
+
+
+class TickedImageGraphModel(ImageGraphModel):
+    """ A model for the ticked image graph """
+    show_scale = Bool(False)
+    aspect_ratio = Int(0)
 
 
 class ROIAnnotateModel(ImageGraphModel):
@@ -110,6 +116,20 @@ def _beam_graph_reader(element):
 def _beam_graph_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, "BeamGraph")
+    write_base_karabo_image_model(model, element)
+    return element
+
+
+@register_scene_reader("TickedImageGraph")
+def _ticked_image_graph_reader(element):
+    traits = read_base_karabo_image_model(element)
+    return TickedImageGraphModel(**traits)
+
+
+@register_scene_writer(TickedImageGraphModel)
+def _ticked_image_graph_writer(model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_widget_data(model, element, "TickedImageGraph")
     write_base_karabo_image_model(model, element)
     return element
 
