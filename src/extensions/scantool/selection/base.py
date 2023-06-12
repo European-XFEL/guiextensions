@@ -3,8 +3,6 @@ from functools import partial
 from qtpy.QtCore import Signal, Slot
 from qtpy.QtWidgets import QCheckBox, QRadioButton, QWidget
 
-from ..const import MOTOR_NAMES, SOURCE_NAMES
-
 
 class BaseSelectionWidget(QWidget):
 
@@ -13,45 +11,36 @@ class BaseSelectionWidget(QWidget):
     def __init__(self, parent=None):
         super(BaseSelectionWidget, self).__init__(parent)
         # Initialize variables
-        self._motors = MOTOR_NAMES
-        self._sources = SOURCE_NAMES
         self._motors_ids = []
         self._source_ids = []
         self._source_widgets = []
         self._current_index = 0
 
     def _init_source_widgets(self, as_radio_buttons=False):
+        self._source_widgets.clear()
         # Initialize y_data widget
-        for index, device in enumerate(self._sources):
+        for index, source_id in enumerate(self._source_ids):
             if as_radio_buttons:
-                widget = QRadioButton(device, self)
+                widget = QRadioButton(source_id, self)
             else:
-                widget = QCheckBox(device, self)
+                widget = QCheckBox(source_id, self)
             widget.clicked.connect(
                 partial(self._source_widgets_clicked, index))
             self._source_widgets.append(widget)
 
-    def set_motors(self, motors, motor_ids):
+    def set_motors(self, motor_ids):
         pass
 
-    def set_sources(self, sources, source_ids):
-        # Setup needed checkboxes from already existing
-        for index, device in enumerate(source_ids):
-            checkbox = self._source_widgets[index]
-            checkbox.setText(device)
-            checkbox.setVisible(True)
-
-        # Then hide unused checkboxes
-        for checkbox in self._source_widgets[len(sources):]:
-            checkbox.setVisible(False)
-
-        self._sources = sources
-        self._source_ids = source_ids
+    def set_sources(self, source_ids):
+        pass
 
     def set_config(self, config):
         pass
 
     def get_selected_motors(self):
+        pass
+
+    def clear_all(self):
         pass
 
     @Slot(int)

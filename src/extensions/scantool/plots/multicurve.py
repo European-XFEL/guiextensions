@@ -6,7 +6,8 @@
 from itertools import cycle
 
 from pyqtgraph import InfiniteLine
-from traits.api import DictStrAny, Instance, List, Property
+from qtpy.QtGui import QPen
+from traits.api import Dict, DictStrAny, Instance, List, Property, String
 
 from karabogui.graph.common.api import KaraboLegend, make_pen
 
@@ -22,6 +23,7 @@ class MultiCurvePlot(GraphPlot):
     config = Property(List(DictStrAny), depends_on="_items")
 
     _pens = Instance(cycle, factory=PEN_CYCLER, args=())
+    _pen_map = Dict(String, QPen)
     _legend = Instance(KaraboLegend)
 
     def __init__(self, parent=None):
@@ -34,7 +36,9 @@ class MultiCurvePlot(GraphPlot):
            We utilize an ItemRegistry to bookkeep all the PlotDataItems"""
 
         # Attach a PlotDataItem to the config.
-        item = self._get_item(config[Y_DATA].device_id)
+        name = config[Y_DATA].device_id
+        pen = self._pen_map.setdefault(name, next(self._pens))
+        item = self.widget.add_curve_item(name=name, pen=pen)
         self._items.add(item, config)
 
         if update:
@@ -67,21 +71,6 @@ class MultiCurvePlot(GraphPlot):
         if item is not None:
             self._remove_item(item)
 
-    def _get_item(self, name):
-        """Use an unused PlotDataItem from the registry if any, we create a
-           new one otherwise."""
-        if self._items.has_unused():
-            # The item name must be changed to the new y_data name
-            # and be added back to the legend.
-            item = self._items.use(name)
-            self._legend.addItem(item, name)
-        else:
-            pen = next(self._pens)
-            item = self.widget.add_curve_item(name=name,
-                                              pen=pen)
-
-        return item
-
     def _remove_item(self, item):
         """An item is removed by:
            1. "Hiding" it with empty data
@@ -100,6 +89,9 @@ class MultiCurvePlot(GraphPlot):
            pool."""
         for item in self._items.used():
             self._remove_item(item)
+
+    def clear_pen_map(self):
+        self._pen_map.clear()
 
     # ---------------------------------------------------------------------
     # trait handlers

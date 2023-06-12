@@ -50,12 +50,8 @@ class TestBaseWidgetController(GuiTestCase):
         self._current_plot = None
 
     def test_basics(self):
-        init_scan = self._scan_controller.scan
-        self.assertIsNotNone(init_scan)
-
         new_scan = self._scan_controller.new_scan(ASCAN_CONFIG)
         self.assertIsNotNone(new_scan)
-        self.assertNotEqual(init_scan, new_scan)
         self.assertEqual(new_scan.scan_type, ASCAN_CONFIG[SCAN_TYPE])
 
     @skip(reason="Usage of other classes for plots is not compatible with "
@@ -108,10 +104,10 @@ class TestBaseWidgetController(GuiTestCase):
 
     def _multicurve_config(self):
         # Setup initial plot by using pos0 as x_data and others as y_data
-        sources = self._scan_controller.scan._data_sources
+        sources = self._scan_controller.scans[-1]._data_sources
 
         # Populate the plot by specifying x_data and y_data
-        x_data = self._scan_controller.scan._motors[0]
+        x_data = self._scan_controller.scans[-1]._motors[0]
         return [{X_DATA: x_data, Y_DATA: y_data} for y_data in sources]
 
     def _assert_multicurve_init(self):

@@ -35,9 +35,10 @@ Z_DATA = "z_data"
 
 ADD = "add"
 REMOVE = "remove"
+REMOVE_ALL = "remove_all"
 
 # default scan
-A4SCAN_CONFIG = {
+ASCAN_CONFIG = {
     SCAN_TYPE: "ascan",
     MOTORS: MOTOR_NAMES,
     SOURCES: SOURCE_NAMES,

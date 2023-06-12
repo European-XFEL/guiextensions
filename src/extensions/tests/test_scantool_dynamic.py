@@ -267,6 +267,43 @@ class TestScantoolDynamicWidget(GuiTestCase):
         self._assert_full_scan(config)
         self._assert_multicurve_plot(config)
 
+    def test_multiple_plots(self):
+        config = ASCAN_CONFIG
+        self._write_scan_history(config)
+        self.assertTrue(len(self._get_scans()) == 1)
+
+        # Request to plot the same scan is rejected
+        self._write_scan_history(config)
+        self.assertTrue(len(self._get_scans()) == 1)
+
+        # A single plot is identified by an uniques motor_id, source_id pair
+        # We do not update plot if the scan is already plotted. This will never
+        # happen, but lets test it
+        config["y0"] = [3 * i for i in range(10)]
+        self._write_scan_history(config)
+        self.assertTrue(len(self._get_scans()) == 1)
+
+        # Source id is different: add a new plot
+        config["sourceIds"] = ["ascan_1:source"]
+        self._write_scan_history(config)
+        self.assertTrue(len(self._get_scans()) == 2)
+
+        # We do not plot several scans if the motor ids do not match
+        config["sourceIds"] = ["ascan_2:source"]
+        config["motorIds"] = ["some_other_motor"]
+        self._write_scan_history(config)
+        self.assertTrue(len(self._get_scans()) == 1)
+
+        # New realtime scan clears all plots
+        config = ASCAN_CONFIG
+        self._write_full_scan(config)
+        self.assertTrue(len(self._get_scans()) == 1)
+
+        # Realtime or historical mesh scan clears all plots
+        config = MESH_CONFIG
+        self._write_scan_history(config)
+        self.assertTrue(len(self._get_scans()) == 1)
+
     # -----------------------------------------------------------------------
     # Helper methods
 
@@ -303,8 +340,7 @@ class TestScantoolDynamicWidget(GuiTestCase):
                 ACTUAL_STEP, index,
                 CURRENT_INDEX, steps,
                 *self._motor_values(len(config[MOTORS]), index),
-                *self._source_values(len(config[SOURCES]), index))
-                        )
+                *self._source_values(len(config[SOURCES]), index)))
             apply_configuration(hash, self.binding)
 
         # Note that the scan has finished, thus change the state to ON
@@ -324,7 +360,7 @@ class TestScantoolDynamicWidget(GuiTestCase):
                     MOTOR_IDS, config[MOTOR_IDS],
                     SOURCE_IDS, config[SOURCE_IDS],)
         apply_configuration(data, self.history_proxy.binding)
-        self._scan = self.controller._history_scan
+        self._scan = self._get_scans()[-1]
 
     def _motor_values(self, num_motors, actual_step):
         """Dummy motor values."""
@@ -359,6 +395,9 @@ class TestScantoolDynamicWidget(GuiTestCase):
             else:
                 values.extend([f"y{index}", []])
         return values
+
+    def _get_scans(self):
+        return self.controller._controller.scans
 
     # -----------------------------------------------------------------------
     # Assert methods

@@ -18,17 +18,7 @@ class ImageDataSelectionWidget(BaseSelectionWidget):
                                'image_data.ui')
         uic.loadUi(ui_path, self)
 
-        button_group = QButtonGroup(parent)
-        self._init_source_widgets(as_radio_buttons=True)
-        for radio_button in self._source_widgets:
-            self.z_groupbox.layout().addWidget(radio_button)
-            button_group.addButton(radio_button)
-
-        # Initialize axes data
-        self.ui_x_combobox.addItems(self._motors)
-        self.ui_y_combobox.addItems(self._motors)
-        self.ui_y_combobox.setCurrentIndex(1)
-
+        self.button_group = QButtonGroup(parent)
         self.ui_x_combobox.currentIndexChanged.connect(self._x_axis_changed)
         self.ui_y_combobox.currentIndexChanged.connect(self._y_axis_changed)
         self.aligner_cbox.clicked.connect(
@@ -37,7 +27,7 @@ class ImageDataSelectionWidget(BaseSelectionWidget):
     # ---------------------------------------------------------------------
     # Public methods
 
-    def set_motors(self, motors, motor_ids):
+    def set_motors(self, motor_ids):
         with SignalBlocker(self.ui_x_combobox):
             self.ui_x_combobox.clear()
             self.ui_x_combobox.addItems(motor_ids)
@@ -47,8 +37,20 @@ class ImageDataSelectionWidget(BaseSelectionWidget):
             self.ui_y_combobox.addItems(motor_ids)
             self.ui_y_combobox.setCurrentIndex(1)
 
-        self._motors = motors
         self._motor_ids = motor_ids
+
+    def set_sources(self, source_ids):
+        self._source_ids = source_ids
+
+        # Remove existing checkboxes
+        for i in reversed(range(self.z_groupbox.layout().count())):
+            self.z_groupbox.layout().itemAt(i).widget().close()
+            self.z_groupbox.layout().takeAt(i)
+
+        self._init_source_widgets(as_radio_buttons=True)
+        for radio_button in self._source_widgets:
+            self.z_groupbox.layout().addWidget(radio_button)
+            self.button_group.addButton(radio_button)
 
     def set_config(self, config):
         # 1. Images only have one config
@@ -109,7 +111,7 @@ class ImageDataSelectionWidget(BaseSelectionWidget):
 
     @Slot()
     def _show_aligner_results_clicked(self):
-        self._emit_changes()
+        self.changed.emit({ALIGNER: self.aligner_cbox.isChecked()})
 
     def _emit_changes(self):
         x_data = self._motor_ids[self.ui_x_combobox.currentIndex()]
@@ -120,5 +122,4 @@ class ImageDataSelectionWidget(BaseSelectionWidget):
         added = [{X_DATA: x_data, Y_DATA: y_data, Z_DATA: z_data}]
 
         # Emit config
-        self.changed.emit({REMOVE: removed, ADD: added,
-                           ALIGNER: self.aligner_cbox.isChecked()})
+        self.changed.emit({REMOVE: removed, ADD: added})

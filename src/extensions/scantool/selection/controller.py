@@ -27,15 +27,15 @@ class DataSelectionController(HasStrictTraits):
     def use_image_selection(self):
         self._use_selection(ImageDataSelectionWidget)
 
-    def set_devices(self, motors, sources, motor_ids, source_ids):
+    def set_devices(self, motor_ids, source_ids):
         if self._selection_widget is None:
             return
 
         # Bookkeep the changes in the selection such that it is persistent
         # on the next scans (with the same config
 
-        self._selection_widget.set_motors(motors, motor_ids)
-        self._selection_widget.set_sources(sources, source_ids)
+        self._selection_widget.set_motors(motor_ids)
+        self._selection_widget.set_sources(source_ids)
 
     def set_config(self, config):
         if self._selection_widget is None:
@@ -48,6 +48,11 @@ class DataSelectionController(HasStrictTraits):
 
     def aligner_results_enabled(self):
         return self._selection_widget.are_aligner_results_enabled()
+
+    def set_clear_button_enabled(self, state):
+        if isinstance(self._selection_widget, XYDataSelectionWidget):
+            # 2D plot do not have clear_button
+            self._selection_widget.clear_button.setEnabled(state)
 
     # ---------------------------------------------------------------------
     # Private methods
@@ -77,3 +82,6 @@ class DataSelectionController(HasStrictTraits):
 
     def _change(self, changes):
         self.changed = changes
+
+    def clear(self):
+        self._selection_widget.clear_all()
