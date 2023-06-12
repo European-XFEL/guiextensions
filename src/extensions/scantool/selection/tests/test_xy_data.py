@@ -1,8 +1,7 @@
 from karabogui.testing import GuiTestCase
 
 from ...const import (
-    ADD, MOTOR_NAMES, REMOVE, SOURCE_NAMES, TEST_MOTOR_IDS, TEST_SOURCE_IDS,
-    X_DATA, Y_DATA)
+    ADD, REMOVE, TEST_MOTOR_IDS, TEST_SOURCE_IDS, X_DATA, Y_DATA)
 from ..xy_data import XYDataSelectionWidget
 
 
@@ -25,33 +24,29 @@ class TestXYDataSelectionController(GuiTestCase):
         self._changes = changes
 
     def test_basics(self):
-        self._assert_motors(names=MOTOR_NAMES, index=0)
-        self._assert_sources(names=SOURCE_NAMES, checked=[])
+        self._assert_motors(names=[], index=-1)
+        self._assert_sources(names=[], checked=[])
         self._assert_changes(changes=None)
 
     def test_set_devices(self):
         # Set and assert motors
-        motors = MOTOR_NAMES[:2]
         motor_ids = TEST_MOTOR_IDS[:2]
-        self._widget.set_motors(motors, motor_ids)
+        self._widget.set_motors(motor_ids)
         self._assert_motors(names=motor_ids, index=0)
         self._assert_changes(changes=None)
 
         # Set and assert devices
-        sources = SOURCE_NAMES[:3]
         source_ids = TEST_SOURCE_IDS[:3]
-        self._widget.set_sources(sources, source_ids)
-        self._assert_sources(names=source_ids, checked=[])
+        self._widget.set_sources(source_ids)
+        self._assert_sources(names=source_ids, checked=source_ids)
         self._assert_changes(changes=None)
 
     def test_set_config(self):
         # Set devices
-        motors = MOTOR_NAMES[:2]
         motor_ids = TEST_MOTOR_IDS[:2]
-        self._widget.set_motors(motors, motor_ids)
-        sources = SOURCE_NAMES[:3]
+        self._widget.set_motors(motor_ids)
         source_ids = TEST_SOURCE_IDS[:3]
-        self._widget.set_sources(sources, source_ids)
+        self._widget.set_sources(source_ids)
 
         # Set config
         x_data = motor_ids[1]
@@ -66,12 +61,10 @@ class TestXYDataSelectionController(GuiTestCase):
 
     def test_changes(self):
         # Set devices
-        motors = MOTOR_NAMES[:2]
         motor_ids = TEST_MOTOR_IDS[:2]
-        self._widget.set_motors(motors, motor_ids)
-        sources = SOURCE_NAMES[:3]
+        self._widget.set_motors(motor_ids)
         source_ids = TEST_SOURCE_IDS[:3]
-        self._widget.set_sources(sources, source_ids)
+        self._widget.set_sources(source_ids)
 
         # Set config
         x_data = motor_ids[1]
@@ -102,12 +95,10 @@ class TestXYDataSelectionController(GuiTestCase):
 
     def test_last_item(self):
         # Set devices
-        motors = MOTOR_NAMES[:2]
         motor_ids = TEST_MOTOR_IDS[:2]
-        self._widget.set_motors(motors, motor_ids)
-        sources = SOURCE_NAMES[:3]
+        self._widget.set_motors(motor_ids)
         source_ids = TEST_SOURCE_IDS[:3]
-        self._widget.set_sources(sources, source_ids)
+        self._widget.set_sources(source_ids)
 
         # Set config, only put one source
         y_index = 1
@@ -127,8 +118,7 @@ class TestXYDataSelectionController(GuiTestCase):
         self.assertEqual(combobox.currentIndex(), index)
 
     def _assert_sources(self, *, names, checked):
-        checkboxes = [checkbox for checkbox in self._widget._source_widgets
-                      if checkbox.isVisible()]
+        checkboxes = self._widget._source_widgets
         self.assertListEqual([checkbox.text() for checkbox in checkboxes],
                              names)
         checked_boxes = [checkbox.text() for checkbox in checkboxes

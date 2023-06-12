@@ -84,6 +84,13 @@
     </widget>
    </item>
    <item>
+    <widget class="QPushButton" name="clear_button">
+     <property name="text">
+      <string>Clear Plots</string>
+     </property>
+    </widget>
+   </item>
+   <item>
     <widget class="QGroupBox" name="tools_groupbox">
      <property name="title">
       <string>Tools</string>

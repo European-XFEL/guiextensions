@@ -17,7 +17,7 @@ ASCAN_CONFIG = {
 
 
 A2SCAN_CONFIG = {
-    SCAN_TYPE: "a2scan",
+    SCAN_TYPE: "ascan",
     MOTORS: MOTOR_NAMES[:2],
     SOURCES: SOURCE_NAMES[:1],
     MOTOR_IDS: MOTOR_NAMES[:2],
@@ -45,7 +45,7 @@ MESH_CONFIG = {
 
 
 C2SCAN_CONFIG = {
-    SCAN_TYPE: "c2scan",
+    SCAN_TYPE: "cscan",
     MOTORS: MOTOR_NAMES[:2],
     SOURCES: SOURCE_NAMES[:1],
     MOTOR_IDS: MOTOR_NAMES[:2],

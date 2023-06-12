@@ -37,7 +37,6 @@ class ScantoolDynamicWidget(BaseBindingController):
     _controller = Instance(ScanController)
     # Scan contains the scan parameters, device objects
     _scan = Instance(Scan)
-    _history_scan = Instance(Scan)
     _history_proxy = Instance(PropertyProxy)
 
     _is_scanning = Bool(False)
@@ -65,9 +64,10 @@ class ScantoolDynamicWidget(BaseBindingController):
         # Reject first node proxy from first widget creation,
         # This contains unwanted default values. Still thinking about this.
         if proxy.path == HISTORY_PROXY_PATH:
-            self._history_scan = self._plot_history_scan(proxy)
+            self._plot_history_scan(proxy)
 
         proxies = proxy.value
+
         # Add aligner results
         if hasattr(proxies, ALIGNER):
             self._controller.update_aligner_results(
@@ -98,7 +98,7 @@ class ScantoolDynamicWidget(BaseBindingController):
             for device in self._scan.devices:
                 value = self._get_value(proxies, device.name)
                 device.add(value, current_index)
-            self._controller.update(device)
+                self._controller.update(device)
 
     def _setup_new_scan(self, proxy):
         # TODO: Investigate fundamental reasons in Karabo
@@ -165,7 +165,10 @@ class ScantoolDynamicWidget(BaseBindingController):
         config.update({MOTOR_IDS: motor_ids, SOURCE_IDS: source_ids,
                        MOTORS: motors, SOURCES: sources})
 
-        scan = self._controller.new_scan(config)
+        scan = self._controller.new_scan(config, realtime=False)
+        # User tried to plot the same historic scan. No changes in the plot
+        if scan is None:
+            return
 
         if config[SCAN_TYPE] not in MESHES:
             self._controller.use_multicurve_plot()
@@ -191,8 +194,6 @@ class ScantoolDynamicWidget(BaseBindingController):
                     index += 1
         self._plot_available = True
 
-        return scan
-
     def state_update(self, proxy):
         state = self._get_state(proxy)
         # Normally, the state should not be None
@@ -205,12 +206,14 @@ class ScantoolDynamicWidget(BaseBindingController):
             # if self._is_scanning:
             #     self.value_update(proxy)
             # Scan is done or not started yet.
+            self._controller.enable_clear_button(self._scan is not None)
             self._scan = None
         elif state == State.ACQUIRING.value:
             if self._scan is None:
                 # Scan has just started.
                 self._scan = self._setup_new_scan(proxy)
             self._is_scanning = True
+            self._controller.enable_clear_button(False)
 
     @on_trait_change("_controller:_plot_double_clicked")
     def _plot_doube_clicked(self, data):

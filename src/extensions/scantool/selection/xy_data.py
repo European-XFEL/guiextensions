@@ -5,7 +5,7 @@ from qtpy.QtCore import Slot
 
 from karabogui.util import SignalBlocker
 
-from ..const import ADD, ALIGNER, MOTOR_NAMES, REMOVE, X_DATA, Y_DATA
+from ..const import ADD, ALIGNER, REMOVE, REMOVE_ALL, X_DATA, Y_DATA
 from .base import BaseSelectionWidget
 
 
@@ -17,26 +17,36 @@ class XYDataSelectionWidget(BaseSelectionWidget):
                                'xy_data.ui')
         uic.loadUi(ui_path, self)
 
-        self._init_source_widgets()
-        for checkbox in self._source_widgets:
-            self.y_groupbox.layout().addWidget(checkbox)
-
-        # Disable selection on default x_data
-        self.ui_x_combobox.addItems(MOTOR_NAMES)
         self.ui_x_combobox.currentIndexChanged.connect(self._x_axis_changed)
         self.aligner_cbox.clicked.connect(
             self._show_aligner_results_clicked)
+        self.clear_button.setEnabled(False)
+        self.clear_button.clicked.connect(self._clear_all_clicked)
 
     # ---------------------------------------------------------------------
     # Public methods
 
-    def set_motors(self, motors, motor_ids):
+    def set_motors(self, motor_ids):
+        # Remove duplicates if several scans are plotted
+        motor_ids = list(dict.fromkeys(motor_ids))
         with SignalBlocker(self.ui_x_combobox):
             self.ui_x_combobox.clear()
             self.ui_x_combobox.addItems(motor_ids)
-
-        self._motors = motors
         self._motor_ids = motor_ids
+
+    def set_sources(self, source_ids):
+        self._source_ids = source_ids
+
+        # Remove existing checkboxes
+        for i in reversed(range(self.y_groupbox.layout().count())):
+            self.y_groupbox.layout().itemAt(i).widget().close()
+            self.y_groupbox.layout().takeAt(i)
+
+        self._init_source_widgets()
+        for checkbox in self._source_widgets:
+            checkbox.setChecked(True)
+            self.y_groupbox.layout().addWidget(checkbox)
+        self.clear_button.setEnabled(True)
 
     def set_config(self, config):
         # 1. Collapse to unique device names
@@ -75,8 +85,7 @@ class XYDataSelectionWidget(BaseSelectionWidget):
 
     @Slot(int, bool)
     def _source_widgets_clicked(self, index):
-        checked = [checkbox.isChecked() for checkbox in
-                   self._source_widgets[:len(self._sources)]]
+        checked = [checkbox.isChecked() for checkbox in self._source_widgets]
         if not any(checked):
             self._source_widgets[index].setChecked(True)
             return
@@ -102,3 +111,22 @@ class XYDataSelectionWidget(BaseSelectionWidget):
         # Emit config
         self.changed.emit({REMOVE: removed, ADD: added,
                            ALIGNER: self.aligner_cbox.isChecked()})
+
+    @Slot()
+    def _clear_all_clicked(self):
+        self.clear_all()
+        self.clear_button.setEnabled(False)
+
+    def clear_all(self):
+        self.changed.emit({REMOVE_ALL: True})
+
+        self._motor_ids.clear()
+        self._source_ids.clear()
+
+        # Clear motor checkbox
+        self.ui_x_combobox.clear()
+
+        # Remove existing checkboxes
+        for i in reversed(range(self.y_groupbox.layout().count())):
+            self.y_groupbox.layout().itemAt(i).widget().close()
+            self.y_groupbox.layout().takeAt(i)
