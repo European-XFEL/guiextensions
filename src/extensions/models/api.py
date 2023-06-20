@@ -12,7 +12,7 @@ from .networkx import FilterInstance, NetworkXModel, NodePosition
 from .plots import (
     DynamicDigitizerModel, DynamicGraphModel, ExtendedVectorXYGraph,
     PeakIntegrationGraphModel, ScatterPositionModel, TableVectorXYGraphModel,
-    UncertaintyGraphModel, XasGraphModel)
+    UncertaintyGraphModel, VectorGraphWithLinearRegionsModel, XasGraphModel)
 from .simple import (
     DetectorCellsModel, DisplayConditionCommandModel, DynamicPulseIdMapModel,
     EditableDateTimeModel, EditableTextOptionsModel, FileUploaderModel,

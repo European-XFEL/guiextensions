@@ -42,6 +42,18 @@ class ExtendedVectorXYGraph(BasePlotModel):
     legends = List(String)
 
 
+class VectorGraphWithLinearRegionsModel(BasePlotModel):
+    """ A model for the VectorGraphWithLinearRegions"""
+    half_samples = Int(6000)
+    roi_items = List(Instance(BaseROIData))
+    roi_tool = Int(0)
+    offset = Float(0.0)
+    step = Float(1.0)
+    x_grid = Bool(True)
+    y_grid = Bool(True)
+    number = Int(10)
+
+
 class TableVectorXYGraphModel(BasePlotModel):
     """ A model for the TableVectorXYGraph"""
     x_grid = Bool(True)
@@ -141,6 +153,19 @@ def _extended_vector_xy_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_plot(model, element, "ExtendedVectorXYGraph")
     element.set(NS_KARABO + "legends", ",".join(model.legends))
+    return element
+
+
+@register_scene_reader("VectorGraphWithLinearRegionsModel")
+def _vector_graph_with_linear_regions_reader(element):
+    traits = read_base_plot(element)
+    return VectorGraphWithLinearRegionsModel(**traits)
+
+
+@register_scene_writer(VectorGraphWithLinearRegionsModel)
+def _vector_graph_with_linear_regions_writer(model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_plot(model, element, "VectorGraphWithLinearRegionsModel")
     return element
 
 

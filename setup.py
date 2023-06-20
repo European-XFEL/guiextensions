@@ -20,6 +20,7 @@ entries = {
         'ImageCrossHairGraph = extensions.display_image_crosshair_graph',
         'VectorLimitedDoubleLineEdit = extensions.edit_limited_lineedit',
         'VectorLimitedIntLineEdit = extensions.edit_limited_lineedit',
+        'VectorGraphWithLinearRegions = extensions.display_vector_graph_linear_regions',
         'LimitedDoubleLineEdit = extensions.edit_limited_lineedit',
         'LimitedIntLineEdit = extensions.edit_limited_lineedit',
         'MetroXasGraph = extensions.metro.xas_graph',
