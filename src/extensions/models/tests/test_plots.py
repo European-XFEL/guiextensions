@@ -88,3 +88,10 @@ def test_peak_integration_graph_model():
     model = api.PeakIntegrationGraphModel(**traits)
     read_model = single_model_round_trip(model)
     _assert_geometry_traits(read_model)
+
+
+def test_vector_with_linear_regions_model():
+    traits = _geometry_traits()
+    model = api.VectorGraphWithLinearRegionsModel(**traits)
+    read_model = single_model_round_trip(model)
+    _assert_geometry_traits(read_model)
