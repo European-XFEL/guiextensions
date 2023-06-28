@@ -76,4 +76,4 @@ nightly test miniconda:
 include:
   - project: karabo/gitlabci
     file: .mirror-device.yml
-    ref: main
+    ref: include-alpha
