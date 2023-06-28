@@ -1,6 +1,7 @@
 stages:
   - lint
   - build
+  - deploy
 
 # static source code analysis
 lint:
@@ -70,3 +71,9 @@ unit tests miniconda-win64:
 nightly test miniconda:
   image: europeanxfel/karabo-ci:miniconda-3
   <<: *nightly-test-conda
+
+
+include:
+  - project: karabo/gitlabci
+    file: .mirror-device.yml
+    ref: main
