@@ -159,7 +159,7 @@ class DeviceTreeWidget(QTreeWidget):
         self.setDragEnabled(True)
         self.setAcceptDrops(True)
         self.setDropIndicatorShown(True)
-        self.setExpandsOnDoubleClick(False)
+        self.setExpandsOnDoubleClick(True)
 
     def dragEnterEvent(self, event):
         self._check_drag_event(event)

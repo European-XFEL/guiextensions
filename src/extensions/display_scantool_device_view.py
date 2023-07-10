@@ -66,7 +66,7 @@ class ScantoolDeviceView(BaseBindingController):
         main_widget = QWidget(parent=parent)
         self._treewidget = DeviceTreeWidget(parent=main_widget)
         header = self._treewidget.header()
-        header.setSectionResizeMode(QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(QHeaderView.Interactive)
         self._toolbar = ButtonToolbar(self._treewidget, main_widget)
 
         self._treewidget.setColumnCount(COLUMN_COUNT)
