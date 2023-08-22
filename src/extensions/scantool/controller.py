@@ -197,11 +197,11 @@ class ScanController(HasStrictTraits):
     # Private methods
 
     def _mouse_double_clicked(self, event):
-        QGraphicsScene.mouseDoubleClickEvent(
-            self._current_plot.widget.plotItem.scene(), event)
-        scene_coords = event.scenePos()
         plot_item = self._current_plot.widget.plotItem
-        if plot_item.sceneBoundingRect().contains(scene_coords):
+        scene_coords = event.scenePos()
+
+        QGraphicsScene.mouseDoubleClickEvent(plot_item.scene(), event)
+        if plot_item.vb.sceneBoundingRect().contains(scene_coords):
             pos = plot_item.vb.mapSceneToView(scene_coords)
             self._plot_double_clicked = {
                 "coord": [pos.x(), pos.y()],
@@ -240,7 +240,7 @@ class ScanController(HasStrictTraits):
         self._plot_refreshed = klass
 
         # 4. Reimplement mouseDoubleCkickedEvent
-        # We can not use sigMouseClicked signal of scene due to the bug in
+        # We can not use sigMouseClicked signal of plotItem due to the bug in
         # pyqtgraph: double click is not detected.
         self._current_plot.widget.plotItem.scene().mouseDoubleClickEvent =\
             self._mouse_double_clicked
