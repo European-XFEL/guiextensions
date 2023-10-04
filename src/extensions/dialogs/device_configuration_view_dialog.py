@@ -11,7 +11,7 @@ from .utils import get_config_changes, get_dialog_ui
 class DeviceConfigurationPreview(QDialog):
 
     def __init__(self, device_id, current_config, requested_config,
-                 parent=None):
+                 current_timestamp, requested_timestamp, parent=None):
         super().__init__(parent=parent)
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setModal(False)
@@ -22,6 +22,13 @@ class DeviceConfigurationPreview(QDialog):
         self.setWindowTitle("Device Configuration Preview")
         info = f"Showing the configuration and changes for <b>{device_id}</b>."
         self.info_label.setText(info)
+
+        if requested_timestamp is not None:
+            self.label_new.setText(
+                f"Requested Configuration ({requested_timestamp})")
+        if current_timestamp is not None:
+            self.label_old.setText(
+                f"Existing Configuration ({current_timestamp})")
 
         self._show_changes = False
         self.swap_button.setIcon(icons.change)

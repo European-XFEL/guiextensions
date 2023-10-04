@@ -84,10 +84,12 @@ class DisplayDeviceReconfigurationTable(BaseFilterTableController):
             data = reply["payload"]["data"]
             device_id = data["deviceId"]
             current_config = data.get("new", Hash())
+            current_timestamp = data.get("new_timestamp")
             requested_config = data.get("old", Hash())
-            dialog = DeviceConfigurationPreview(device_id, current_config,
-                                                requested_config,
-                                                parent=self.widget)
+            requested_timestamp = data.get("old_timestamp")
+            dialog = DeviceConfigurationPreview(
+                device_id, current_config, requested_config,
+                current_timestamp, requested_timestamp, parent=self.widget)
             if dialog.exec() == QDialog.Accepted:
                 call_device_slot(WeakMethodRef(self.handle_config_apply),
                                  self.getInstanceId(), "requestAction",
