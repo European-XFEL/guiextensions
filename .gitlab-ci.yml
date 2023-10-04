@@ -2,6 +2,7 @@ stages:
   - lint
   - build
   - deploy
+  - package
 
 # static source code analysis
 lint:
