@@ -59,7 +59,7 @@ class RoiAnnotator(QObject):
             roi_class_name)
 
         info_hash["annotation"] = selected_annotation_name
-        info_hash["annotationDate"] = str(
+        info_hash["date"] = str(
             datetime.datetime.now())
         info_hash["roiTool"] = roi_class_number
         info["payload"] = info_hash
