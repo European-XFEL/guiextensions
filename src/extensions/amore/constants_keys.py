@@ -1,3 +1,5 @@
+import numpy as np
+
 from karabogui.graph.common.api import ROITool
 from karabogui.graph.common.roi.crosshair import CrosshairROI
 from karabogui.graph.common.roi.rect import RectROI
@@ -15,23 +17,21 @@ TOOL_MAP_NUMBERS = {
 
 INDIVIDUAL_ROI_COLOR = [110, 255, 244]
 
-INDIVIDUAL_KEYS = ["horizontal",
-                   "vertical",
-                   "annotation",
-                   "annotationDate",
-                   "roiTool",
-                   "horizontalSize",
-                   "verticalSize"]
+HISTORY_HASH_PROPERTIES = ["horizontal",
+                           "vertical",
+                           "annotation",
+                           "date",
+                           "roiTool",
+                           "horizontalSize",
+                           "verticalSize"]
 
-HISTORY_KEYS = [
-    "historyHorizontal",
-    "historyVertical",
-    "historyAnnotation",
-    "historyDates",
-    "historyRoiTool",
-    "historyHorizontalSize",
-    "historyVerticalSize"
-]
+HISTORY_HASH_TYPES = [np.float32,
+                      np.float32,
+                      str,
+                      str,
+                      np.int32,
+                      np.float32,
+                      np.float32]
 
 MULTICOLOR = [(1.0, 0.0, 0.0),
               (1.0, 0.21052631578947367, 0.0),

@@ -18,7 +18,7 @@ from karabogui.request import call_device_slot
 
 from .additional_color_bar import add_colorbar_rois, remove_rois_colorbar
 from .aux_filtering_and_plotting import (
-    removing_rois_from_plot, roi_filtering, roi_plotting, update_from_remote)
+    removing_rois_from_plot, roi_filtering, roi_plotting)
 from .constants_keys import LIGHT_RED
 
 INDIVIDUAL_ROI_COLOR = [110, 255, 244]
@@ -37,7 +37,7 @@ class RoiRequestor(QObject):
                 self._get_rois_from_interval))
         (self._display_image_annotate.coordinatesTool.
          ui_get_last_coordinates.clicked.connect(
-             partial(update_from_remote, self._display_image_annotate, True)))
+             partial(self._display_image_annotate.update_from_remote, True)))
 
     def get_annotation_type(self):
         # Set the ROItool to the proper value set by the user

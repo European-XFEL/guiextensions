@@ -9,12 +9,9 @@ import re
 import numpy as np
 from pyqtgraph import ColorMap
 
-from karabogui import messagebox
-from karabogui.api import is_device_online
-from karabogui.graph.common.api import ROITool
 from karabogui.logger import get_logger
 
-from .constants_keys import HISTORY_KEYS, INDIVIDUAL_KEYS, INDIVIDUAL_ROI_COLOR
+from .constants_keys import HISTORY_HASH_PROPERTIES
 
 # ---------------------------------------------------------------------
 # Functions associated to the icons plotting
@@ -74,10 +71,9 @@ def individual_filtering_previous(roi_requestor, annot):
 
 
 def individual_filtering(search_annotation, annot):
-    # Now we finally start filtering by the text set by the user
+    # We can now start filtering based on the user's input.
+    # If the user didn't enter anything, we won't filter.
     if len(search_annotation) == 0:
-        # If the user did not write anything, then we dont
-        # filter
         match = True
     else:
         match_low = re.search(
@@ -86,23 +82,6 @@ def individual_filtering(search_annotation, annot):
             search_annotation.upper(), annot.upper())
         match = (match_low or match_up)
     return match
-
-
-def update_from_remote(image_annotate, flag=True):
-    color = INDIVIDUAL_ROI_COLOR
-    info = []
-    device_online = (is_device_online(image_annotate.remote_instance_id))
-    if device_online:
-        for individual in INDIVIDUAL_KEYS:
-            info.append(image_annotate.proxy_dictionary[individual].value)
-        info.append(color)
-        image_annotate.widget.roi.selected.emit(ROITool.NoROI)
-        image_annotate.widget.roi.selected.emit(
-            image_annotate.proxy_dictionary["roiTool"].value)
-        image_annotate.plotting(info, flag)
-    else:
-        messagebox.show_warning("Device no instantiated",
-                                title='Device no instantiated?')
 
 
 def removing_rois_from_plot(roi_requestor):
@@ -120,34 +99,28 @@ def removing_rois_from_plot(roi_requestor):
 
 
 def _filtering_by_annotation(image_annotate):
-    # This function filters the value by the annotation and tool
-    # entered by the user
+    # This function allows the user to filter the value based on
+    # the specified annotation and tool.
     image_annotate.delta_days_filtered = []
     info_filtered_rois_from_interval = {}
-    for key in HISTORY_KEYS:
+    for key in HISTORY_HASH_PROPERTIES:
         info_filtered_rois_from_interval[key] = []
-    for hor, ver, annot, date, roi_type, hor_size, ver_size in zip(
-            image_annotate.proxy_dictionary_history["historyHorizontal"].value,
-            image_annotate.proxy_dictionary_history["historyVertical"].value,
-            image_annotate.proxy_dictionary_history["historyAnnotation"].value,
-            image_annotate.proxy_dictionary_history["historyDates"].value,
-            image_annotate.proxy_dictionary_history["historyRoiTool"].value,
-            image_annotate.proxy_dictionary_history[
-                "historyHorizontalSize"].value,
-            image_annotate.proxy_dictionary_history[
-                "historyVerticalSize"].value
-    ):
+    all_items = [
+        image_annotate._get_value(
+            image_annotate.historic_proxy.value, history_key)
+        for history_key in HISTORY_HASH_PROPERTIES]
+    for hor, ver, annot, date, roi_type, hor_size, ver_size in zip(*all_items):
         # We have to check if the element has been filtered
         is_filtered = individual_filtering(
             image_annotate.searchingTool.ui_annotation_value, annot)
         is_filtered_second = checking_for_previous_searches(
             image_annotate, annot)
-        # And now that we know that it has been filtered we have
-        # to know, when, in days from today; to asign the correct colo
+        # Now we need to determine the number of days from today
+        #  to assign the correct color based on the filter.
 
         if (is_filtered or is_filtered_second):
             roi_summary = [hor, ver, annot, date, roi_type, hor_size, ver_size]
-            roi_keys = image_annotate.proxy_dictionary_history.keys()
+            roi_keys = HISTORY_HASH_PROPERTIES
             # Time difference
             delta_time = ((datetime.datetime.now() -
                            datetime.datetime.strptime(

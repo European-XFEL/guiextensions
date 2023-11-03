@@ -13,19 +13,21 @@ from karabo.common.scenemodel.api import (
     build_graph_config, restore_graph_config)
 from karabo.common.states import State
 from karabogui import messagebox
+from karabogui.api import is_device_online
 from karabogui.binding.api import (
     ImageBinding, PropertyProxy, WidgetNodeBinding, get_binding_value)
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
-from karabogui.graph.common.api import AuxPlots, MouseMode
+from karabogui.graph.common.api import AuxPlots, MouseMode, ROITool
 from karabogui.graph.image.api import (
     KaraboImageNode, KaraboImagePlot, KaraboImageView, KaraboImageViewBox)
 
 from ..models.api import ROIAnnotateModel
 from .annotation_dialog_and_display import (
     AnnotationSearchDialog, DisplayTool, DisplayToolset)
-from .aux_filtering_and_plotting import display_saved_data, update_from_remote
-from .constants_keys import HISTORY_KEYS, INDIVIDUAL_KEYS, TOOL_MAP
+from .aux_filtering_and_plotting import display_saved_data
+from .constants_keys import (
+    HISTORY_HASH_PROPERTIES, HISTORY_HASH_TYPES, TOOL_MAP)
 from .displaying_from_past import IntervalSettings
 from .roi_annotator import RoiAnnotator
 from .roi_requestor import RoiRequestor
@@ -125,21 +127,10 @@ class DisplayImageAnnotate(BaseBindingController):
         if proxy.binding is not None:
             if (proxy.binding.display_type == "WidgetNode|HistoricAnnotation"
                     and self.historic_proxy is None):
-                for parameter in HISTORY_KEYS:
-                    self.proxy_dictionary_history[parameter] = (
-                        PropertyProxy(
-                            root_proxy=proxy.root_proxy,
-                            path=proxy.path + '.' + parameter))
-                self.remote_instance_id = proxy.root_proxy.device_id
                 self.historic_proxy = proxy
+                self.remote_instance_id = proxy.root_proxy.device_id
             if (proxy.binding.display_type == "WidgetNode|CoordinateAnnotation"
                     and self.roi_proxy is None):
-                for parameter in INDIVIDUAL_KEYS:
-                    self.proxy_dictionary[parameter] = (
-                        PropertyProxy(
-                            root_proxy=proxy.root_proxy,
-                            path=proxy.path + '.' + parameter))
-                self.remote_instance_id = proxy.root_proxy.device_id
                 self.roi_proxy = proxy
         # If a device is offline, we still add it.
         return True
@@ -155,7 +146,7 @@ class DisplayImageAnnotate(BaseBindingController):
             # We plot current roi information from remote proxy
             # No need to show the error message
             # if there is no a value in the device
-            update_from_remote(self, False)
+            self.update_from_remote(False)
             # If its a bit hard to add a new value from device
             # Either we don't allow to change the ROI
             # or we desactivate this
@@ -263,6 +254,33 @@ class DisplayImageAnnotate(BaseBindingController):
                     "plotted. Please, get values from "
                     "interval.")
 
+    def update_from_remote(self, flag=True):
+        color = INDIVIDUAL_ROI_COLOR
+        info = []
+        device_online = (is_device_online(
+            self.roi_proxy.root_proxy.device_id))
+        if device_online:
+            for prop, prop_type in zip(HISTORY_HASH_PROPERTIES,
+                                       HISTORY_HASH_TYPES):
+                prop_value = self._get_value(self.roi_proxy.value,
+                                             prop)
+                if type(prop_value) == prop_type:
+                    info.append(
+                        self._get_value(self.roi_proxy.value,
+                                        prop))
+                else:
+                    messagebox.show_error(f"Wrong data type for {prop}")
+                    return
+            info.append(color)
+            self.widget.roi.selected.emit(ROITool.NoROI)
+            self.widget.roi.selected.emit(
+                self._get_value(self.roi_proxy.value,
+                                "roiTool"))
+            self.plotting(info, flag)
+        else:
+            messagebox.show_warning("Device no instantiated",
+                                    title='Device no instantiated?')
+
     def no_rois_found_message(self, s):
         # If there's not ROI that matches the search then
         # we show a message, to make sure the users now there's
@@ -321,3 +339,7 @@ class DisplayImageAnnotate(BaseBindingController):
             roi_item._updateHoverColor()
 
         return roi_item
+
+    def _get_value(self, proxy, prop):
+        if hasattr(proxy, prop):
+            return get_binding_value(getattr(proxy, prop))
