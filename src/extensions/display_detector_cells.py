@@ -1,9 +1,12 @@
+from enum import Enum
+
 import numpy as np
 from qtpy.QtCore import QRectF, Qt
 from qtpy.QtGui import QBrush, QColor, QFont, QPainter, QPen
 from qtpy.QtWidgets import (
-    QGraphicsScene, QGraphicsView, QGridLayout, QHBoxLayout, QLabel,
-    QPushButton, QSlider, QSpinBox, QWidget)
+    QAction, QDialog, QDialogButtonBox, QFormLayout, QGraphicsScene,
+    QGraphicsView, QGridLayout, QHBoxLayout, QInputDialog, QLabel, QPushButton,
+    QSlider, QSpinBox, QVBoxLayout, QWidget)
 from traits.api import Bool, Instance, Int
 
 from karabogui.binding.api import WidgetNodeBinding, get_binding_value
@@ -17,6 +20,7 @@ from .utils import get_array_data
 GRAY = QColor(127, 127, 127, 255)
 BLUE = QColor(31, 119, 180, 255)
 ORANGE = QColor(255, 127, 14, 255)
+RED = QColor(255, 204, 203, 255)
 
 BRUSH_UNUSED = QBrush(GRAY)
 BRUSH_DARK = QBrush(BLUE)
@@ -40,24 +44,31 @@ TICK_LEN = 6
 STRIDE_H = SIDE + GAP_H
 STRIDE_V = SIDE + GAP_H
 STRIDE_LEGEND = 70
+LEGEND_MIN_HEIGHT = OFFSET_V + 5 * STRIDE_V - GAP_V
+LEGEND_MIN_WIDTH = OFFSET_H + 21 * STRIDE_H - GAP_H
 
 NUM_PATTERNS_START = 1
 DEFAULT_NUM_PATTERNS = NUM_PATTERNS_START + 0  # no pattern
 
 
-class DetectorCellsWidget(QWidget):
-    def __init__(self, parent=None):
-        super().__init__(parent)
+class Location(Enum):
+    BOTTOM = 'bottom'
+    RIGHT = 'right'
 
-        self.nrow = 11
-        self.ncol = 32
+
+class DetectorCellsWidget(QWidget):
+
+    nrow = 0
+    ncol = 0
+
+    def __init__(self, rows=0, cols=0,
+                 legend_location=Location.BOTTOM,
+                 parent=None):
+        super().__init__(parent)
         self.cells = []
 
         self.nfrm = 0
         self.npulse_per_frame = np.zeros(self.nfrm, dtype=np.uint16)
-
-        width = OFFSET_H + self.ncol * STRIDE_H - GAP_H + 10
-        height = OFFSET_V + self.nrow * STRIDE_V - GAP_V + 40
 
         grid = QGridLayout(self)
         self.view = QGraphicsView()
@@ -105,10 +116,44 @@ class DetectorCellsWidget(QWidget):
         button.toggled.connect(self._enable_pattern_slice)
         self.set_num_patterns(0)
 
-        self.scene = QGraphicsScene(0, 0, width, height)
+        # Finalize
+        self.legend_location = legend_location
+        self.set_cells(rows, cols, update=False)
+
+    def set_legend_location(self, location):
+        self.legend_location = Location(location)
+
+        # Redraw
+        self.set_cells(rows=self.nrow, columns=self.ncol)
+
+    def set_cells(self, rows, columns, update=True):
+        self.nrow, self.ncol = rows, columns
+        width = OFFSET_H + columns * STRIDE_H - GAP_H
+        height = OFFSET_V + rows * STRIDE_V - GAP_V
+
+        if self.legend_location == Location.RIGHT:
+            offset_w, offset_h = (114, 10)
+            height = max(height, LEGEND_MIN_HEIGHT)
+        else:
+            offset_w, offset_h = (10, 40)
+            width = max(width, LEGEND_MIN_WIDTH)
+
+        self.scene = QGraphicsScene(0, 0, width + offset_w, height + offset_h)
         self.view.setScene(self.scene)
 
-        self.draw_cell_matrix()
+        self.draw_cells()
+        self.draw_legends()
+
+        if update:
+            # Store parameters temporarily
+            nfrm, npulse_per_frame = self.nfrm, self.npulse_per_frame
+
+            # Reset to default values
+            self.nfrm = 0
+            self.npulse_per_frame = np.zeros(self.nfrm, dtype=np.uint16)
+
+            # Set the parameters back and trigger painting
+            self.set_parameters(nfrm, npulse_per_frame)
 
     def add_text(self, text, x, y, va=ALGN_CENTER, ha=ALGN_CENTER,
                  font='Courier', size=9):
@@ -122,7 +167,8 @@ class DetectorCellsWidget(QWidget):
 
         return t
 
-    def draw_cell_matrix(self):
+    def draw_cells(self):
+        self.cells.clear()
         rect = QRectF(0, 0, SIDE, SIDE)
 
         y = OFFSET_V
@@ -150,46 +196,98 @@ class DetectorCellsWidget(QWidget):
 
             y += STRIDE_V
 
-        # add legend
+    def draw_legends(self):
+        draw_map = {
+            Location.BOTTOM: self._draw_legends_bottom,
+            Location.RIGHT: self._draw_legends_right}
+        draw = (draw_map.get(self.legend_location)
+                or draw_map.get(Location.BOTTOM))
+        draw()
+
+    def _draw_legends_right(self):
+        rect = QRectF(0, 0, SIDE, SIDE)
+        x = OFFSET_H + self.ncol * STRIDE_H + 15
+
+        y = OFFSET_V
+        ypos = y + SIDE / 2
+        self.scene.addRect(rect.translated(x, y), PEN_UNUSED, BRUSH_UNUSED)
+        self.add_text('UNUSED', x + SIDE, ypos, ha=ALGN_LEFT)
+
         y += STRIDE_V
         ypos = y + SIDE / 2
+        self.scene.addRect(rect.translated(x, y), PEN_UNUSED, BRUSH_DARK)
+        self.add_text('DARK', x + SIDE, ypos, ha=ALGN_LEFT)
+
+        y += STRIDE_V
+        ypos = y + SIDE / 2
+        self.scene.addRect(rect.translated(x, y), PEN_UNUSED, BRUSH_LIT)
+        self.nlit_legend = self.add_text("LIT:    0",
+                                         x + SIDE, ypos, ha=ALGN_LEFT)
+
+        y += STRIDE_V * 2
+        ypos = y + SIDE / 2
+        self.ncell_legend = self.add_text("USED:   0",
+                                          x + SIDE, ypos, ha=ALGN_LEFT)
+
+    def _draw_legends_bottom(self):
+        rect = QRectF(0, 0, SIDE, SIDE)
+        y = OFFSET_V + STRIDE_V * (self.nrow + 1)
+        ypos = y + SIDE / 2
+
         x = OFFSET_H
         self.scene.addRect(rect.translated(x, y), PEN_UNUSED, BRUSH_UNUSED)
         self.add_text('UNUSED', x + SIDE, ypos, ha=ALGN_LEFT)
+
         x += STRIDE_LEGEND
         self.scene.addRect(rect.translated(x, y), PEN_UNUSED, BRUSH_DARK)
         self.add_text('DARK', x + SIDE, ypos, ha=ALGN_LEFT)
+
         x += STRIDE_LEGEND
         self.scene.addRect(rect.translated(x, y), PEN_UNUSED, BRUSH_LIT)
-        self.add_text('LIT', x + SIDE, ypos, ha=ALGN_LEFT)
+        self.nlit_legend = self.add_text("LIT:    0", x + SIDE, ypos,
+                                         ha=ALGN_LEFT)
 
-        x = OFFSET_H + self.ncol * STRIDE_H - GAP_H
-        self.nlit_legend = self.add_text("LIT:   0", x, ypos, ha=ALGN_RIGHT)
-        x -= 100
+        x = max(OFFSET_H + self.ncol * STRIDE_H - GAP_H, LEGEND_MIN_WIDTH)
         self.ncell_legend = self.add_text("USED:   0", x, ypos, ha=ALGN_RIGHT)
 
     def set_parameters(self, nfrm, npulse_per_frame):
         if len(npulse_per_frame) != nfrm:
             npulse_per_frame = np.zeros(nfrm, dtype=np.uint16)
 
+        # Determine changed pulses
         nsmall = min(nfrm, self.nfrm)
         nlarge = max(nfrm, self.nfrm)
         pulse_diff = np.where(self.npulse_per_frame[:nsmall]
                               != npulse_per_frame[:nsmall])[0]
         used_diff = np.arange(nsmall, nlarge)
-
         changed_cells = np.unique(np.concatenate([pulse_diff, used_diff]))
+
+        # Update cells
         for i in changed_cells:
+            if i >= len(self.cells):
+                # Displayed cells are less than actual cells.
+                # We stop iterating.
+                break
+
             cell = self.cells[i]
             cell_state = int(npulse_per_frame[i] > 0) + 1 if i < nfrm else 0
             cell.setBrush(CELL_BRUSH[cell_state])
 
+        # Display indicators if number of incoming used cells is greater than
+        # the number of displayed cells
+        bg_color, text_color = Qt.white, Qt.black
+        if nfrm > len(self.cells):
+            bg_color, text_color = RED, Qt.red
+        self.view.setBackgroundBrush(QBrush(bg_color))
+        self.ncell_legend.setDefaultTextColor(text_color)
+
+        # Finalize
         self.nfrm = nfrm
         self.npulse_per_frame = npulse_per_frame
         nlit = np.sum(npulse_per_frame > 0)
 
         self.ncell_legend.setPlainText(f"USED: {nfrm:3d}")
-        self.nlit_legend.setPlainText(f"LIT: {nlit:3d}")
+        self.nlit_legend.setPlainText(f"LIT:  {nlit:3d}")
 
         self.update()
 
@@ -223,7 +321,20 @@ class BaseDetectorCellsController(BaseBindingController):
     _index = Int
 
     def create_widget(self, parent):
-        widget = DetectorCellsWidget(parent)
+        rows, cols = self.model.rows, self.model.columns
+        widget = DetectorCellsWidget(rows=rows, cols=cols, parent=parent)
+        widget.set_legend_location(self.model.legend_location)
+
+        # Configure shape
+        shape_action = QAction("Cells shape", widget)
+        shape_action.triggered.connect(self._configure_cells_shape)
+        widget.addAction(shape_action)
+
+        # Configure legend location
+        legend_action = QAction("Legend location", widget)
+        legend_action.triggered.connect(self._configure_legend_location)
+        widget.addAction(legend_action)
+
         return widget
 
     def binding_update(self, proxy):
@@ -231,6 +342,30 @@ class BaseDetectorCellsController(BaseBindingController):
 
     def value_update(self, proxy):
         """Reimplemented in subclasses"""
+
+    def _configure_cells_shape(self):
+        config = {"rows": self.model.rows, "columns": self.model.columns}
+
+        content, ok = CellsShapeDialog.get(config, parent=self.widget)
+        if not ok:
+            return
+
+        self.model.trait_set(**content)
+        self.widget.set_cells(**content)
+
+    def _configure_legend_location(self):
+        locations = [loc.value for loc in Location]
+        index = locations.index(self.model.legend_location)
+
+        location, ok = QInputDialog.getItem(self.widget,
+                                            "Set legend location",
+                                            "Legend location:",
+                                            locations, index, False)
+        if not ok:
+            return
+
+        self.model.legend_location = location
+        self.widget.set_legend_location(location)
 
 
 @register_binding_controller(
@@ -322,3 +457,54 @@ class MultipleDetectorCells(BaseDetectorCellsController):
 
     def _update_index(self, selected):
         self.trait_set(_index=selected - NUM_PATTERNS_START)
+
+
+class CellsShapeDialog(QDialog):
+    """"""
+    def __init__(self, config, parent=None):
+        super().__init__(parent=parent)
+        self.setModal(False)
+        self.setWindowTitle("Set cells shape")
+
+        self.rows_spinbox = rows_spinbox = QSpinBox()
+        rows_spinbox.setMinimum(0)
+        rows_spinbox.setValue(config['rows'])
+
+        self.cols_spinbox = cols_spinbox = QSpinBox()
+        cols_spinbox.setMinimum(0)
+        cols_spinbox.setValue(config['columns'])
+
+        form = QFormLayout()
+        form.setHorizontalSpacing(10)
+        form.setVerticalSpacing(5)
+        form.addRow("Rows:", rows_spinbox)
+        form.addRow("Columns:", cols_spinbox)
+
+        # Add button boxes
+        button_box = QDialogButtonBox(QDialogButtonBox.Ok
+                                      | QDialogButtonBox.Cancel)
+        button_box.accepted.connect(self.accept)
+        button_box.rejected.connect(self.reject)
+
+        # Finalize widget
+        layout = QVBoxLayout()
+        layout.setSpacing(15)
+        layout.addLayout(form)
+        layout.addWidget(button_box)
+        self.setLayout(layout)
+
+    @staticmethod
+    def get(configuration, parent=None):
+        dialog = CellsShapeDialog(configuration, parent)
+        result = dialog.exec_() == QDialog.Accepted
+        content = {"rows": dialog.rows,
+                   "columns": dialog.columns}
+        return content, result
+
+    @property
+    def rows(self):
+        return self.rows_spinbox.value()
+
+    @property
+    def columns(self):
+        return self.cols_spinbox.value()
