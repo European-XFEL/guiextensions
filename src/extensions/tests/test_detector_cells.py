@@ -1,4 +1,5 @@
 import numpy as np
+from qtpy.QtCore import Qt
 
 from karabo.native import (
     AccessMode, Configurable, Hash, NDArray, Node, UInt16, VectorUInt16)
@@ -6,8 +7,8 @@ from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_hash)
 
 from ..display_detector_cells import (
-    BRUSH_DARK, BRUSH_LIT, BRUSH_UNUSED, PEN_UNUSED, MultipleDetectorCells,
-    SingleDetectorCells)
+    BRUSH_DARK, BRUSH_LIT, BRUSH_UNUSED, PEN_UNUSED, RED,
+    MultipleDetectorCells, SingleDetectorCells)
 from ..utils import get_ndarray_hash_from_data
 
 
@@ -64,7 +65,7 @@ class BaseTestCase:
 
         def tearDown(self):
             self.controller.destroy()
-            assert self.controller.widget is None
+            assert self.widget is None
 
         def set_sample_data(self):
             """Set and returns example data to the device
@@ -82,35 +83,76 @@ class BaseTestCase:
         def test_values(self):
             nfrm, npulse_per_frame = self.set_sample_data()
 
-            self.assertEqual(self.controller.widget.nfrm, nfrm)
+            self.assertEqual(self.widget.nfrm, nfrm)
             np.testing.assert_array_equal(
-                self.controller.widget.npulse_per_frame, npulse_per_frame)
+                self.widget.npulse_per_frame, npulse_per_frame)
 
         def test_colors(self):
-            cell = self.controller.widget.cells[0]
+            cell = self.widget.cells[0]
             self.assertEqual(cell.pen(), PEN_UNUSED)
             self.assertEqual(cell.brush(), BRUSH_UNUSED)
 
             self.set_sample_data()
 
-            cell = self.controller.widget.cells[0]
+            cell = self.widget.cells[0]
             self.assertEqual(cell.pen(), PEN_UNUSED)
             self.assertEqual(cell.brush(), BRUSH_DARK)
 
-            cell = self.controller.widget.cells[1]
+            cell = self.widget.cells[1]
             self.assertEqual(cell.pen(), PEN_UNUSED)
             self.assertEqual(cell.brush(), BRUSH_LIT)
 
         def test_labels(self):
-            nlit_label = self.controller.widget.nlit_legend
-            ncell_label = self.controller.widget.ncell_legend
-            self.assertEqual(nlit_label.toPlainText(), "LIT:   0")
+            nlit_label = self.widget.nlit_legend
+            ncell_label = self.widget.ncell_legend
+            self.assertEqual(nlit_label.toPlainText(), "LIT:    0")
             self.assertEqual(ncell_label.toPlainText(), "USED:   0")
 
             self.set_sample_data()
 
-            self.assertEqual(nlit_label.toPlainText(), "LIT:   4")
+            self.assertEqual(nlit_label.toPlainText(), "LIT:    4")
             self.assertEqual(ncell_label.toPlainText(), "USED: 202")
+
+        def test_shape_without_values(self):
+            rows, cols = self.model.rows, self.model.columns
+            self.assertEqual(self.widget.nrow, rows)
+            self.assertEqual(self.widget.ncol, cols)
+            self.assertEqual(len(self.widget.cells), rows * cols)
+
+            rows, cols = 40, 20
+            self.widget.set_cells(rows, cols)
+            self.assertEqual(self.widget.nrow, rows)
+            self.assertEqual(self.widget.ncol, cols)
+            self.assertEqual(len(self.widget.cells), rows * cols)
+
+        def test_shape_with_values(self):
+            self.assertEqual(self.widget.cells[0].brush(), BRUSH_UNUSED)
+
+            self.set_sample_data()
+            self.widget.set_cells(40, 20)
+
+            self.assertEqual(self.widget.cells[0].brush(), BRUSH_DARK)
+            self.assertEqual(self.widget.cells[1].brush(), BRUSH_LIT)
+
+        def test_background(self):
+            view = self.widget.view
+            self.assertEqual(view.backgroundBrush().color(), Qt.white)
+
+            # Set the data. The default size should be larger
+            self.set_sample_data()
+            self.assertEqual(view.backgroundBrush().color(), Qt.white)
+
+            # Set a smaller shape than the actual cells
+            self.widget.set_cells(1, 3)
+            self.assertEqual(view.backgroundBrush().color(), RED)
+
+        @property
+        def model(self):
+            return self.controller.model
+
+        @property
+        def widget(self):
+            return self.controller.widget
 
 
 class TestOldDetectorCells(BaseTestCase.DetectorCellsWidget):

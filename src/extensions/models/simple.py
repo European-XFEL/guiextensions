@@ -1,6 +1,6 @@
 from xml.etree.ElementTree import SubElement
 
-from traits.api import Bool, Enum, String
+from traits.api import Bool, Enum, Int, String
 
 from karabo.common.scenemodel.api import (
     BaseDisplayEditableWidget, BaseWidgetObjectData)
@@ -67,11 +67,14 @@ class DynamicPulseIdMapModel(BaseWidgetObjectData):
 
 
 class DetectorCellsModel(BaseWidgetObjectData):
-    """A model for the AgipdLitFrameFinder with single pattern"""
+    """A model for the LitFrameFinder widget with single pattern"""
+    rows = Int(11)
+    columns = Int(32)
+    legend_location = String('bottom')
 
 
-class MultipleDetectorCellsModel(BaseWidgetObjectData):
-    """A model for the AgipdLitFrameFinder with multiple patterns"""
+class MultipleDetectorCellsModel(DetectorCellsModel):
+    """A model for the LitFrameFinder widget with multiple patterns"""
 
 
 class VectorLimitedIntLineEditModel(BaseEditWidget):
@@ -89,8 +92,7 @@ class LimitedIntLineEditModel(BaseEditWidget):
 # Model must have __NAME__Model. Widget must have __NAME__ as class name
 _SIMPLE_WIDGET_MODELS = (
     "IPMQuadrantModel", "PulseIdMapModel", "DynamicPulseIdMapModel",
-    "DisplayConditionCommandModel", "DetectorCellsModel",
-    "MultipleDetectorCellsModel", "VectorLimitedIntLineEditModel",
+    "DisplayConditionCommandModel", "VectorLimitedIntLineEditModel",
     "LimitedIntLineEditModel",
     "FileUploaderModel")
 
@@ -168,6 +170,35 @@ def _editable_options_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, "EditableTextOptions")
     element.set(NS_KARABO + "strict", str(model.strict).lower())
+
+
+@register_scene_reader("DetectorCells")
+def _detector_cells_reader(element, model=DetectorCellsModel):
+    traits = read_base_widget_data(element)
+    traits["rows"] = int(element.get(NS_KARABO + "rows", "0"))
+    traits["columns"] = int(element.get(NS_KARABO + "columns", "0"))
+    traits["legend_location"] = element.get(NS_KARABO + "legend_location",
+                                            "bottom")
+    return model(**traits)
+
+
+@register_scene_writer(DetectorCellsModel)
+def _detector_cells_writer(model, parent, name="DetectorCells"):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_widget_data(model, element, name)
+    element.set(NS_KARABO + "rows", str(model.rows))
+    element.set(NS_KARABO + "columns", str(model.columns))
+    element.set(NS_KARABO + "legend_location", model.legend_location)
+
+
+@register_scene_reader("MultipleDetectorCells")
+def _multiple_detector_cells_reader(element):
+    return _detector_cells_reader(element, model=MultipleDetectorCellsModel)
+
+
+@register_scene_writer(MultipleDetectorCellsModel)
+def _multiple_detector_cells_writer(model, parent):
+    _detector_cells_writer(model, parent, name="MultipleDetectorCells")
 
 
 # ----------------------------------------------------------------------------
