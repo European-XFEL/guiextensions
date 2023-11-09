@@ -1,7 +1,8 @@
 # flake8: noqa
 
 from .complex import (
-    LimitedDoubleLineEditModel, VectorLimitedDoubleLineEditModel)
+    DetectorCellsModel, LimitedDoubleLineEditModel, MultipleDetectorCellsModel,
+    VectorLimitedDoubleLineEditModel)
 from .images import (
     BeamGraphModel, CircleRoiGraphModel, ImageCrossHairGraphModel,
     RectRoiGraphModel, ROIAnnotateModel, TickedImageGraphModel)
@@ -14,12 +15,12 @@ from .plots import (
     PeakIntegrationGraphModel, ScatterPositionModel, TableVectorXYGraphModel,
     UncertaintyGraphModel, VectorGraphWithLinearRegionsModel, XasGraphModel)
 from .simple import (
-    DetectorCellsModel, DisplayConditionCommandModel, DynamicPulseIdMapModel,
+    DisplayConditionCommandModel, DynamicPulseIdMapModel,
     EditableDateTimeModel, EditableTextOptionsModel, FileUploaderModel,
-    IPMQuadrantModel, LimitedIntLineEditModel, MultipleDetectorCellsModel,
-    PointAndClickModel, PulseIdMapModel, ScantoolBaseModel,
-    ScantoolDeviceViewModel, ScantoolTemplatesModel,
-    StateAwareComponentManagerModel, VectorLimitedIntLineEditModel)
+    IPMQuadrantModel, LimitedIntLineEditModel, PointAndClickModel,
+    PulseIdMapModel, ScantoolBaseModel, ScantoolDeviceViewModel,
+    ScantoolTemplatesModel, StateAwareComponentManagerModel,
+    VectorLimitedIntLineEditModel)
 from .tables import (
     CriticalCompareViewModel, DeviceReconfigurationTableModel,
     DoocsLocationTableModel, DoocsMirrorTableModel, MotorAssignmentTableModel,
