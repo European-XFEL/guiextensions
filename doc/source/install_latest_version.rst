@@ -30,3 +30,17 @@ From command line
 You can update GUI Extensions by using the ``karabo-update-extensions`` executable as
 
 `karabo-update-extensions --latest`
+
+Remote installation
+===================
+
+The GUI extension packages can't be directly downloaded from outside the DESY network.
+One way around this is to proxy the connection through SSH:
+
+.. code-block:: shell
+
+    ssh -D 22222 myusername@max-exfl-display.desy.de
+
+    # In another terminal
+    all_proxy=socks5://localhost:22222 karabo-update-extensions --latest
+
