@@ -1,15 +1,17 @@
 from enum import Enum
 
 import numpy as np
-from qtpy.QtCore import QRectF, Qt
+from qtpy.QtCore import Qt
 from qtpy.QtGui import QBrush, QColor, QFont, QPainter, QPen
 from qtpy.QtWidgets import (
-    QAction, QDialog, QDialogButtonBox, QFormLayout, QGraphicsScene,
-    QGraphicsView, QGridLayout, QHBoxLayout, QInputDialog, QLabel, QPushButton,
-    QSlider, QSpinBox, QVBoxLayout, QWidget)
+    QAction, QDialog, QDialogButtonBox, QFormLayout, QGraphicsRectItem,
+    QGraphicsScene, QGraphicsView, QGridLayout, QHBoxLayout, QInputDialog,
+    QLabel, QPushButton, QSlider, QSpinBox, QVBoxLayout, QWidget)
 from traits.api import Bool, Instance, Int
 
-from karabogui.binding.api import WidgetNodeBinding, get_binding_value
+from karabo.common.api import State
+from karabogui.binding.api import (
+    BaseBinding, PropertyProxy, StringBinding, get_binding_value)
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller, with_display_type)
 from karabogui.fonts import get_font_size_from_dpi
@@ -21,19 +23,13 @@ GRAY = QColor(127, 127, 127, 255)
 BLUE = QColor(31, 119, 180, 255)
 ORANGE = QColor(255, 127, 14, 255)
 RED = QColor(255, 204, 203, 255)
-
-BRUSH_UNUSED = QBrush(GRAY)
-BRUSH_DARK = QBrush(BLUE)
-BRUSH_LIT = QBrush(ORANGE)
-PEN_UNUSED = QPen(Qt.transparent)
+NOPEN = QPen(Qt.transparent)
 
 ALGN_CENTER = 1
 ALGN_TOP = 0
 ALGN_BOTTOM = 2
 ALGN_LEFT = 0
 ALGN_RIGHT = 2
-
-CELL_BRUSH = (BRUSH_UNUSED, BRUSH_DARK, BRUSH_LIT)
 
 OFFSET_H = 40
 OFFSET_V = 40
@@ -56,6 +52,61 @@ class Location(Enum):
     RIGHT = 'right'
 
 
+class CellStyle(Enum):
+    UNUSED = (NOPEN, QBrush(GRAY), None)
+    DARK = (NOPEN, QBrush(BLUE), None)
+    LIT = (NOPEN, QBrush(ORANGE), None)
+    LIT_BLOCKED = (NOPEN, QBrush(ORANGE, Qt.Dense4Pattern), BLUE)
+
+    @property
+    def brush(self):
+        return self.value[1]
+
+    @property
+    def pen(self):
+        return self.value[0]
+
+    @property
+    def bgcolor(self):
+        return self.value[2]
+
+    @classmethod
+    def index(cls, pos):
+        return list(cls)[pos]
+
+
+class QGraphicsCellItem(QGraphicsRectItem):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._bg_color = Qt.transparent
+
+    def paint(self, painter, option, widget):
+        if self._bg_color != Qt.transparent:
+            painter.setBrush(QBrush(self._bg_color))
+            painter.setPen(QPen(Qt.transparent))
+            painter.drawRect(self.rect())
+        super().paint(painter, option, widget)
+
+    def setBackgroundColor(self, color):
+        self._bg_color = (color if color is not None
+                          else Qt.transparent)
+
+
+def draw_cell(scene, x, y, style=CellStyle.UNUSED):
+    cell = QGraphicsCellItem(x, y, SIDE, SIDE)
+    cell.setPen(style.pen)
+    cell.setBrush(style.brush)
+    cell.setBackgroundColor(style.bgcolor)
+    scene.addItem(cell)
+    return cell
+
+
+def set_cell_style(cell, style):
+    cell.setPen(style.pen)
+    cell.setBrush(style.brush)
+    cell.setBackgroundColor(style.bgcolor)
+
+
 class DetectorCellsWidget(QWidget):
 
     nrow = 0
@@ -68,7 +119,7 @@ class DetectorCellsWidget(QWidget):
         self.cells = []
 
         self.nfrm = 0
-        self.npulse_per_frame = np.zeros(self.nfrm, dtype=np.uint16)
+        self.cell_style_codes = np.zeros(self.nfrm, dtype=np.uint16)
 
         grid = QGridLayout(self)
         self.view = QGraphicsView()
@@ -146,14 +197,14 @@ class DetectorCellsWidget(QWidget):
 
         if update:
             # Store parameters temporarily
-            nfrm, npulse_per_frame = self.nfrm, self.npulse_per_frame
+            nfrm, cell_style_codes = self.nfrm, self.cell_style_codes
 
             # Reset to default values
             self.nfrm = 0
-            self.npulse_per_frame = np.zeros(self.nfrm, dtype=np.uint16)
+            self.cell_style_codes = np.zeros(self.nfrm, dtype=np.uint16)
 
             # Set the parameters back and trigger painting
-            self.set_parameters(nfrm, npulse_per_frame)
+            self.set_parameters(nfrm, 0, cell_style_codes)
 
     def add_text(self, text, x, y, va=ALGN_CENTER, ha=ALGN_CENTER,
                  font='Courier', size=9):
@@ -169,7 +220,6 @@ class DetectorCellsWidget(QWidget):
 
     def draw_cells(self):
         self.cells.clear()
-        rect = QRectF(0, 0, SIDE, SIDE)
 
         y = OFFSET_V
         for row in range(self.nrow):
@@ -187,11 +237,7 @@ class DetectorCellsWidget(QWidget):
                     self.add_text(f'{col}',
                                   xpos, ypos - TICK_LEN, va=ALGN_BOTTOM)
 
-                # background representing fel/no-fel
-                cell = self.scene.addRect(
-                    rect.translated(x, y), PEN_UNUSED, BRUSH_UNUSED)
-
-                self.cells.append(cell)
+                self.cells.append(draw_cell(self.scene, x, y))
                 x += STRIDE_H
 
             y += STRIDE_V
@@ -205,22 +251,21 @@ class DetectorCellsWidget(QWidget):
         draw()
 
     def _draw_legends_right(self):
-        rect = QRectF(0, 0, SIDE, SIDE)
         x = OFFSET_H + self.ncol * STRIDE_H + 15
 
         y = OFFSET_V
         ypos = y + SIDE / 2
-        self.scene.addRect(rect.translated(x, y), PEN_UNUSED, BRUSH_UNUSED)
+        draw_cell(self.scene, x, y, CellStyle.UNUSED)
         self.add_text('UNUSED', x + SIDE, ypos, ha=ALGN_LEFT)
 
         y += STRIDE_V
         ypos = y + SIDE / 2
-        self.scene.addRect(rect.translated(x, y), PEN_UNUSED, BRUSH_DARK)
+        draw_cell(self.scene, x, y, CellStyle.DARK)
         self.add_text('DARK', x + SIDE, ypos, ha=ALGN_LEFT)
 
         y += STRIDE_V
         ypos = y + SIDE / 2
-        self.scene.addRect(rect.translated(x, y), PEN_UNUSED, BRUSH_LIT)
+        draw_cell(self.scene, x, y, CellStyle.LIT)
         self.nlit_legend = self.add_text("LIT:    0",
                                          x + SIDE, ypos, ha=ALGN_LEFT)
 
@@ -230,48 +275,42 @@ class DetectorCellsWidget(QWidget):
                                           x + SIDE, ypos, ha=ALGN_LEFT)
 
     def _draw_legends_bottom(self):
-        rect = QRectF(0, 0, SIDE, SIDE)
         y = OFFSET_V + STRIDE_V * (self.nrow + 1)
         ypos = y + SIDE / 2
 
         x = OFFSET_H
-        self.scene.addRect(rect.translated(x, y), PEN_UNUSED, BRUSH_UNUSED)
+        draw_cell(self.scene, x, y, CellStyle.UNUSED)
         self.add_text('UNUSED', x + SIDE, ypos, ha=ALGN_LEFT)
 
         x += STRIDE_LEGEND
-        self.scene.addRect(rect.translated(x, y), PEN_UNUSED, BRUSH_DARK)
+        draw_cell(self.scene, x, y, CellStyle.DARK)
         self.add_text('DARK', x + SIDE, ypos, ha=ALGN_LEFT)
 
         x += STRIDE_LEGEND
-        self.scene.addRect(rect.translated(x, y), PEN_UNUSED, BRUSH_LIT)
+        draw_cell(self.scene, x, y, CellStyle.LIT)
         self.nlit_legend = self.add_text("LIT:    0", x + SIDE, ypos,
                                          ha=ALGN_LEFT)
 
         x = max(OFFSET_H + self.ncol * STRIDE_H - GAP_H, LEGEND_MIN_WIDTH)
         self.ncell_legend = self.add_text("USED:   0", x, ypos, ha=ALGN_RIGHT)
 
-    def set_parameters(self, nfrm, npulse_per_frame):
-        if len(npulse_per_frame) != nfrm:
-            npulse_per_frame = np.zeros(nfrm, dtype=np.uint16)
+    def set_parameters(self, nfrm, nlit, cell_style_codes):
+        if len(cell_style_codes) != nfrm:
+            cell_style_codes = np.zeros(nfrm, dtype=np.uint16)
 
         # Determine changed pulses
-        nsmall = min(nfrm, self.nfrm)
-        nlarge = max(nfrm, self.nfrm)
-        pulse_diff = np.where(self.npulse_per_frame[:nsmall]
-                              != npulse_per_frame[:nsmall])[0]
-        used_diff = np.arange(nsmall, nlarge)
-        changed_cells = np.unique(np.concatenate([pulse_diff, used_diff]))
+        nsmall = min(min(nfrm, self.nfrm), len(self.cells))
+        nlarge = min(max(nfrm, self.nfrm), len(self.cells))
+        overlap_diff = np.flatnonzero(self.cell_style_codes[:nsmall]
+                                      != cell_style_codes[:nsmall])
+        oneside_diff = np.arange(nsmall, nlarge)
+        changed_cells = np.concatenate([overlap_diff, oneside_diff])
 
         # Update cells
         for i in changed_cells:
-            if i >= len(self.cells):
-                # Displayed cells are less than actual cells.
-                # We stop iterating.
-                break
-
             cell = self.cells[i]
-            cell_state = int(npulse_per_frame[i] > 0) + 1 if i < nfrm else 0
-            cell.setBrush(CELL_BRUSH[cell_state])
+            style = CellStyle.index(cell_style_codes[i] if i < nfrm else 0)
+            set_cell_style(cell, style)
 
         # Display indicators if number of incoming used cells is greater than
         # the number of displayed cells
@@ -283,13 +322,10 @@ class DetectorCellsWidget(QWidget):
 
         # Finalize
         self.nfrm = nfrm
-        self.npulse_per_frame = npulse_per_frame
-        nlit = np.sum(npulse_per_frame > 0)
+        self.cell_style_codes = cell_style_codes
 
         self.ncell_legend.setPlainText(f"USED: {nfrm:3d}")
         self.nlit_legend.setPlainText(f"LIT:  {nlit:3d}")
-
-        self.update()
 
     def set_num_patterns(self, value):
         self.npattern_slider.setMinimum(1 if value else 0)
@@ -311,6 +347,11 @@ class DetectorCellsWidget(QWidget):
         self.npattern_spinbox.setDisabled(enabled or is_single_pattern)
 
 
+def _is_state(binding):
+    return(isinstance(binding, StringBinding)
+           and binding.display_type == "State")
+
+
 class BaseDetectorCellsController(BaseBindingController):
     """Base class for the detector cells controller.
 
@@ -319,6 +360,9 @@ class BaseDetectorCellsController(BaseBindingController):
 
     _is_union = Bool(False)
     _index = Int
+    _shutter_open = Bool(True)
+
+    _shutter_proxy = Instance(PropertyProxy)
 
     def create_widget(self, parent):
         rows, cols = self.model.rows, self.model.columns
@@ -337,11 +381,55 @@ class BaseDetectorCellsController(BaseBindingController):
 
         return widget
 
+    def add_proxy(self, proxy):
+        binding = proxy.binding
+
+        # We postpone adding the proxy if it is still None:
+        # This is usual for properties of offline devices
+        if binding is None:
+            return True
+
+        if _is_state(binding) and self._shutter_proxy is None:
+            self._shutter_proxy = proxy
+            return True
+
     def binding_update(self, proxy):
+        self.add_proxy(proxy)
         self.value_update(proxy)
 
     def value_update(self, proxy):
-        """Reimplemented in subclasses"""
+        value = get_binding_value(proxy)
+        if value is None:
+            return
+
+        if proxy is self._shutter_proxy:
+            self._shutter_open = State(value).isDerivedFrom(State.ACTIVE)
+            node = get_binding_value(self.proxy)
+        elif proxy is self.proxy:
+            node = value
+            value = self._shutter_open
+
+        # 0. Get values
+        npulse_per_frame = self._get_npulse_per_frame(node)
+
+        # 1. Resolve index
+        self.widget.set_num_patterns(self._get_num_pattern(npulse_per_frame))
+
+        # 2. Finalize
+        self.widget.set_parameters(*self._get_pattern(npulse_per_frame))
+
+    def _get_cell_style_codes(self, npulse_per_frame, shutter_open):
+        litframes = (npulse_per_frame != 0).astype(int)
+        return litframes + 1 + int(not shutter_open) * litframes
+
+    def _get_pattern(self, npulse_per_frame=None):
+        raise NotImplementedError
+
+    def _get_npulse_per_frame(self, node):
+        raise NotImplementedError
+
+    def _get_num_pattern(self, npulse_per_frame):
+        raise NotImplementedError
 
     def _configure_cells_shape(self):
         config = {"rows": self.model.rows, "columns": self.model.columns}
@@ -371,7 +459,7 @@ class BaseDetectorCellsController(BaseBindingController):
 @register_binding_controller(
     ui_name='Detector Cells Widget',
     klassname='DetectorCells',
-    binding_type=WidgetNodeBinding,
+    binding_type=BaseBinding,
     is_compatible=with_display_type('WidgetNode|DetectorCells'),
     priority=0, can_show_nothing=False)
 class SingleDetectorCells(BaseDetectorCellsController):
@@ -385,21 +473,30 @@ class SingleDetectorCells(BaseDetectorCellsController):
     """
     model = Instance(DetectorCellsModel, args=())
 
-    def value_update(self, proxy):
-        node = get_binding_value(proxy)
-        if node is None:
-            return
-
+    def _get_npulse_per_frame(self, node):
         nfrm = get_binding_value(node.nFrame, default=0)
         npulse_per_frame = get_binding_value(
             node.nPulsePerFrame, default=np.zeros(nfrm, np.uint16))
-        self.widget.set_parameters(nfrm, npulse_per_frame)
+        return npulse_per_frame
+
+    def _get_num_pattern(self, npulse_per_frame):
+        return 0
+
+    def _get_pattern(self, npulse_per_frame=None):
+        if npulse_per_frame is None:
+            node = get_binding_value(self.proxy)
+            npulse_per_frame = self._get_npulse_per_frame(node)
+        nfrm = len(npulse_per_frame)
+        nlit = np.sum(npulse_per_frame > 0)
+        pattern = self._get_cell_style_codes(
+            npulse_per_frame, self._shutter_open)
+        return nfrm, nlit, pattern
 
 
 @register_binding_controller(
     ui_name='Detector Cells Widget',
     klassname='MultipleDetectorCells',
-    binding_type=WidgetNodeBinding,
+    binding_type=BaseBinding,
     is_compatible=with_display_type('WidgetNode|MultipleDetectorCells'),
     priority=0, can_show_nothing=False)
 class MultipleDetectorCells(BaseDetectorCellsController):
@@ -419,34 +516,29 @@ class MultipleDetectorCells(BaseDetectorCellsController):
         widget.button.toggled.connect(self._enable_union)
         return widget
 
-    def value_update(self, proxy):
-        node = get_binding_value(proxy)
-        if node is None:
-            return
-
-        # 0. Get values
+    def _get_npulse_per_frame(self, node):
         npulse_per_frame, _ = get_array_data(
             node.nPulsePerFrame, default=np.array([[]], dtype=np.uint16))
+        return npulse_per_frame
 
-        # 1. Resolve index
-        self.widget.set_num_patterns(len(npulse_per_frame))
-
-        # 2. Finalize
-        self.widget.set_parameters(*self._get_pattern(npulse_per_frame))
+    def _get_num_pattern(self, npulse_per_frame):
+        return len(npulse_per_frame)
 
     def _get_pattern(self, npulse_per_frame=None):
-        node = get_binding_value(self.proxy)
-
         if npulse_per_frame is None:
-            npulse_per_frame, _ = get_array_data(
-                node.nPulsePerFrame, default=np.array([[]], dtype=np.uint16))
+            node = get_binding_value(self.proxy)
+            npulse_per_frame = self._get_npulse_per_frame(node)
+
         nframe = npulse_per_frame.shape[1]
 
         if npulse_per_frame.size:
             npulse_per_frame = (npulse_per_frame.sum(axis=0) if self._is_union
                                 else npulse_per_frame[self._index])
 
-        return nframe, npulse_per_frame
+        nlit = np.sum(npulse_per_frame > 0)
+        pattern = self._get_cell_style_codes(
+            npulse_per_frame, self._shutter_open)
+        return nframe, nlit, pattern
 
     def _enable_union(self, enabled):
         self._is_union = enabled
