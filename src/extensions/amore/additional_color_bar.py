@@ -14,8 +14,7 @@ from karabogui.fonts import get_qfont
 from karabogui.graph.common.const import X_AXIS_HEIGHT
 from karabogui.graph.image.colorbar import ColorViewBox
 
-from .aux_filtering_and_plotting import (
-    _create_lut, removing_rois_from_plot, roi_filtering, roi_plotting)
+from .aux_filtering_and_plotting import _create_lut, roi_filter, roi_plot
 from .constants_keys import LIGHT_BLUE, LIGHT_GREEN, LIGHT_RED, MULTICOLOR
 
 # -----
@@ -46,6 +45,7 @@ class ColorBarWidgetDates(GraphicsWidget):
 
         self.barItem = ImageItem(parent=self)
         self.barItem.setImage(data)
+        self.vb.scene().sigPrepareForPaint.connect(self.vb.prepareForPaint)
         self.vb.addItem(self.barItem)
         self.grid_layout.addItem(self.vb, 1, 0)
         self.vb.setYRange(*self.levels, padding=0)
@@ -70,7 +70,6 @@ class ColorBarWidgetDates(GraphicsWidget):
         self.axisItem.setStyle(tickFont=font)
         self.axisItem.linkToView(self.vb)
         self.grid_layout.addItem(self.axisItem, 1, 1)
-
         self.setLayout(self.grid_layout)
 
     # ---------------------------------------------------------------------
@@ -101,12 +100,12 @@ class ColorBarWidgetDates(GraphicsWidget):
             # because each ROI has a different color depending on when
             # it was saved, we removed it and we plot it again
             # instead of iteration over _rois and updating the color.
-            removing_rois_from_plot(self._display_image_annotate)
+            self._display_image_annotate.remove_rois_from_plot()
             # First we iterate over the ROIS got from the past,
             # Get history from interval.
-            roi_dict_list = roi_filtering(
+            roi_dict_list = roi_filter(
                 self._display_image_annotate, self.selected_color)
-            roi_plotting(self._display_image_annotate, roi_dict_list)
+            roi_plot(self._display_image_annotate, roi_dict_list)
 
     # ---------------------------------------------------------------------
     # Qt Events
@@ -142,7 +141,7 @@ class ColorBarWidgetDates(GraphicsWidget):
 
 
 def add_colorbar_rois(image_annotate):
-    """Enable the standard colorbar of this widget"""
+    # Enable the standard colorbar of this widget
     # We add an additional colorbar for the ROIs
     plotItem = image_annotate.widget.plotItem
     image_annotate.widget._colorbarl = ColorBarWidgetDates(

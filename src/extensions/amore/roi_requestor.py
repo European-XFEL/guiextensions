@@ -11,14 +11,12 @@ from qtpy.QtWidgets import QDialog
 
 from karabo.native import Hash
 from karabogui import messagebox
-from karabogui.api import is_device_online
-from karabogui.graph.common.api import ROITool
+from karabogui.api import ROITool, is_device_online
 from karabogui.logger import get_logger
 from karabogui.request import call_device_slot
 
 from .additional_color_bar import add_colorbar_rois, remove_rois_colorbar
-from .aux_filtering_and_plotting import (
-    removing_rois_from_plot, roi_filtering, roi_plotting)
+from .aux_filtering_and_plotting import roi_filter, roi_plot
 from .constants_keys import LIGHT_RED
 
 INDIVIDUAL_ROI_COLOR = [110, 255, 244]
@@ -38,20 +36,6 @@ class RoiRequestor(QObject):
         (self._display_image_annotate.coordinatesTool.
          ui_get_last_coordinates.clicked.connect(
              partial(self._display_image_annotate.update_from_remote, True)))
-
-    def get_annotation_type(self):
-        # Set the ROItool to the proper value set by the user
-        if (
-                self._display_image_annotate.searchingTool.
-                ui_annotation_type.currentText() == "Crosshair"):
-            self._display_image_annotate.widget.roi.selected.emit(
-                ROITool.Crosshair)
-            self._display_image_annotate.annotation_type = 2
-        elif (
-                self._display_image_annotate.searchingTool.
-                ui_annotation_type.currentText() == "Rectangle"):
-            self._display_image_annotate.widget.roi.selected.emit(ROITool.Rect)
-            self._display_image_annotate.annotation_type = 1
 
     def keep_track(self):
         self._display_image_annotate.previous_search_annotation.append(
@@ -99,30 +83,29 @@ class RoiRequestor(QObject):
             self._display_image_annotate.widget.roi.selected.emit(
                 ROITool.NoROI)
             # Set the ROItool to the proper value set by the user
-            self.get_annotation_type()
             # Removing ROIS obtained in a previous search
-            removing_rois_from_plot(self._display_image_annotate)
-            roi_dict_list = roi_filtering(
+            roi_tool = ROITool[self._display_image_annotate.searchingTool.
+                               ui_annotation_type_value]
+            roi_dict_list = roi_filter(
                 self._display_image_annotate, color)
-            roi_plotting(self._display_image_annotate, roi_dict_list)
             # We keep track of the searches in case the user
             # wants to keep previous values.
             self.keep_track()
             if hasattr(self._display_image_annotate.widget, "_colorbarl"):
                 remove_rois_colorbar(self._display_image_annotate.widget)
-            if (len(self._display_image_annotate._reference_rois[
-                    self._display_image_annotate.annotation_type]) == 0
-                    or len(self._display_image_annotate.delta_days_filtered)
-                    == 0):
+            if len(roi_dict_list[0]) > 0:
+                self._display_image_annotate.remove_rois_from_plot()
+                roi_plot(self._display_image_annotate, roi_dict_list)
+                self._display_image_annotate.widget.roi.selected.emit(
+                    roi_tool)
+                add_colorbar_rois(self._display_image_annotate)
+            else:
                 self._display_image_annotate.no_rois_found_message(
                     "No reference values saved from this"
                     " device and ROI type")
                 # And we unselect the ROItool
                 self._display_image_annotate.widget.roi.selected.emit(
                     ROITool.NoROI)
-            else:
-                add_colorbar_rois(self._display_image_annotate)
-
             # We have to first remove all the previous ROIS
             # anyway because their color depend on their
             # "relative" date they were saved.

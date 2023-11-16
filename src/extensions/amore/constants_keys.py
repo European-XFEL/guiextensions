@@ -1,6 +1,6 @@
 import numpy as np
 
-from karabogui.graph.common.api import ROITool
+from karabogui.api import ROITool
 from karabogui.graph.common.roi.crosshair import CrosshairROI
 from karabogui.graph.common.roi.rect import RectROI
 

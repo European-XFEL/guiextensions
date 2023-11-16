@@ -83,7 +83,7 @@ class AnnotationSearchDialog(QDialog):
         annotation_type_name = QLabel('&Annotation Type', self)
         self.ui_annotation_type = QComboBox(self)
         self.ui_annotation_type.addItems(["Crosshair",
-                                          "Rectangle"])
+                                          "Rect"])
         annotation_type_name.setBuddy(self.ui_annotation_type)
 
         self.ui_keep_all = QRadioButton(
