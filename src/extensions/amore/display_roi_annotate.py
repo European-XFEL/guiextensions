@@ -7,20 +7,17 @@ from collections import OrderedDict, defaultdict
 from functools import partial
 
 from pyqtgraph import Point, functions as fn
-from traits.api import Bool, Enum, Float, Instance, List, String, WeakRef
+from traits.api import Bool, Dict, Enum, Float, Instance, List, String, WeakRef
 
 from karabo.common.scenemodel.api import (
     build_graph_config, restore_graph_config)
 from karabo.common.states import State
-from karabogui import messagebox
-from karabogui.api import is_device_online
-from karabogui.binding.api import (
-    ImageBinding, PropertyProxy, WidgetNodeBinding, get_binding_value)
-from karabogui.controllers.api import (
-    BaseBindingController, register_binding_controller)
-from karabogui.graph.common.api import AuxPlots, MouseMode, ROITool
-from karabogui.graph.image.api import (
-    KaraboImageNode, KaraboImagePlot, KaraboImageView, KaraboImageViewBox)
+from karabogui.api import (
+    BaseBindingController, ImageBinding, KaraboImageNode, KaraboImagePlot,
+    KaraboImageView, KaraboImageViewBox, MouseMode, PropertyProxy, ROITool,
+    WidgetNodeBinding, get_binding_value, messagebox,
+    register_binding_controller)
+from karabogui.graph.common.api import AuxPlots
 
 from ..models.api import ROIAnnotateModel
 from .annotation_dialog_and_display import (
@@ -62,6 +59,7 @@ class DisplayImageAnnotate(BaseBindingController):
     annotation_type = Float(2)
     delta_max = Float(5)
     delta_days_filtered = List()
+    saved_rois = Dict()
     search = Bool(False)
 
     # plot
@@ -132,6 +130,8 @@ class DisplayImageAnnotate(BaseBindingController):
             if (proxy.binding.display_type == "WidgetNode|CoordinateAnnotation"
                     and self.roi_proxy is None):
                 self.roi_proxy = proxy
+        else:
+            self.remote_instance_id = proxy.root_proxy.device_id
         # If a device is offline, we still add it.
         return True
 
@@ -230,7 +230,7 @@ class DisplayImageAnnotate(BaseBindingController):
     def plot(self):
         return self._plot
 
-    def plotting(self, info, flag):
+    def plotting(self, info):
         horizontal_coordinate = info[0]
         vertical_coordinate = info[1]
         annotation = info[2]
@@ -238,54 +238,57 @@ class DisplayImageAnnotate(BaseBindingController):
         current_tool = info[4]
         size = [info[5], info[6]]
         color = info[7]
-        try:
-            self.add_rois_to_plot(current_tool,
-                                  [horizontal_coordinate, vertical_coordinate],
-                                  saved_date, color, size=size,
-                                  name=annotation)
-            self.widget.roi.show(self.widget.roi.current_tool)
-        except Exception:
-            # We show a message in case someone wants
-            # to plot/display the latest value sent to device
-            # but there's nothing there/
-            if flag is True:
-                self.no_rois_found_message(
-                    "Last value sent to device cannot be  "
-                    "plotted. Please, get values from "
-                    "interval.")
+        self.add_rois_to_plot(current_tool,
+                              [horizontal_coordinate, vertical_coordinate],
+                              saved_date, color, size=size,
+                              name=annotation)
+        self.widget.roi.show(self.widget.roi.current_tool)
 
     def update_from_remote(self, flag=True):
         color = INDIVIDUAL_ROI_COLOR
         info = []
-        device_online = (is_device_online(
-            self.roi_proxy.root_proxy.device_id))
-        if device_online:
-            for prop, prop_type in zip(HISTORY_HASH_PROPERTIES,
-                                       HISTORY_HASH_TYPES):
-                prop_value = self._get_value(self.roi_proxy.value,
-                                             prop)
-                if type(prop_value) == prop_type:
-                    info.append(
-                        self._get_value(self.roi_proxy.value,
-                                        prop))
-                else:
-                    messagebox.show_error(f"Wrong data type for {prop}")
-                    return
-            info.append(color)
-            self.widget.roi.selected.emit(ROITool.NoROI)
-            self.widget.roi.selected.emit(
-                self._get_value(self.roi_proxy.value,
-                                "roiTool"))
-            self.plotting(info, flag)
-        else:
-            messagebox.show_warning("Device no instantiated",
-                                    title='Device no instantiated?')
+        if (self.roi_proxy is None and flag):
+            self.no_rois_found_message(
+                f"Device {self.remote_instance_id} not instantiated")
+            return
+        for prop, prop_type in zip(HISTORY_HASH_PROPERTIES,
+                                   HISTORY_HASH_TYPES):
+            prop_value = self._get_value(self.roi_proxy.value,
+                                         prop)
+            # There are values in the node with the correct type
+            if (prop_value is not None and (type(prop_value) == prop_type)):
+                info.append(
+                    self._get_value(self.roi_proxy.value,
+                                    prop))
+            # There are values in the node property but the wrong type
+            elif type(prop_value) == prop_type:
+                messagebox.show_error(
+                    f"Wrong data type for {prop}", parent=self.widget)
+                return
+            # There are no values and we want to make the user aware of this
+            elif (prop_value is None and flag):
+                # We show a message in case someone wants
+                # to plot/display the latest value sent to device
+                # but there's nothing there
+                self.no_rois_found_message(
+                    "Last value sent to device cannot be "
+                    "plotted. Please, get values from "
+                    "interval.")
+                return
+
+        info.append(color)
+        self.widget.roi.selected.emit(ROITool.NoROI)
+        self.widget.roi.selected.emit(
+            self._get_value(self.roi_proxy.value,
+                            "roiTool"))
+        self.plotting(info)
 
     def no_rois_found_message(self, s):
         # If there's not ROI that matches the search then
         # we show a message, to make sure the users now there's
         # somethin running.
-        messagebox.show_warning(s, title='NO ROIS in Device')
+        messagebox.show_warning(
+            s, title='No ROIs in Device', parent=self.widget)
 
     def add_rois_to_plot(self, tool, pos, date, color, size=None,
                          name='', ignore_bounds=False, current_item=True):
@@ -297,7 +300,6 @@ class DisplayImageAnnotate(BaseBindingController):
                                  pen=selected_pen)
         else:
             roi_item = roi_class(pos=pos, name=name, pen=selected_pen)
-
         scaleSnap = (getattr(self.widget.roi, '_scale_snap', None)
                      or getattr(self.widget.roi, 'scaleSnap'))
         translateSnap = (getattr(self.widget.roi, '_translate_snap', None)
@@ -324,7 +326,6 @@ class DisplayImageAnnotate(BaseBindingController):
         roi_item.sigHoverEvent.connect(
             partial(display_saved_data, roi_item))
         roi_item.saved_date = date
-
         # Bookkeeping. Add the items to the list of existing ROI tools
         self.widget.roi._rois[tool].append(roi_item)
         self._reference_rois[tool].append(roi_item)
@@ -337,8 +338,21 @@ class DisplayImageAnnotate(BaseBindingController):
             self.widget.roi._set_current_item(roi_item, update=False)
             # Set as current item, in which affects the aux plots.
             roi_item._updateHoverColor()
+        # return roi_item
 
-        return roi_item
+    def remove_rois_from_plot(self):
+        """
+        This function removes existing ROIs to plot new or different ones,
+        or display existing ones in a different colour.
+        """
+        for item in self._reference_rois[
+                self.widget.roi.current_tool]:
+            try:
+                if item.textItem:
+                    self.widget.roi.plotItem.vb.removeItem(item.textItem)
+                self.widget.roi.plotItem.vb.removeItem(item)
+            except AttributeError:
+                messagebox.show_warning.info("No (latest) ROI in device")
 
     def _get_value(self, proxy, prop):
         if hasattr(proxy, prop):
