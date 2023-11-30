@@ -22,12 +22,10 @@ from karabogui.graph.common.api import AuxPlots
 from ..models.api import ROIAnnotateModel
 from .annotation_dialog_and_display import (
     AnnotationSearchDialog, DisplayTool, DisplayToolset)
-from .aux_filtering_and_plotting import display_saved_data
-from .constants_keys import (
-    HISTORY_HASH_PROPERTIES, HISTORY_HASH_TYPES, TOOL_MAP)
-from .displaying_from_past import IntervalSettings
+from .constants import HISTORY_HASH_PROPERTIES, HISTORY_HASH_TYPES, TOOL_MAP
 from .roi_annotator import RoiAnnotator
 from .roi_requestor import RoiRequestor
+from .utils import display_saved_data
 
 INDIVIDUAL_ROI_COLOR = [110, 255, 244]
 
@@ -55,7 +53,6 @@ class DisplayImageAnnotate(BaseBindingController):
     previous_search_annotation = List()
     previous_search_tool = List()
     searchingTool = Instance(AnnotationSearchDialog, args=())
-    coordinatesTool = Instance(IntervalSettings, args=())
     annotation_type = Float(2)
     delta_max = Float(5)
     delta_days_filtered = List()
@@ -109,7 +106,6 @@ class DisplayImageAnnotate(BaseBindingController):
         self._display_toolset = tb.add_toolset(DisplayTool)
         self._display_toolset.on_trait_change(self._display,
                                               "current_tool")
-
         # we delegate the sending rois to device to the RoiAnnotator,
         # which can interact via slots witht the rest of the system
         self._roi_annotator = RoiAnnotator(self, parent=parent)
@@ -146,7 +142,7 @@ class DisplayImageAnnotate(BaseBindingController):
             # We plot current roi information from remote proxy
             # No need to show the error message
             # if there is no a value in the device
-            self.update_from_remote(False)
+            self.update_from_remote()
             # If its a bit hard to add a new value from device
             # Either we don't allow to change the ROI
             # or we desactivate this
@@ -212,6 +208,10 @@ class DisplayImageAnnotate(BaseBindingController):
                     parent=self.widget)
             self._display_toolset.select(
                 DisplayTool.NoTool)
+        elif display_tool is DisplayTool.DisplayInterval:
+            self.searchingTool.exec_()
+            self._display_toolset.select(
+                DisplayTool.NoTool)
         elif display_tool is DisplayTool.NoTool:
             # reset the mouse mode to whatever it was before
             self._viewbox.set_mouse_mode(self._mouse_mode)
@@ -227,9 +227,6 @@ class DisplayImageAnnotate(BaseBindingController):
         state = get_binding_value(root_proxy.state_binding)
         return state
 
-    def plot(self):
-        return self._plot
-
     def plotting(self, info):
         horizontal_coordinate = info[0]
         vertical_coordinate = info[1]
@@ -244,12 +241,13 @@ class DisplayImageAnnotate(BaseBindingController):
                               name=annotation)
         self.widget.roi.show(self.widget.roi.current_tool)
 
-    def update_from_remote(self, flag=True):
+    def update_from_remote(self):
         color = INDIVIDUAL_ROI_COLOR
         info = []
-        if (self.roi_proxy is None and flag):
-            self.no_rois_found_message(
-                f"Device {self.remote_instance_id} not instantiated")
+        if self.roi_proxy is None:
+            msg = f"Device {self.remote_instance_id} not instantiated"
+            messagebox.show_warning(
+                msg, title='No ROIs in Device', parent=self.widget)
             return
         for prop, prop_type in zip(HISTORY_HASH_PROPERTIES,
                                    HISTORY_HASH_TYPES):
@@ -265,30 +263,12 @@ class DisplayImageAnnotate(BaseBindingController):
                 messagebox.show_error(
                     f"Wrong data type for {prop}", parent=self.widget)
                 return
-            # There are no values and we want to make the user aware of this
-            elif (prop_value is None and flag):
-                # We show a message in case someone wants
-                # to plot/display the latest value sent to device
-                # but there's nothing there
-                self.no_rois_found_message(
-                    "Last value sent to device cannot be "
-                    "plotted. Please, get values from "
-                    "interval.")
-                return
-
         info.append(color)
         self.widget.roi.selected.emit(ROITool.NoROI)
         self.widget.roi.selected.emit(
             self._get_value(self.roi_proxy.value,
                             "roiTool"))
         self.plotting(info)
-
-    def no_rois_found_message(self, s):
-        # If there's not ROI that matches the search then
-        # we show a message, to make sure the users now there's
-        # somethin running.
-        messagebox.show_warning(
-            s, title='No ROIs in Device', parent=self.widget)
 
     def add_rois_to_plot(self, tool, pos, date, color, size=None,
                          name='', ignore_bounds=False, current_item=True):
@@ -352,7 +332,8 @@ class DisplayImageAnnotate(BaseBindingController):
                     self.widget.roi.plotItem.vb.removeItem(item.textItem)
                 self.widget.roi.plotItem.vb.removeItem(item)
             except AttributeError:
-                messagebox.show_warning.info("No (latest) ROI in device")
+                messagebox.show_warning.info(
+                    "No (latest) ROI in device", parent=self.widget)
 
     def _get_value(self, proxy, prop):
         if hasattr(proxy, prop):

@@ -9,9 +9,9 @@ import re
 import numpy as np
 from pyqtgraph import ColorMap
 
-from karabogui.api import ROITool, messagebox
+from karabogui.api import ROITool
 
-from .constants_keys import HISTORY_HASH_PROPERTIES
+from .constants import HISTORY_HASH_PROPERTIES
 
 # ---------------------------------------------------------------------
 # Functions associated to the icons plotting
@@ -24,14 +24,14 @@ def roi_filter(image_annotate, color):
     # Filtering by annotation
     _filter_by_annotation(image_annotate)
     # Create a lut based on the dates associated to the filtered values
-    lut_colors = _create_lut_colors(image_annotate, color)
+    lut_colors = create_lut_colors(image_annotate, color)
     # Individually plotting the filtered result
     roi_filtered = list(image_annotate.saved_rois.values())
     roi_filtered.append(lut_colors)
     return roi_filtered
 
 
-def roi_plot(image_annotate, roi_dict_list):
+def plot_rois(image_annotate, roi_dict_list):
     for j in range(len(roi_dict_list[0])):
         individual_roi_info = []
         for i in range(len(roi_dict_list)):
@@ -42,39 +42,26 @@ def roi_plot(image_annotate, roi_dict_list):
 def _filter_by_annotation(image_annotate):
     # This function allows the user to filter the value based on
     # the specified annotation and tool.
-    image_annotate.saved_rois = {
-        history_key: image_annotate._get_value(
-            image_annotate.historic_proxy.value, history_key)
-        for history_key in HISTORY_HASH_PROPERTIES}
-    search_values = [image_annotate.searchingTool.ui_annotation_value]
-    if (image_annotate.searchingTool.ui_keep_all.isChecked()):
-        if len(image_annotate.previous_search_annotation) == 0:
-            msg = ("Previous search do not contain any results. "
-                   "No annotations found.")
-            messagebox.show_warning(msg, parent=image_annotate.widget)
-        else:
-            search_values.append(
-                [image_annotate.previous_search_annotation[-1]])
     # Collecting the indices of annotations containing a specified string
     # from the "Search by Annotation" box and matching the annotation
     # type.
     # Then we interesct both lists, to get common elements
     search_indices, indices_to_remove = _get_indices(
-        image_annotate, search_values)
+        image_annotate, image_annotate._roi_requestor.annotations_to_filter)
     _calculate_delta_dates(image_annotate, search_indices)
     _remove_no_matched_results(image_annotate, indices_to_remove)
 
 
 def _get_indices(image_annotate, search_values):
     roi_tool = ROITool[image_annotate.searchingTool.
-                       ui_annotation_type_value]
+                       annotation_type.currentText()]
     for search_annotation in search_values:
         annotation_indices = (
             [i for i, x in enumerate(image_annotate.saved_rois["annotation"])
              if re.search(search_annotation, x, flags=re.IGNORECASE)])
         type_indices = [i for i, x in enumerate(
             image_annotate.saved_rois["roiTool"]) if x == roi_tool]
-        search_indices = (annotation_indices and type_indices)
+        search_indices = list(set(annotation_indices) & set(type_indices))
     indices = np.array(range(len(image_annotate.saved_rois["annotation"])))
     indices_to_remove = np.delete(indices, search_indices)
     return search_indices, indices_to_remove
@@ -87,11 +74,13 @@ def _calculate_delta_dates(image_annotate, search_indices):
     image_annotate: object of the class DisplayImageAnnotate
     search_indices: indices obtained after filtering by annotation and type
     """
+    historic_dates = image_annotate._get_value(
+        image_annotate.historic_proxy.value, "date")
     image_annotate.delta_days_filtered = []
-    for i in search_indices:
+    for date in historic_dates:
         delta_time = ((datetime.datetime.now() -
                        datetime.datetime.strptime(
-            image_annotate.saved_rois["date"][i], '%d/%m/%Y %H:%M:%S')))
+            date, '%d/%m/%Y %H:%M:%S')))
         delta_day = delta_time.days
         image_annotate.delta_days_filtered.append(delta_day)
 
@@ -103,7 +92,7 @@ def _remove_no_matched_results(image_annotate, indices_to_remove):
                 image_annotate.saved_rois[roi_key], indices_to_remove)
 
 
-def _create_lut_colors(image_annotate, color):
+def create_lut_colors(image_annotate, color):
     # This function creates a LUT, and assign a colour
     # to each ROI depending on the day it was saved.
     lut_colors = []
@@ -118,7 +107,7 @@ def _create_lut_colors(image_annotate, color):
                 image_annotate.delta_days_filtered)/delta_max*511
         # Createing the lut
         color_number = []
-        lut = _create_lut(color)
+        lut = create_lut(color)
         # Find the color associated to each ROI
         for day in delta_days_normalized:
             color_number.append(int(day))
@@ -127,7 +116,7 @@ def _create_lut_colors(image_annotate, color):
     return lut_colors
 
 
-def _create_lut(color):
+def create_lut(color):
     colors = []
     for i, c in enumerate(color):
         colors.append(tuple([cc * 255 for cc in c] + [1]))

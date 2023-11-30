@@ -5,10 +5,10 @@
 #############################################################################
 from enum import IntEnum
 
-from qtpy.QtCore import Slot
+from qtpy.QtCore import QDate, Slot
 from qtpy.QtWidgets import (
-    QComboBox, QDialog, QGridLayout, QLabel, QLineEdit, QPushButton,
-    QRadioButton)
+    QComboBox, QDateTimeEdit, QDialog, QGridLayout, QLabel, QLineEdit,
+    QPushButton, QRadioButton)
 from traits.api import Callable, Constant, Enum, List
 
 from karabogui import icons
@@ -17,6 +17,7 @@ from karabogui.graph.common.api import BaseToolsetController, create_button
 # ---------
 # Play and pause class, icons and toolset
 # -----------
+MAX_DAYS = 2.5
 
 
 class DisplayTool(IntEnum):
@@ -24,6 +25,7 @@ class DisplayTool(IntEnum):
     PlayImage = 1
     PauseImage = 2
     SendSelectCross = 3
+    DisplayInterval = 4
 
 
 def display_factory(tool):
@@ -44,12 +46,18 @@ def display_factory(tool):
                                tooltip="Send selected ROI "
                                "coordinates to Device")
 
+    if tool is DisplayTool.DisplayInterval:
+        button = create_button(icon=icons.arrowFancyLeft,
+                               checkable=True,
+                               tooltip="Get ROIs (Rect and Cross)"
+                                       "from a given time interval")
+
     return button
 
 
 class DisplayToolset(BaseToolsetController):
     tools = List([DisplayTool.PlayImage, DisplayTool.PauseImage,
-                 DisplayTool.SendSelectCross])
+                 DisplayTool.SendSelectCross, DisplayTool.DisplayInterval])
     factory = Callable(display_factory)
     current_tool = Enum(*DisplayTool)
     default_tool = Constant(DisplayTool.NoTool)
@@ -70,48 +78,59 @@ class DisplayToolset(BaseToolsetController):
 
 
 class AnnotationSearchDialog(QDialog):
-    # TODO: add ui to variable names
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Annotation Information")
-        self.ok = False
-        ui_annotation_text_name = QLabel('&Search by Annotation ', self)
-        ui_annotation_text_name.setToolTip('Search by Annotation')
-        self.ui_annotation_text = QLineEdit(self)
-        ui_annotation_text_name.setBuddy(self.ui_annotation_text)
+        annotation_text_name = QLabel('&Search by Annotation ', self)
+        annotation_text_name.setToolTip('Search by Annotation')
+        self.annotation_text = QLineEdit(self)
+        annotation_text_name.setBuddy(self.annotation_text)
 
         annotation_type_name = QLabel('&Annotation Type', self)
-        self.ui_annotation_type = QComboBox(self)
-        self.ui_annotation_type.addItems(["Crosshair",
-                                          "Rect"])
-        annotation_type_name.setBuddy(self.ui_annotation_type)
+        self.annotation_type = QComboBox(self)
+        self.annotation_type.addItems(["Crosshair",
+                                       "Rect"])
+        annotation_type_name.setBuddy(self.annotation_type)
 
-        self.ui_keep_all = QRadioButton(
+        self.keep_all = QRadioButton(
             "Keep results from previous search")
-        self.ui_keep_all.setChecked(False)
+        self.keep_all.setChecked(False)
 
-        self.ui_accept_button = QPushButton('&Accept')
-        self.ui_close_button = QPushButton('&Cancel')
-        self.ui_accept_button.clicked.connect(self.get_annotation)
-        self.ui_close_button.clicked.connect(self.close_dialog)
+        self.accept_button = QPushButton('&Get Data')
+        self.plot_button = QPushButton('&Plot')
+        self.close_button = QPushButton('&Close')
+        self.close_button.clicked.connect(self.close_dialog)
+
+        # start_time Calendar Widget
+        start_time_label = QLabel('Start Date', self)
+        self.start_time = QDateTimeEdit()
+        self.start_time.setDate(QDate.currentDate().addDays(-MAX_DAYS*2))
+        self.start_time.setCalendarPopup(True)
+        self.start_time.setDisplayFormat("dd.MM.yyyy")
+        self.start_time.setObjectName("start_time")
+        # end_time Calendar Widget
+        end_time_label = QLabel('End Date', self)
+        self.end_time = QDateTimeEdit()
+        self.end_time.setDate(QDate.currentDate().addDays(1))
+        self.end_time.setCalendarPopup(True)
+        self.end_time.setDisplayFormat("dd.MM.yyyy")
+        self.end_time.setObjectName("end_time")
 
         main_layout = QGridLayout(self)
-        main_layout.addWidget(ui_annotation_text_name, 0, 0, 1, 1)
-        main_layout.addWidget(self.ui_annotation_text, 1, 0, 1, 1)
+        main_layout.addWidget(annotation_text_name, 0, 0, 1, 1)
+        main_layout.addWidget(self.annotation_text, 1, 0, 1, 1)
         main_layout.addWidget(annotation_type_name, 0, 1, 1, 1)
-        main_layout.addWidget(self.ui_annotation_type, 1, 1, 1, 1)
-        main_layout.addWidget(self.ui_keep_all, 2, 0, 1, 2)
-        main_layout.addWidget(self.ui_accept_button, 3, 0)
-        main_layout.addWidget(self.ui_close_button, 3, 1)
+        main_layout.addWidget(self.annotation_type, 1, 1, 1, 1)
+        main_layout.addWidget(self.keep_all, 2, 0, 1, 2)
+        main_layout.addWidget(self.accept_button, 3, 0)
+        main_layout.addWidget(self.plot_button, 3, 1)
+
+        # Add connections to calendar
+        main_layout.addWidget(start_time_label, 4, 0)
+        main_layout.addWidget(self.start_time, 5, 0)
+        main_layout.addWidget(end_time_label, 4, 1)
+        main_layout.addWidget(self.end_time, 5, 1)
 
     @Slot()
     def close_dialog(self):
         self.close()
-        self.ok = False
-
-    @Slot()
-    def get_annotation(self):
-        self.ui_annotation_value = self.ui_annotation_text.text()
-        self.ui_annotation_type_value = self.ui_annotation_type.currentText()
-        self.ok = True
-        self.accept()

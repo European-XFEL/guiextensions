@@ -14,8 +14,8 @@ from karabogui.fonts import get_qfont
 from karabogui.graph.common.const import X_AXIS_HEIGHT
 from karabogui.graph.image.colorbar import ColorViewBox
 
-from .aux_filtering_and_plotting import _create_lut, roi_filter, roi_plot
-from .constants_keys import LIGHT_BLUE, LIGHT_GREEN, LIGHT_RED, MULTICOLOR
+from .constants import LIGHT_BLUE, LIGHT_GREEN, LIGHT_RED, MULTICOLOR
+from .utils import create_lut, plot_rois, roi_filter
 
 # -----
 # Extra colorbar showing the dates associated to each ROI
@@ -49,7 +49,7 @@ class ColorBarWidgetDates(GraphicsWidget):
         self.vb.addItem(self.barItem)
         self.grid_layout.addItem(self.vb, 1, 0)
         self.vb.setYRange(*self.levels, padding=0)
-        self.lut = _create_lut(self.selected_color)
+        self.lut = create_lut(self.selected_color)
         self.barItem.setLookupTable(self.lut)
         font = get_qfont()
         font.setPointSize(8)
@@ -94,7 +94,7 @@ class ColorBarWidgetDates(GraphicsWidget):
             elif item == "Multicolor mode":
                 self.selected_color = MULTICOLOR
             # We change the color of colorbar and apply the changes
-            self.lut = _create_lut(self.selected_color)
+            self.lut = create_lut(self.selected_color)
             self.barItem.setLookupTable(self.lut)
             # And now we change the ROI color,
             # because each ROI has a different color depending on when
@@ -105,7 +105,7 @@ class ColorBarWidgetDates(GraphicsWidget):
             # Get history from interval.
             roi_dict_list = roi_filter(
                 self._display_image_annotate, self.selected_color)
-            roi_plot(self._display_image_annotate, roi_dict_list)
+            plot_rois(self._display_image_annotate, roi_dict_list)
 
     # ---------------------------------------------------------------------
     # Qt Events
@@ -140,11 +140,11 @@ class ColorBarWidgetDates(GraphicsWidget):
         return menu
 
 
-def add_colorbar_rois(image_annotate):
+def add_colorbar(image_annotate):
     # Enable the standard colorbar of this widget
     # We add an additional colorbar for the ROIs
     plotItem = image_annotate.widget.plotItem
-    image_annotate.widget._colorbarl = ColorBarWidgetDates(
+    image_annotate.widget._rois_colorbar = ColorBarWidgetDates(
         image_annotate.delta_days_filtered, int(
             np.max(image_annotate.delta_days_filtered)) + 1,
         image_annotate.delta_days_filtered,
@@ -156,24 +156,24 @@ def add_colorbar_rois(image_annotate):
     bot_axis_checked = plotItem.getAxis("bottom").style["showValues"]
     bottom_margin = X_AXIS_HEIGHT * bot_axis_checked
 
-    image_annotate.widget._colorbarl.set_margins(
+    image_annotate.widget._rois_colorbar.set_margins(
         top=top_margin, bottom=bottom_margin)
-    image_annotate.widget._colorbarl.levelsChanged.connect(
+    image_annotate.widget._rois_colorbar.levelsChanged.connect(
         plotItem.set_image_levels)
 
     image_annotate.widget.image_layout.addItem(
-        image_annotate.widget._colorbarl, row=1, col=3)
+        image_annotate.widget._rois_colorbar, row=1, col=3)
     image_annotate.widget.image_layout.ci.layout.setColumnStretchFactor(2, 1)
 
     image_annotate.widget.add_colormap_action()
 
-    return image_annotate.widget._colorbarl
+    return image_annotate.widget._rois_colorbar
 
 
 def remove_rois_colorbar(widget):
-    if widget._colorbarl is not None:
-        widget.image_layout.removeItem(widget._colorbarl)
+    if widget._rois_colorbar is not None:
+        widget.image_layout.removeItem(widget._rois_colorbar)
         widget.image_layout.ci.layout.setColumnStretchFactor(1, 3)
-        widget._colorbarl.deleteLater()
-        widget._colorbarl = None
+        widget._rois_colorbar.deleteLater()
+        widget._rois_colorbar = None
         widget.remove_colormap_action()
