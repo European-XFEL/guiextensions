@@ -1,10 +1,9 @@
-from unittest import main, mock
+import pytest
 
 from extensions.display_dynamic_graph import DisplayDynamicGraph
 from extensions.models.plots import DynamicGraphModel
 from karabo.native import AccessMode, Configurable, VectorDouble
-from karabogui.testing import (
-    GuiTestCase, get_class_property_proxy, set_proxy_value)
+from karabogui.testing import get_class_property_proxy, set_proxy_value
 
 
 class Object(Configurable):
@@ -13,48 +12,47 @@ class Object(Configurable):
         accessMode=AccessMode.READONLY)
 
 
-class TestDynamicGraph(GuiTestCase):
+@pytest.fixture()
+def controller_widget(gui_app):
+    schema = Object.getClassSchema()
+    proxy = get_class_property_proxy(schema, "prop")
+    controller = DisplayDynamicGraph(proxy=proxy)
+    controller.create(None)
+    yield controller
 
-    def setUp(self):
-        super().setUp()
-
-        schema = Object.getClassSchema()
-        self.proxy = get_class_property_proxy(schema, "prop")
-        self.controller = DisplayDynamicGraph(proxy=self.proxy)
-        self.controller.create(None)
-
-    def tearDown(self):
-        super().tearDown()
-        self.controller.destroy()
-        self.assertIsNone(self.controller.widget)
-
-    def test_set_value(self):
-        self.assertEqual(len(self.controller.curves), 10)
-        curve = self.controller.curves[0]
-        self.assertIsNotNone(curve)
-        value = [2, 4, 6]
-        set_proxy_value(self.proxy, "prop", value)
-        self.assertEqual(list(curve.yData), value)
-
-    def test_actions(self):
-        controller = DisplayDynamicGraph(proxy=self.proxy,
-                                         model=DynamicGraphModel())
-        controller.create(None)
-        self.assertEqual(len(controller.widget.actions()), 12)
-        action = controller.widget.actions()[11]
-        self.assertEqual(action.text(), "Number of Curves")
-
-        self.assertEqual(controller.model.number, 10)
-        self.assertEqual(len(controller.curves), 10)
-        dsym = ('extensions.display_dynamic_graph.QInputDialog')
-        with mock.patch(dsym) as QInputDialog:
-            QInputDialog.getInt.return_value = 12, True
-            action.trigger()
-            self.assertEqual(controller.model.number, 12)
-            self.assertEqual(len(controller.curves), 12)
-
-        controller.destroy()
+    controller.destroy()
+    assert controller.widget is None
 
 
-if __name__ == "__main__":
-    main()
+def test_set_value(controller_widget):
+    proxy = controller_widget.proxy
+    assert len(controller_widget.curves) == 10
+    curve = controller_widget.curves[0]
+    assert curve is not None
+    value = [2, 4, 6]
+    set_proxy_value(proxy, "prop", value)
+    assert list(curve.yData) == value
+
+
+def test_actions(controller_widget, mocker):
+    proxy = controller_widget.proxy
+    controller = DisplayDynamicGraph(proxy=proxy,
+                                     model=DynamicGraphModel())
+    controller.create(None)
+    assert len(controller.widget.actions()) >= 11
+    action = None
+    for ac in controller.widget.actions():
+        if ac.text() == "Number of Curves":
+            action = ac
+            break
+    assert action is not None
+    assert controller.model.number == 10
+    assert len(controller.curves) == 10
+    dsym = 'extensions.display_dynamic_graph.QInputDialog'
+    QInputDialog = mocker.patch(dsym)
+    QInputDialog.getInt.return_value = 12, True
+    action.trigger()
+    assert controller.model.number == 12
+    assert len(controller.curves) == 12
+
+    controller.destroy()

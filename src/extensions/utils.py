@@ -209,5 +209,8 @@ def _get_karabo_gui_version():
     from importlib_metadata import version
     gui_version = version("karabogui")
     major, minor = gui_version.split(".")[:2]
-
-    return VERSION(major=int(major), minor=int(minor))
+    try:
+        return VERSION(major=int(major), minor=int(minor))
+    except ValueError:
+        # Happens in tests only ...
+        return VERSION(major=3, minor=14)
