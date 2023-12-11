@@ -16,11 +16,11 @@ from .plots import (
     UncertaintyGraphModel, VectorGraphWithLinearRegionsModel, XasGraphModel)
 from .simple import (
     DisplayConditionCommandModel, DynamicPulseIdMapModel,
-    EditableDateTimeModel, EditableTextOptionsModel, FileUploaderModel,
-    IPMQuadrantModel, LimitedIntLineEditModel, PointAndClickModel,
-    PulseIdMapModel, ScantoolBaseModel, ScantoolDeviceViewModel,
-    ScantoolTemplatesModel, StateAwareComponentManagerModel,
-    VectorLimitedIntLineEditModel)
+    EditableAssistantOverviewModel, EditableDateTimeModel,
+    EditableTextOptionsModel, FileUploaderModel, IPMQuadrantModel,
+    LimitedIntLineEditModel, PointAndClickModel, PulseIdMapModel,
+    ScantoolBaseModel, ScantoolDeviceViewModel, ScantoolTemplatesModel,
+    StateAwareComponentManagerModel, VectorLimitedIntLineEditModel)
 from .tables import (
     CriticalCompareViewModel, DeviceReconfigurationTableModel,
     DoocsLocationTableModel, DoocsMirrorTableModel, MotorAssignmentTableModel,
