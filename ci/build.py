@@ -125,10 +125,13 @@ class Builder:
         conda_run(Commands.RUN, '-n', 'karabogui', '--cwd', gui_root,
                   'python', 'setup.py', 'install')
 
-        # Install pythonKarabo in the environment as well
+        # Install pythonKarabo in the environment as well, but only native
+        os.environ["BUILD_KARABO_SUBMODULE"] = "NATIVE"
         py_karabo_root = op.join(framework_dir, 'src', 'pythonKarabo')
         conda_run(Commands.RUN, '-n', 'karabogui', '--cwd', py_karabo_root,
                   'python', 'setup.py', 'install')
+
+        os.environ.pop("BUILD_KARABO_SUBMODULE")
 
         # Then install the package
         conda_run(Commands.RUN, '-n', 'karabogui', '--cwd', self.root_path,
