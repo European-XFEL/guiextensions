@@ -35,6 +35,7 @@ entries = {
         'PulseIdMap = extensions.display_pulse_info',
         'RecoveryCompareView = extensions.display_recovery_compare_view',
         'RectRoiGraph = extensions.roi_graph',
+        'RunAssistantOverview = extensions.daq.edit_runassistant',
         'ScatterPosition = extensions.display_scatter_position',
         'ScantoolDynamic = extensions.display_scantool_dynamic',
         'ScantoolDeviceView = extensions.display_scantool_device_view',
@@ -60,6 +61,6 @@ setup(
     entry_points=entries,
     include_package_data=True,
     package_data={
-        "extensions": ["dialogs/ui/*.ui", "icons/*.svg"],
+        "extensions": ["dialogs/ui/*.ui", "icons/*.svg", "daq/ui/*.ui"],
     }
 )

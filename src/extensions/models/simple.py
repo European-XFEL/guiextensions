@@ -17,6 +17,10 @@ class IPMQuadrantModel(BaseWidgetObjectData):
     """ A model for the Intensity Position Monitor"""
 
 
+class EditableAssistantOverviewModel(BaseEditWidget):
+    """ A model for the RunAssistant Overview"""
+
+
 class FileUploaderModel(BaseWidgetObjectData):
     """ A model for the File Uploader"""
 
@@ -82,7 +86,7 @@ class LimitedIntLineEditModel(BaseEditWidget):
 _SIMPLE_WIDGET_MODELS = (
     "IPMQuadrantModel", "PulseIdMapModel", "DynamicPulseIdMapModel",
     "DisplayConditionCommandModel", "VectorLimitedIntLineEditModel",
-    "LimitedIntLineEditModel",
+    "LimitedIntLineEditModel", "EditableAssistantOverviewModel",
     "FileUploaderModel")
 
 _SIMPLE_DISPLAY_EDIT_MODELS = (
