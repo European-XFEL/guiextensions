@@ -15,7 +15,7 @@ from karabogui.graph.common.const import X_AXIS_HEIGHT
 from karabogui.graph.image.colorbar import ColorViewBox
 
 from .constants import LIGHT_BLUE, LIGHT_GREEN, LIGHT_RED, MULTICOLOR
-from .utils import create_lut, plot_rois, roi_filter
+from .utils import create_lut
 
 # -----
 # Extra colorbar showing the dates associated to each ROI
@@ -39,18 +39,17 @@ class ColorBarWidgetDates(GraphicsWidget):
         self.grid_layout.setSpacing(0)
         self.grid_layout.setContentsMargins(0, 40, 0, 0)
 
-        self.vb = ColorViewBox(parent=self)
+        self.vb = ColorViewBox()
         self.vb.menu = self._create_menu()
         self.vb.setToolTip("Delta days: difference with respect current date")
 
         self.barItem = ImageItem(parent=self)
         self.barItem.setImage(data)
-        self.vb.scene().sigPrepareForPaint.connect(self.vb.prepareForPaint)
         self.vb.addItem(self.barItem)
         self.grid_layout.addItem(self.vb, 1, 0)
         self.vb.setYRange(*self.levels, padding=0)
-        self.lut = create_lut(self.selected_color)
-        self.barItem.setLookupTable(self.lut)
+        lut = create_lut(self.selected_color)
+        self.barItem.setLookupTable(lut)
         font = get_qfont()
         font.setPointSize(8)
 
@@ -93,19 +92,17 @@ class ColorBarWidgetDates(GraphicsWidget):
                 self.selected_color = LIGHT_BLUE
             elif item == "Multicolor mode":
                 self.selected_color = MULTICOLOR
-            # We change the color of colorbar and apply the changes
-            self.lut = create_lut(self.selected_color)
-            self.barItem.setLookupTable(self.lut)
-            # And now we change the ROI color,
-            # because each ROI has a different color depending on when
-            # it was saved, we removed it and we plot it again
-            # instead of iteration over _rois and updating the color.
+            lut = create_lut(self.selected_color)
+            self.barItem.setLookupTable(lut)
+            # The color of the ROI is being changed because each ROI
+            # has a different color based on when it was saved.
+            # Instead of iterating over the ROIs and updating the color,
+            # the ROI is removed and plotted again.
             self._display_image_annotate.remove_rois_from_plot()
-            # First we iterate over the ROIS got from the past,
-            # Get history from interval.
-            roi_dict_list = roi_filter(
-                self._display_image_annotate, self.selected_color)
-            plot_rois(self._display_image_annotate, roi_dict_list)
+            lut_colors = self._display_image_annotate.create_lut_colors(
+                self.selected_color)
+            self._display_image_annotate.saved_rois["lut"] = lut_colors
+            self._display_image_annotate.plot_rois()
 
     # ---------------------------------------------------------------------
     # Qt Events

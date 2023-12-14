@@ -1,7 +1,7 @@
 #############################################################################
 # Author: <ana.garcia-tabares@xfel.eu>
 # Created on April, 2022
-# Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 #############################################################################
 import datetime
 from functools import partial
