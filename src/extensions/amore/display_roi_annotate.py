@@ -1,11 +1,13 @@
 #############################################################################
 # Author: <ana.garcia-tabares@xfel.eu>
 # Created on April, 2022
-# Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 #############################################################################
-from collections import OrderedDict, defaultdict
+import datetime
+from collections import defaultdict
 from functools import partial
 
+import numpy as np
 from pyqtgraph import Point, functions as fn
 from traits.api import Bool, Dict, Enum, Float, Instance, List, String, WeakRef
 
@@ -22,10 +24,11 @@ from karabogui.graph.common.api import AuxPlots
 from ..models.api import ROIAnnotateModel
 from .annotation_dialog_and_display import (
     AnnotationSearchDialog, DisplayTool, DisplayToolset)
-from .constants import HISTORY_HASH_PROPERTIES, HISTORY_HASH_TYPES, TOOL_MAP
+from .constants import (
+    HISTORY_HASH_PROPERTIES, HISTORY_HASH_TYPES, LUT_LENGTH, TOOL_MAP)
 from .roi_annotator import RoiAnnotator
 from .roi_requestor import RoiRequestor
-from .utils import display_saved_data
+from .utils import create_lut, display_saved_data
 
 INDIVIDUAL_ROI_COLOR = [110, 255, 244]
 
@@ -67,14 +70,14 @@ class DisplayImageAnnotate(BaseBindingController):
     _viewbox = WeakRef(KaraboImageViewBox)
     _reference_rois = defaultdict(list)
 
-    # Related to the device used to saved the coordinates
-    proxy_dictionary = OrderedDict()
-    proxy_dictionary_history = OrderedDict()
-    # The remote_instance_id of the roi proxy
+    # The ROI proxy instance ID
     remote_instance_id = String()
-    # The roi proxy node holding the roi information
+    # The roi proxys holding the roi information:
+    # annotation and historicAnnotation
     roi_proxy = Instance(PropertyProxy)
     historic_proxy = Instance(PropertyProxy)
+    # The image proxy holding the camera/image information
+    image_proxy = Instance(PropertyProxy)
 
     # ------------------------------------------
     # Creating widget
@@ -106,13 +109,12 @@ class DisplayImageAnnotate(BaseBindingController):
         self._display_toolset = tb.add_toolset(DisplayTool)
         self._display_toolset.on_trait_change(self._display,
                                               "current_tool")
-        # we delegate the sending rois to device to the RoiAnnotator,
-        # which can interact via slots witht the rest of the system
+        # The sending of ROIs is delegated to the RoiAnnotator,
+        # which interacts with the rest of the system via slots.
         self._roi_annotator = RoiAnnotator(self, parent=parent)
-        # we delegate the request ROIS from interval to the
-        # RoiRequestor
+        # The requesting of ROIs from interval is delegated to
+        # the RoiRequestor.
         self._roi_requestor = RoiRequestor(self, parent=parent)
-        # Adding calendar to Layout
         # Restore the model information
         self.widget.restore(build_graph_config(self.model))
         return self.widget
@@ -126,9 +128,12 @@ class DisplayImageAnnotate(BaseBindingController):
             if (proxy.binding.display_type == "WidgetNode|CoordinateAnnotation"
                     and self.roi_proxy is None):
                 self.roi_proxy = proxy
+            if (proxy.binding.display_type == "ImageData" and
+                    self.image_proxy is None):
+                self.image_proxy = proxy
         else:
+            # Getting the DEVICE ID, also when it's not instantiated.
             self.remote_instance_id = proxy.root_proxy.device_id
-        # If a device is offline, we still add it.
         return True
 
     def binding_update(self, proxy):
@@ -136,26 +141,18 @@ class DisplayImageAnnotate(BaseBindingController):
             self.add_proxy(proxy)
         if self.historic_proxy is None:
             self.add_proxy(proxy)
+        if self.image_proxy is None:
+            self.add_proxy(proxy)
 
     def value_update(self, proxy):
         if proxy is self.roi_proxy:
-            # We plot current roi information from remote proxy
-            # No need to show the error message
-            # if there is no a value in the device
+            # The current remote proxy does not display
+            # any error message when device is without value.
             self.update_from_remote()
-            # If its a bit hard to add a new value from device
-            # Either we don't allow to change the ROI
-            # or we desactivate this
-            # pass
         elif proxy is self.historic_proxy:
-            # we have to plot historic data delivered on remote proxy
-            # This could be a bit confussin, specially if we mix
-            # crosses and rectangles
-            # We only update when we have new values
-            # and the user has requested the past values
+            # Update past values only when the user requests it.
             pass
         else:
-            # self.proxy updates the image
             image_data = proxy.value
             self._image_node.set_value(image_data)
 
@@ -186,22 +183,25 @@ class DisplayImageAnnotate(BaseBindingController):
             self._pause_image = True
             self._display_toolset.select(DisplayTool.NoTool)
         elif display_tool is DisplayTool.SendSelectCross:
-            # Send selected cross to the ROIAnnotation device
-            # We have to know what roi is currently selected
+            # Send the selected cross to the ROIAnnotation device.
+
+            # Determine the currently selected ROI.
             selected_roi = self.widget.roi._current_item[
                 self.widget.roi.current_tool]
-            # If they try to send nothing to the device
-            # we don't do anything
             if selected_roi:
+                # Check if the ROI has already been saved.
+                # If not, send selected coordinates.
                 if (selected_roi not in
                         self._reference_rois[self.widget.roi.current_tool]):
                     self._roi_annotator.send_selected_coordinates(selected_roi)
                 else:
+                    # Display a warning if the ROI is already saved.
                     messagebox.show_alarm(
                         "ROI already saved, "
                         "please select a ROI before sending it to the device.",
                         parent=self.widget)
             else:
+                # Display a warning if no ROI is selected.
                 messagebox.show_alarm(
                     "Nothing selected, "
                     "please select a ROI before sending it to the device.",
@@ -213,12 +213,11 @@ class DisplayImageAnnotate(BaseBindingController):
             self._display_toolset.select(
                 DisplayTool.NoTool)
         elif display_tool is DisplayTool.NoTool:
-            # reset the mouse mode to whatever it was before
+            # Reset the display tool.
             self._viewbox.set_mouse_mode(self._mouse_mode)
 
     def state_update(self, proxy):
         state = self._get_state(proxy)
-        # Normally, the state should not be None
         if State(state) is State.RUNNING:
             self._pause_image = False
 
@@ -287,14 +286,12 @@ class DisplayImageAnnotate(BaseBindingController):
 
         roi_item.scaleSnap = scaleSnap
         roi_item.translateSnap = translateSnap
-        # ROIs can't be removed to avoid possible misunderstandings
-        # since in fact they can only be hidden from plot but
-        # not from history.
+        # ROIs cannot be removed to avoid misunderstandings
+        # since they can only be hidden from the plot
+        # but not deleted from the history.
         roi_item.translatable = False
-        # Connect some signals
-        # The standard signals that are normally connected
-        # by the standard add function
-        # + the sigHoverEvent that shows when the data was saved.
+        # Standard signals are connected including the sigHoverEvent
+        # that displays when the data is saved.
         roi_item.sigRegionChangeStarted.connect(
             self.widget.roi._set_current_item)
         roi_item.sigRegionChanged.connect(self.widget.roi.update)
@@ -306,7 +303,8 @@ class DisplayImageAnnotate(BaseBindingController):
         roi_item.sigHoverEvent.connect(
             partial(display_saved_data, roi_item))
         roi_item.saved_date = date
-        # Bookkeeping. Add the items to the list of existing ROI tools
+        # Bookkeeping. Add the current ROI
+        # to the list of existing ROIs, tool specific.
         self.widget.roi._rois[tool].append(roi_item)
         self._reference_rois[tool].append(roi_item)
 
@@ -318,7 +316,6 @@ class DisplayImageAnnotate(BaseBindingController):
             self.widget.roi._set_current_item(roi_item, update=False)
             # Set as current item, in which affects the aux plots.
             roi_item._updateHoverColor()
-        # return roi_item
 
     def remove_rois_from_plot(self):
         """
@@ -338,3 +335,53 @@ class DisplayImageAnnotate(BaseBindingController):
     def _get_value(self, proxy, prop):
         if hasattr(proxy, prop):
             return get_binding_value(getattr(proxy, prop))
+
+    def _calculate_delta_dates(self):
+        """
+        Calculates the number of days between the current date and
+        the date the ROI was saved.
+        """
+        historic_dates = self._get_value(
+            self.historic_proxy.value, "date")
+        self.delta_days_filtered = []
+        for date in historic_dates:
+            delta_time = ((datetime.datetime.now() -
+                           datetime.datetime.strptime(
+                date[:-7], '%Y-%m-%d %H:%M:%S')))
+            delta_day = delta_time.days
+            self.delta_days_filtered.append(delta_day)
+
+    def create_lut_colors(self, color):
+        ''''
+        This function creates a Look-Up Table (LUT) and assigns a color
+        to each ROI based on the day it was saved.
+        The function normalizes the dates with the oldest saved ROI and
+        then associates a color with each ROI.
+        '''
+        lut_colors = []
+        if len(self.delta_days_filtered) > 0:
+            delta_max = (np.max(self.delta_days_filtered))
+            if delta_max == 0:
+                delta_days_normalized = np.zeros(
+                    len(self.delta_days_filtered))
+            else:
+                delta_days_normalized = np.array(
+                    self.delta_days_filtered) / delta_max * LUT_LENGTH
+            color_number = []
+            lut = create_lut(color)
+            for day in delta_days_normalized:
+                color_number.append(int(day))
+                color = [lut[int(day)][i] for i in range(3)]
+                lut_colors.append(color)
+        return lut_colors
+
+    def plot_rois(self):
+        number_of_rois = set([len(self.saved_rois[k])
+                             for k in self.saved_rois.keys()])
+        if len(number_of_rois) == 1:
+            for individual_roi_info in list(zip(*self.saved_rois.values())):
+                self.plotting(list(individual_roi_info))
+        else:
+            msg = f"Error plotting {self.remote_instance_id} historical values"
+            messagebox.show_warning(
+                msg, title='Error in plotting', parent=self.widget)

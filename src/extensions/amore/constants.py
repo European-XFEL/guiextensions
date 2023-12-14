@@ -14,6 +14,7 @@ TOOL_MAP_NUMBERS = {
     ROITool.Crosshair: 2
 }
 
+LUT_LENGTH = 511
 
 INDIVIDUAL_ROI_COLOR = [110, 255, 244]
 

@@ -1,7 +1,7 @@
 #############################################################################
 # Author: <ana.garcia-tabares@xfel.eu>
 # Created on April, 2022
-# Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 #############################################################################
 from functools import partial
 
@@ -15,7 +15,6 @@ from karabogui.request import call_device_slot
 
 from .additional_color_bar import add_colorbar, remove_rois_colorbar
 from .constants import HISTORY_HASH_PROPERTIES, LIGHT_RED
-from .utils import plot_rois, roi_filter
 
 INDIVIDUAL_ROI_COLOR = [110, 255, 244]
 
@@ -31,7 +30,7 @@ class RoiRequestor(QObject):
             self._get_rois_from_interval)
         self._search_tool.plot_button.setEnabled(False)
         self._search_tool.plot_button.clicked.connect(
-            partial(self.filtering_and_plotting, LIGHT_RED))
+            partial(self.update_and_plot_rois, LIGHT_RED))
 
     def keep_track_of_previous_searchs(self):
         """
@@ -98,21 +97,25 @@ class RoiRequestor(QObject):
             get_logger().info("Coordinate device not instantiated")
             return
 
-    def filtering_and_plotting(self, color):
-        # Getting the rois available from the device nodes.
+    def update_and_plot_rois(self, color):
+        # Retrieve and save the regions of interest (ROIs) from device node.
         self._display_image_annotate.saved_rois = {
             history_key: self._display_image_annotate._get_value(
                 self._display_image_annotate.historic_proxy.value,
                 history_key) for history_key in HISTORY_HASH_PROPERTIES}
-        # Getting tool, Cross or Rect
+        # Determine the type of ROI tool (Cross or Rect).
         roi_tool = ROITool[self._search_tool.
                            annotation_type.currentText()]
-        roi_dict_list = roi_filter(
-            self._display_image_annotate, color)
+        # Calculate delta dates and create a lookup table for colors.
+        self._display_image_annotate._calculate_delta_dates()
+        lut_colors = self._display_image_annotate.create_lut_colors(color)
+        self._display_image_annotate.saved_rois["lut"] = lut_colors
+        # Remove existing color bar if present.
         if hasattr(self._display_image_annotate.widget, "_rois_colorbar"):
             remove_rois_colorbar(self._display_image_annotate.widget)
+        # Remove existing ROIs from the plot and then plot the updated ROIs.
         self._display_image_annotate.remove_rois_from_plot()
-        plot_rois(self._display_image_annotate, roi_dict_list)
+        self._display_image_annotate.plot_rois()
         self._display_image_annotate.widget.roi.selected.emit(
             roi_tool)
         add_colorbar(self._display_image_annotate)
