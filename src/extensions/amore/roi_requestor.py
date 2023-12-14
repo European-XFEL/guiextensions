@@ -26,7 +26,7 @@ class RoiRequestor(QObject):
         self._display_image_annotate = image_annotate
         self._canvas = None
         self._search_tool = self._display_image_annotate.searchingTool
-        self._search_tool.accept_button.clicked.connect(
+        self._search_tool.get_data_button.clicked.connect(
             self._get_rois_from_interval)
         self._search_tool.plot_button.setEnabled(False)
         self._search_tool.plot_button.clicked.connect(
