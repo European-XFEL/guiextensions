@@ -210,7 +210,12 @@ def _get_karabo_gui_version():
     """
     Return the running Karabo GUI version as a named tuple.
     """
-    from importlib_metadata import version
+    try:
+        from importlib_metadata import version
+    except ModuleNotFoundError:
+        # Python > 3.8
+        from importlib.metadata import version
+
     gui_version = version("karabogui")
     major, minor = gui_version.split(".")[:2]
     try:
