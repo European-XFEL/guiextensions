@@ -31,8 +31,8 @@ def _is_vector_number_binding(binding):
 
 
 def _is_uncertainty_band(binding):
-    return(isinstance(binding, NodeBinding)
-           and binding.display_type == "WidgetNode|UncertaintyBand")
+    return (isinstance(binding, NodeBinding)
+            and binding.display_type == "WidgetNode|UncertaintyBand")
 
 
 class VectorFillGraphPlot(QGraphicsPathItem):

@@ -253,12 +253,12 @@ class DisplayImageAnnotate(BaseBindingController):
             prop_value = self._get_value(self.roi_proxy.value,
                                          prop)
             # There are values in the node with the correct type
-            if (prop_value is not None and (type(prop_value) == prop_type)):
+            if (prop_value is not None and (type(prop_value) is prop_type)):
                 info.append(
                     self._get_value(self.roi_proxy.value,
                                     prop))
             # There are values in the node property but the wrong type
-            elif type(prop_value) == prop_type:
+            elif type(prop_value) is prop_type:
                 messagebox.show_error(
                     f"Wrong data type for {prop}", parent=self.widget)
                 return

@@ -3,18 +3,23 @@
 # Created on October 2021
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
+from collections.abc import Sequence
+from dataclasses import dataclass
+
 import numpy as np
 from pyqtgraph import ROI, CrosshairROI, EllipseROI, LabelItem, Point
 from qtpy.QtGui import QPainter, QPainterPath, QPainterPathStroker
-from traits.api import Bool, Float, Instance, WeakRef, on_trait_change
+from traits.api import (
+    Bool, Float, Instance, Tuple, Undefined, WeakRef, on_trait_change)
 
 from karabo.common.scenemodel.api import (
     build_graph_config, restore_graph_config)
 from karabo.native import EncodingType, Timestamp
 from karabogui.binding.api import (
-    BaseBinding, ImageBinding, NodeBinding, PropertyProxy, get_binding_value)
+    FloatBinding, ImageBinding, IntBinding, WidgetNodeBinding,
+    get_binding_value)
 from karabogui.controllers.api import (
-    BaseBindingController, register_binding_controller)
+    BaseBindingController, register_binding_controller, with_display_type)
 from karabogui.fonts import get_font_size_from_dpi
 from karabogui.graph.common.api import KaraboLegend, float_to_string, make_pen
 from karabogui.graph.image.api import (
@@ -22,32 +27,10 @@ from karabogui.graph.image.api import (
 
 from .models.api import BeamGraphModel
 from .roi_graph import BaseRoiController
-from .utils import get_node_value, reflect_angle, rotate_points
+from .utils import reflect_angle, rotate_points, value_from_node
 
 FONT_SIZE = get_font_size_from_dpi(8)
-
-
-def roi_html(name, center=None, size=None):
-    html_list = []
-
-    # Name
-    html_list.append(
-        f'<span style="color: #FFF; font-size: {FONT_SIZE}pt; '
-        f'font-weight: bold;">'
-        f'{name or "Region of Interest"}</span>')
-    # Center
-    if center is not None:
-        html_list.append(
-            f'<span style="color: #FFF; font-size: {FONT_SIZE}pt;">'
-            f'Center: ({center[0]}, {center[1]})</span>')
-    # Size
-    if size is not None:
-        html_list.append(
-            f'<span style="color: #FFF; font-size: {FONT_SIZE}pt;">'
-            f'Size: ({size[0]}, {size[1]})</span>')
-
-    html = "<br>".join(html_list)
-    return f'<div style="text-align: center">{html}</div>'
+NUMBER_BINDINGS = (IntBinding, FloatBinding)
 
 
 # --------------------------------------------------------------------------
@@ -105,43 +88,61 @@ class CrosshairItem(CrosshairROI):
         p.drawLine(Point(-width/2, 0), Point(width/2, 0))
 
 
-class AxesLegend(KaraboLegend):
+class Legend(KaraboLegend):
 
     def __init__(self):
-        super(AxesLegend, self).__init__()
+        super(Legend, self).__init__()
         self._label = LabelItem(color='w', size=f"{FONT_SIZE}pt")
         self.layout.addItem(self._label, 0, 0)
         self.layout.setContentsMargins(2, 2, 2, 2)
 
-    def set_value(self, values):
-        formatted = [float_to_string(value) for value in values]
+
+class AxesLegend(Legend):
+
+    def set_values(self, values):
+        formatted = [float_to_string(value if value > 1e-2 else 0)
+                     for value in values]
         self._label.setText("<b>Axes</b><br>"
                             "Major: {}<br>"
                             "Minor: {}".format(*formatted))
 
 
+class CenterLegend(Legend):
+
+    def set_values(self, values):
+        formatted = [float_to_string(value if value > 1e-2 else 0)
+                     for value in values]
+        self._label.setText("<b>Center</b><br>"
+                            "x: {}<br>"
+                            "y: {}".format(*formatted))
+
+
 class EllipseNode(BaseRoiController):
 
     crosshair_item = Instance(CrosshairROI)
-    legend_item = Instance(AxesLegend, args=())
-    proxy = Instance(PropertyProxy)
+    center_legend = Instance(CenterLegend, args=())
+    axes_legend = Instance(AxesLegend, args=())
+
+    center = Tuple(Float(0), Float(0))
+    widths = Tuple(Float(0), Float(0))
     angle = Float(0)
 
     _text_direction = (0.5, 1)  # bottom center
 
-    def update(self):
-        center = self._proxy_center
-        axes = self._proxy_size
-        angle = reflect_angle(self._proxy_angle)
+    def update(self, *, center, widths, angle):
+        self.center = center = tuple(center)
+        self.widths = widths = tuple(widths)
+        self.angle = angle
 
+        reflected = reflect_angle(angle)
         x, y = self._calc_position(center=center,
-                                   axes=axes,
-                                   angle=np.deg2rad(angle))
+                                   widths=widths,
+                                   angle=np.deg2rad(reflected))
         self.set_ellipse((x, y))
         self.set_crosshair(center)
-        self.set_size(axes)
-        self.set_angle(angle)
-        self.set_info(center=center, axes=axes)
+        self.set_size(widths)
+        self.set_angle(reflected)
+        self.set_info(center=center, axes=widths)
 
     def set_ellipse(self, pos, update=True):
         # Only redraw if different
@@ -166,7 +167,6 @@ class EllipseNode(BaseRoiController):
             self.crosshair_item.setSize(size)
 
     def set_angle(self, angle, update=True):
-        self.angle = angle
         # Only redraw if different
         if update and angle != self.roi_item.angle():
             # Change ROI item property
@@ -175,21 +175,25 @@ class EllipseNode(BaseRoiController):
             self.crosshair_item.setAngle(angle)
 
     def set_info(self, center=None, axes=None):
-        if self.text_item is not None and center is not None:
-            center = [float_to_string(coord) for coord in center]
-            self.text_item.setHtml(roi_html(self.label_text, center=center))
-        if self.legend_item is not None and axes is not None:
-            self.legend_item.set_value(axes)
+        if self.center_legend is not None and center is not None:
+            self.center_legend.set_values(center)
+        if self.axes_legend is not None and axes is not None:
+            self.axes_legend.set_values(axes)
 
     def add_to(self, plotItem):
         super(EllipseNode, self).add_to(plotItem)
         if self.crosshair_item is not None:
             plotItem.vb.addItem(self.crosshair_item, ignoreBounds=False)
-        if self.legend_item is not None:
-            self.legend_item.setParentItem(plotItem.vb)
-            self.legend_item.anchor(itemPos=(1, 1),
+        if self.axes_legend is not None:
+            self.axes_legend.setParentItem(plotItem.vb)
+            self.axes_legend.anchor(itemPos=(1, 1),
                                     parentPos=(1, 1),
                                     offset=(-5, -5))
+        if self.center_legend is not None:
+            self.center_legend.setParentItem(plotItem.vb)
+            self.center_legend.anchor(itemPos=(0, 1),
+                                      parentPos=(0, 1),
+                                      offset=(5, -5))
 
     @on_trait_change('position')
     def _update_text_position(self, pos):
@@ -199,12 +203,13 @@ class EllipseNode(BaseRoiController):
     @on_trait_change('is_visible')
     def _set_visible(self, visible):
         self.crosshair_item.setVisible(visible)
-        self.text_item.setVisible(visible)
+        if self.text_item is not None:
+            self.text_item.setVisible(visible)
 
     def _roi_item_default(self):
-        roi = EllipseItem(pos=self._proxy_center,
-                          size=self._proxy_size,
-                          angle=self._proxy_angle,
+        roi = EllipseItem(pos=self.center,
+                          size=self.widths,
+                          angle=self.angle,
                           pen=make_pen(self.color, width=2),
                           movable=False,
                           rotatable=False,
@@ -213,57 +218,42 @@ class EllipseNode(BaseRoiController):
         return roi
 
     def _crosshair_item_default(self):
-        roi = CrosshairItem(pos=self._proxy_center,
-                            size=self._proxy_size,
-                            angle=self._proxy_angle,
-                            pen=make_pen(self.color, width=2),
+        roi = CrosshairItem(pos=self.center,
+                            size=self.widths,
+                            angle=self.angle,
+                            pen=make_pen(self.color, width=1),
                             movable=False,
                             rotatable=False,
                             resizable=False,)
         roi.setVisible(self.is_visible)
         return roi
 
-    @property
-    def _proxy_center(self):
-        pos = (0, 0)
-        x0 = get_node_value(self.proxy, key='x0')
-        y0 = get_node_value(self.proxy, key='y0')
-        if x0 is not None and y0 is not None:
-            x0, y0 = get_binding_value(x0), get_binding_value(y0)
-            if (x0 is not None and y0 is not None
-                    and np.isfinite((x0, y0)).all()):
-                pos = (int(x0), int(y0))
-
-        return pos
-
-    @property
-    def _proxy_size(self):
-        size = (0, 0)
-        a = get_node_value(self.proxy, key='a')
-        b = get_node_value(self.proxy, key='b')
-        if a is not None and b is not None:
-            a, b = get_binding_value(a), get_binding_value(b)
-            if (a is not None and b is not None
-                    and np.isfinite((a, b)).all()):
-                size = (int(a), int(b))
-
-        return size
-
-    @property
-    def _proxy_angle(self):
-        angle = 0
-        theta = get_node_value(self.proxy, key='theta')
-        if theta is not None:
-            theta = get_binding_value(theta)
-            if theta is not None and np.isfinite(theta):
-                angle = theta
-
-        return angle
-
-    def _calc_position(self, *, center, axes, angle):
+    def _calc_position(self, *, center, widths, angle):
         xc, yc = center
-        a, b = axes
+        a, b = widths
         return rotate_points((xc - a/2, yc - b/2), center, angle)
+
+
+@dataclass
+class Transform:
+    scale: float = 1.0
+    translate: tuple = (0.0, 0.0)
+
+    def update(self, scale, translate):
+        if scale is None or translate is None:
+            return False
+
+        # Don't forget to multiply with scale
+        translate = np.multiply(translate, scale)
+
+        scale_changed = not np.isclose(scale, self.scale)
+        if scale_changed:
+            self.scale = scale
+        translate_changed = not np.allclose(translate, self.translate)
+        if translate_changed:
+            self.translate = translate
+
+        return scale_changed or translate_changed
 
 
 # --------------------------------------------------------------------------
@@ -273,12 +263,13 @@ def _is_compatible(binding):
     return isinstance(binding, ImageBinding)
 
 
-@register_binding_controller(ui_name='Beam Graph',
-                             klassname='BeamGraph',
-                             binding_type=BaseBinding,
-                             is_compatible=_is_compatible,
-                             priority=0,
-                             can_show_nothing=False)
+@register_binding_controller(
+    ui_name='Beam Graph',
+    klassname='BeamGraph',
+    binding_type=WidgetNodeBinding,
+    is_compatible=with_display_type('WidgetNode|BeamGraph'),
+    priority=0,
+    can_show_nothing=False)
 class BeamGraph(BaseBindingController):
     model = Instance(BeamGraphModel, args=())
     grayscale = Bool(True)
@@ -288,7 +279,13 @@ class BeamGraph(BaseBindingController):
     _image_node = Instance(KaraboImageNode, args=())
 
     # Proxies
-    _ellipse = Instance(BaseRoiController)
+    _ellipse = Instance(EllipseNode, args=())
+    _transform = Instance(Transform, args=())
+    _needs_update = Bool(True)
+
+    # Transforms
+    _scale = Float(1)
+    _translate = Tuple(Float(0), Float(0))
 
     _timestamp = Instance(Timestamp)
 
@@ -301,6 +298,7 @@ class BeamGraph(BaseBindingController):
 
         # Get a reference for our plotting
         self._plot = widget.plot()
+        self._ellipse.add_to(self._plot)
 
         # QActions
         widget.add_axes_labels_dialog()
@@ -311,39 +309,64 @@ class BeamGraph(BaseBindingController):
         return widget
 
     def value_update(self, proxy):
-        timestamp = proxy.binding.timestamp
-        if proxy is self.proxy:
-            self._image_node.set_value(proxy.value)
-            self._timestamp = timestamp
-            if self._ellipse is None:
-                self._update_image()
-        elif proxy is self._ellipse.proxy and timestamp == self._timestamp:
-            self._update_image()
-            self._ellipse.update()
-
-    def _update_image(self):
-        if not self._image_node.is_valid:
+        node = get_binding_value(proxy)
+        if node is None:
             return
 
-        array = self._image_node.get_data()
+        # For some reason the image dimension on first load is undefined
+        image = get_binding_value(node.image)
+        if image.dims.value is Undefined:
+            return
+
+        self._update_image(image)
+        self._update_transform(
+            scale=value_from_node(node.transform, key='pixelScale'),
+            translate=value_from_node(node.transform, key='pixelTranslate'))
+        self._update_ellipse(
+            center=[value_from_node(node.beamProperties, key='x0'),
+                    value_from_node(node.beamProperties, key='y0')],
+            widths=[value_from_node(node.beamProperties, key='a'),
+                    value_from_node(node.beamProperties, key='b')],
+            angle=value_from_node(node.beamProperties, key='theta'))
+
+    def binding_update(self, proxy):
+        self.value_update(proxy)
+
+    # ---------------------------------------------------------------------
+    # Helpers
+
+    def _update_image(self, image):
+        image_node = self._image_node
+        image_node.set_value(image)
+
+        if not image_node.is_valid:
+            return
+
+        array = image_node.get_data()
 
         # Enable/disable some widget features depending on the encoding
-        self.grayscale = (self._image_node.encoding == EncodingType.GRAY
+        self.grayscale = (image_node.encoding == EncodingType.GRAY
                           and array.ndim == 2)
 
         self._plot.setData(array)
 
-    def add_proxy(self, proxy):
-        binding = proxy.binding
-        if binding is None or isinstance(binding, NodeBinding):
-            if self._ellipse is None:
-                self._ellipse = EllipseNode(proxy=proxy,
-                                            color='g',
-                                            label_text='Center of Mass')
-                self._ellipse.add_to(self._plot)
-                return True
+    def _update_transform(self, *, scale, translate):
+        if self._transform.update(scale, translate):
+            scale, translate = self._transform.scale, self._transform.translate
+            self._plot.set_transform(x_scale=scale, y_scale=scale,
+                                     x_translate=translate[0],
+                                     y_translate=translate[1],
+                                     default=True)
 
-        return False
+            # For good measure: force rerender with transforms
+            self._plot._apply_transform()
+
+    def _update_ellipse(self, *, center, widths, angle):
+        # Validate values
+        self._ellipse.update(
+            center=center if is_valid(center) else (0, 0),
+            widths=widths if is_valid(widths) else (0, 0),
+            angle=angle if is_valid(angle) else 0)
 
     # ---------------------------------------------------------------------
     # Slots
@@ -359,3 +382,9 @@ class BeamGraph(BaseBindingController):
         else:
             self.widget.remove_colorbar()
             self.widget.disable_aux()
+
+
+def is_valid(array):
+    if not isinstance(array, Sequence):
+        array = [array]
+    return all([num is not None and np.isfinite(num) for num in array])

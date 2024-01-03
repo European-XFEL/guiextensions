@@ -348,8 +348,8 @@ class DetectorCellsWidget(QWidget):
 
 
 def _is_state(binding):
-    return(isinstance(binding, StringBinding)
-           and binding.display_type == "State")
+    return (isinstance(binding, StringBinding)
+            and binding.display_type == "State")
 
 
 class BaseDetectorCellsController(BaseBindingController):
