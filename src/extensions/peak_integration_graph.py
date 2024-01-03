@@ -14,7 +14,7 @@ from qtpy.QtWidgets import QGraphicsItem
 from traits.api import Array, Bool, Instance, List, WeakRef, on_trait_change
 
 from extensions.models.plots import PeakIntegrationGraphModel
-from extensions.utils import get_node_value
+from extensions.utils import value_from_node
 from karabo.common.scenemodel.api import build_model_config
 from karabogui.binding.api import (
     PropertyProxy, VectorNumberBinding, WidgetNodeBinding, get_binding_value)
@@ -208,10 +208,6 @@ class DisplayPeakIntegrationGraph(BaseBindingController):
         if self._base_region_updated:
             self._update_regions(regions=self._base_regions,
                                  widths=self._peak_baseline)
-
-
-def value_from_node(proxy, *, key):
-    return get_binding_value(get_node_value(proxy, key=key))
 
 
 def array_changed(old, new):

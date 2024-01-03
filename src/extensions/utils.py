@@ -84,6 +84,10 @@ def get_node_value(proxy, *, key):
     return None if node is Undefined else getattr(node, key, None)
 
 
+def value_from_node(proxy, *, key):
+    return get_binding_value(get_node_value(proxy, key=key))
+
+
 def guess_path(proxy, *, klass, output=False, excluded=tuple()):
     proxy_node = get_binding_value(proxy)
     for proxy_name in proxy_node:
