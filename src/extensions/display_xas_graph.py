@@ -3,6 +3,7 @@
 # Created on September 2022
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
+import numpy as np
 import pyqtgraph as pg
 from qtpy.QtCore import Qt
 from qtpy.QtGui import QBrush, QColor, QPalette, QPen
@@ -70,7 +71,7 @@ class BaseXasGraph(BaseBindingController):
         # Intensity bar plot
         intensity_plot = VectorBarGraphPlot(width=DEFAULT_BAR_WIDTH,
                                             brush=GREY_BRUSH)
-        intensity_plot.opts['pen'] = NO_PEN
+        intensity_plot.setOpts(pen=NO_PEN)
         add_twinx(widget.plotItem, data_item=intensity_plot, y_label='Io')
         self.intensity_plot = intensity_plot
 
@@ -84,7 +85,7 @@ class BaseXasGraph(BaseBindingController):
         aux_viewBox.setBackgroundColor('w')
         counts_plot = VectorBarGraphPlot(width=DEFAULT_BAR_WIDTH,
                                          brush=make_brush('b', alpha=70))
-        counts_plot.opts['pen'] = NO_PEN
+        counts_plot.setOpts(pen=NO_PEN)
         aux_plotItem.addItem(counts_plot)
         self.counts_plot = counts_plot
 
@@ -102,6 +103,13 @@ class BaseXasGraph(BaseBindingController):
         for key, plot in self.plots.items():
             y, _ = get_array_data(get_node_value(proxy, key=key),
                                   default=[])
+
+            # Filter out NaN values when plotting bar graphs
+            if isinstance(plot, VectorBarGraphPlot):
+                valid_index = np.isfinite(x)
+                x = x[valid_index]
+                y = y[valid_index]
+
             self._plot_data(plot, x=x, y=y)
 
     @property
