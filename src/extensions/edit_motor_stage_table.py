@@ -103,7 +103,12 @@ class EditableAssignmentTable(BaseFilterTableController):
         :param: pos: The position of the context menu event
         """
         menu = self.get_basic_menu()
-        if self.currentIndex().isValid():
+        # TODO Temporary fix to allow using the extension for advanced
+        # preset assignment table.
+        # Remove the second check when the framework with the fix for the
+        # filtered table is released.
+        if (self.currentIndex().isValid()
+           and self.proxy.path == "assignmentTable"):
             menu.addSeparator()
             request_save = menu.addAction("Request Save Configuration")
             request_save.setIcon(icons.save)
@@ -195,24 +200,29 @@ class EditableAssignmentTable(BaseFilterTableController):
 
         return menu
 
+    def sourceRow(self):
+        """Method to retrieve the selected row of the source model"""
+        index = self.currentIndex()
+        return self.tableModel().mapToSource(index).row()
+
     def add_row(self):
-        row = self.currentIndex().row()
+        row = self.sourceRow()
         self._item_model.insertRows(row + 1, 1, QModelIndex())
 
     def duplicate_row(self):
-        row = self.currentIndex().row()
+        row = self.sourceRow()
         self._item_model.duplicate_row(row)
 
     def move_row_up(self):
-        row = self.currentIndex().row()
+        row = self.sourceRow()
         self._item_model.move_row_up(row)
         self._table_widget.selectRow(row - 1)
 
     def move_row_down(self):
-        row = self.currentIndex().row()
+        row = self.sourceRow()
         self._item_model.move_row_down(row)
         self._table_widget.selectRow(row + 1)
 
     def remove_row(self):
-        index = self.currentIndex()
-        self._item_model.removeRows(index.row(), 1, QModelIndex())
+        row = self.sourceRow()
+        self._item_model.removeRows(row, 1, QModelIndex())
