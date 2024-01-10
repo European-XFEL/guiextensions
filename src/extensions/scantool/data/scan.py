@@ -3,7 +3,7 @@ from traits.api import (
     Array, HasStrictTraits, Instance, Int, List, ListStr, Property, Str,
     cached_property)
 
-from ..const import CSCAN, MESHES, TSCAN
+from ..const import MESHES
 from .device import DataSource, Device, Motor
 
 
@@ -39,7 +39,7 @@ class Scan(HasStrictTraits):
         return steps
 
     def _set_steps(self, steps):
-        shape = None if self.scan_type in [CSCAN, TSCAN] else steps + 1
+        shape = steps + 1 if self.scan_type in MESHES else None
         for device in self.devices:
             device.new_data(shape)
 

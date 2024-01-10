@@ -136,8 +136,8 @@ class ScanController(HasStrictTraits):
 
         return self._use_plot(HeatmapPlot)
 
-    def update_spectrum(self, data):
-        self._current_plot.update_spectrum(data)
+    def update_vector_data(self, data):
+        self._current_plot.update_vector_data(data)
 
     def add_data_selection(self):
         """Adds a controller of a selection widget, which can be used to

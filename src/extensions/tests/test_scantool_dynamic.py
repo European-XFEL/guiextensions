@@ -190,16 +190,13 @@ class TestScantoolDynamicWidget(GuiTestCase):
         scan = self.controller._scan
         self.assertEqual(len(scan.motors), 1)
         self.assertEqual(len(scan.data_sources), 1)
-        length = config[STEPS][0] + 1
 
         motor = scan._motors[0]
         self.assertEqual(motor.name, "pos0")
-        self.assertEqual(len(motor.data), length)
         self.assertTrue(np.isnan(motor.data).all())
 
         data_source = scan._data_sources[0]
         self.assertEqual(data_source.name, "y0")
-        self.assertEqual(len(data_source.data), length)
         self.assertTrue(np.isnan(data_source.data).all())
 
     def test_first_acquire(self):
@@ -213,17 +210,16 @@ class TestScantoolDynamicWidget(GuiTestCase):
                                    "y0", 200,
                                    ACTUAL_STEP, 0))
         apply_configuration(config, self.binding)
-
         scan = self.controller._scan
         # Check scan settings
         self.assertEqual(scan.actual_step, 0)
 
         # Check devices
         motor = scan._motors[0]
-        self.assertEqual(motor.data[0], 100)
+        self.assertEqual(motor.data[1], 100)
 
         data_source = scan._data_sources[0]
-        self.assertEqual(data_source.data[0], 200)
+        self.assertEqual(data_source.data[1], 200)
 
     def test_full_ascan(self):
         # Do a full scan

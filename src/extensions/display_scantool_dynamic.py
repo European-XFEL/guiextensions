@@ -16,9 +16,9 @@ from karabogui.controllers.api import (
 
 from .models.api import ScantoolBaseModel
 from .scantool.const import (
-    ACTUAL_STEP, ALIGNER, CURRENT_INDEX, IS_SPECTRUM_DATA, MESHES, MOTOR_IDS,
+    ACTUAL_STEP, ALIGNER, CURRENT_INDEX, IS_VECTOR_DATA, MESHES, MOTOR_IDS,
     MOTOR_NAMES, MOTORS, SCAN_TYPE, SOURCE_IDS, SOURCE_NAMES, SOURCES,
-    SPECTRUM_DATA, START_POSITIONS, STEPS, STOP_POSITIONS)
+    START_POSITIONS, STEPS, STOP_POSITIONS, VECTOR_DATA)
 from .scantool.controller import ScanController
 from .scantool.data.scan import Scan
 
@@ -88,12 +88,12 @@ class ScantoolDynamicWidget(BaseBindingController):
         self._scan.current_index = current_index
 
         # Update values of relevant devices
-        is_spectrum_data = self._get_value(proxies, IS_SPECTRUM_DATA)
-        if is_spectrum_data:
+        is_vector_data = self._get_value(proxies, IS_VECTOR_DATA)
+        if is_vector_data:
             source = self._scan._data_sources[0]
-            spectrum_data = self._get_value(proxies, SPECTRUM_DATA)
-            source.add_data_slice(spectrum_data, current_index[0])
-            self._controller.update_spectrum(source.data)
+            vector_data = self._get_value(proxies, VECTOR_DATA)
+            source.add_data_slice(vector_data, current_index[0])
+            self._controller.update_vector_data(source.data)
         else:
             for device in self._scan.devices:
                 value = self._get_value(proxies, device.name)
@@ -111,7 +111,7 @@ class ScantoolDynamicWidget(BaseBindingController):
 
         # Get scan parameters
         for prop in [SCAN_TYPE, STEPS, ACTUAL_STEP, START_POSITIONS,
-                     STOP_POSITIONS, CURRENT_INDEX, IS_SPECTRUM_DATA]:
+                     STOP_POSITIONS, CURRENT_INDEX, IS_VECTOR_DATA]:
             config.update({prop: self._get_value(proxies, prop)})
 
         # Get active motor and data sources
@@ -122,7 +122,7 @@ class ScantoolDynamicWidget(BaseBindingController):
         config.update({MOTOR_IDS: motor_ids, SOURCE_IDS: source_ids,
                        MOTORS: motors, SOURCES: sources})
 
-        if config[IS_SPECTRUM_DATA]:
+        if config[IS_VECTOR_DATA]:
             config[MOTORS] = MOTOR_NAMES[:2]
             config[MOTOR_IDS] = ["array_index", motor_ids[0]]
             config[START_POSITIONS] = [0, config[START_POSITIONS][0]]
@@ -132,7 +132,7 @@ class ScantoolDynamicWidget(BaseBindingController):
         scan = self._controller.new_scan(config)
 
         # Use plot  scan type
-        if config[IS_SPECTRUM_DATA] or config[SCAN_TYPE] in MESHES:
+        if config[IS_VECTOR_DATA] or config[SCAN_TYPE] in MESHES:
             self._controller.use_heatmap_plot()
         else:
             self._controller.use_multicurve_plot()
@@ -156,7 +156,7 @@ class ScantoolDynamicWidget(BaseBindingController):
             CURRENT_INDEX: [0],
             START_POSITIONS: self._get_value(proxies, START_POSITIONS),
             STOP_POSITIONS: self._get_value(proxies, STOP_POSITIONS),
-            IS_SPECTRUM_DATA: self._get_value(proxies, IS_SPECTRUM_DATA)})
+            IS_VECTOR_DATA: self._get_value(proxies, IS_VECTOR_DATA)})
         # Get active motor and data sources
         motor_ids = self._get_value(proxies, MOTOR_IDS)
         source_ids = self._get_value(proxies, SOURCE_IDS)
