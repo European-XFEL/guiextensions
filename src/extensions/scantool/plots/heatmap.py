@@ -114,7 +114,7 @@ class HeatmapPlot(ImagePlot):
             plotItem.set_translation(y_translate=self._offset[height - 1],
                                      update=False)
 
-    def update_spectrum(self, data):
+    def update_vector_data(self, data):
         # Get image properties
         z_data = data
         min_data = np.nanmin(z_data)

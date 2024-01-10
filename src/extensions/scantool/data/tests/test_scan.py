@@ -41,10 +41,13 @@ class TestScan(TestCase):
 
         # Check devices
         self.assertEqual(len(scan.motors), len(config[MOTORS]))
-        expected_shape = np.add(config[STEPS], 1)
-        for motor in scan._motors:
-            np.testing.assert_array_equal(motor.data.shape, expected_shape)
+        if config[SCAN_TYPE] == "mesh":
+            expected_shape = np.add(config[STEPS], 1)
+            for motor in scan._motors:
+                np.testing.assert_array_equal(motor.data.shape,
+                                              expected_shape)
 
-        self.assertEqual(len(scan.data_sources), len(config[SOURCES]))
-        for source in scan._data_sources:
-            np.testing.assert_array_equal(source.data.shape, expected_shape)
+            self.assertEqual(len(scan.data_sources), len(config[SOURCES]))
+            for source in scan._data_sources:
+                np.testing.assert_array_equal(source.data.shape,
+                                              expected_shape)
