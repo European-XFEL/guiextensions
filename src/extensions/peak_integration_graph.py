@@ -17,9 +17,10 @@ from extensions.models.plots import PeakIntegrationGraphModel
 from extensions.utils import value_from_node
 from karabo.common.scenemodel.api import build_model_config
 from karabogui.binding.api import (
-    PropertyProxy, VectorNumberBinding, WidgetNodeBinding, get_binding_value)
+    NDArrayBinding, PropertyProxy, WidgetNodeBinding, get_binding_value)
 from karabogui.controllers.api import (
-    BaseBindingController, register_binding_controller, with_display_type)
+    BaseBindingController, get_array_data, register_binding_controller,
+    with_display_type)
 from karabogui.graph.common.api import (
     KaraboLegend, get_default_pen, make_brush, make_pen)
 from karabogui.graph.plots.api import (
@@ -50,7 +51,7 @@ class ColorBox(ItemSample):
 @register_binding_controller(
     ui_name='Peak Integration Graph',
     klassname='PeakIntegrationGraph',
-    binding_type=(WidgetNodeBinding, VectorNumberBinding),
+    binding_type=(WidgetNodeBinding, NDArrayBinding),
     is_compatible=with_display_type('WidgetNode|PeakIntegrationGraph'),
     priority=0, can_show_nothing=False)
 class DisplayPeakIntegrationGraph(BaseBindingController):
@@ -60,8 +61,10 @@ class DisplayPeakIntegrationGraph(BaseBindingController):
     _curve_proxy = Instance(PropertyProxy)
 
     _peak_regions = List(WeakRef(QGraphicsItem))
-    _peak_markers = List(WeakRef(QGraphicsItem))
+    _peak_lines = List(WeakRef(QGraphicsItem))
     _base_regions = List(WeakRef(QGraphicsItem))
+
+    _peak_item = WeakRef(QGraphicsItem)
 
     # Properties
     _peak_positions = Array()
@@ -89,12 +92,14 @@ class DisplayPeakIntegrationGraph(BaseBindingController):
             widget.plotItem.addItem(item)
             self._peak_regions.append(item)
 
-        # Create peak markers
+        # Create peak lines and markers
         peak_pen = make_pen('r', alpha=REGION_ALPHA * 2)
         for _ in range(NUM_PEAKS):
             item = pg.InfiniteLine(pen=peak_pen, movable=False)
             widget.plotItem.addItem(item)
-            self._peak_markers.append(item)
+            self._peak_lines.append(item)
+        self._peak_item = widget.add_scatter_item(pen=peak_pen, cycle=False)
+        self._peak_item.points_brush = make_brush('r', alpha=REGION_ALPHA * 2)
 
         # Create base regions
         base_brush = make_brush('g', alpha=REGION_ALPHA)
@@ -130,7 +135,7 @@ class DisplayPeakIntegrationGraph(BaseBindingController):
             self._curve_proxy = proxy
             return True
 
-        if not isinstance(binding, VectorNumberBinding):
+        if not isinstance(binding, NDArrayBinding):
             return False
 
         if self._curve_proxy is not None:
@@ -161,15 +166,31 @@ class DisplayPeakIntegrationGraph(BaseBindingController):
                     self._peak_baseline = peak_baseline
 
         elif proxy is self._curve_proxy:
-            # Plot data
-            value = get_binding_value(proxy, default=[])
-            if not len(value):
+            value, _ = get_array_data(proxy, default=[])
+
+            # Set visibility
+            has_data = bool(len(value))
+            self._show_peak_regions(has_data)
+            if not has_data:
                 self._curve_item.setData([], [])
+                self._peak_item.setData([], [])
                 return
 
+            # Plot the trace
             rect = get_view_range(self._curve_item)
             x, y = generate_down_sample(value, rect=rect, deviation=True)
             self._curve_item.setData(x, y)
+
+            # Plot the trace's peaks
+            self._peak_item.setData(self._peak_positions,
+                                    value[self._peak_positions])
+
+    # ----------------------------------------------------------------
+    # Properties
+
+    @property
+    def region_items(self):
+        return self._peak_regions + self._base_regions + self._peak_lines
 
     # ----------------------------------------------------------------
     # Trait changes
@@ -199,15 +220,25 @@ class DisplayPeakIntegrationGraph(BaseBindingController):
     def _monitor_peak_properties(self):
         self.reset_traits(['_peak_region_updated', '_base_region_updated'])
         yield
+
+        # Set values
         if self._peak_region_updated:
             self._update_regions(regions=self._peak_regions,
                                  widths=self._peak_widths)
-            for index, marker in enumerate(self._peak_markers):
-                marker.setValue(self._peak_positions[index])
+            for index, line in enumerate(self._peak_lines):
+                line.setValue(self._peak_positions[index])
 
         if self._base_region_updated:
             self._update_regions(regions=self._base_regions,
                                  widths=self._peak_baseline)
+
+        # Change visibility
+        data = self._curve_item.xData
+        self._show_peak_regions(data is not None and len(data))
+
+    def _show_peak_regions(self, visible=True):
+        for item in self.region_items:
+            item.setVisible(visible)
 
 
 def array_changed(old, new):
