@@ -27,7 +27,8 @@ from karabogui.graph.image.api import (
 
 from .models.api import BeamGraphModel
 from .roi_graph import BaseRoiController
-from .utils import reflect_angle, rotate_points, value_from_node
+from .utils import (
+    get_node_value, reflect_angle, rotate_points, value_from_node)
 
 FONT_SIZE = get_font_size_from_dpi(8)
 NUMBER_BINDINGS = (IntBinding, FloatBinding)
@@ -309,12 +310,18 @@ class BeamGraph(BaseBindingController):
         return widget
 
     def value_update(self, proxy):
+        # Check if node binding exists
         node = get_binding_value(proxy)
         if node is None:
             return
 
+        # Check if the data schema exists
+        image_binding = get_node_value(proxy, key='image')
+        if image_binding is None:
+            return
+
         # For some reason the image dimension on first load is undefined
-        image = get_binding_value(node.image)
+        image = get_binding_value(image_binding)
         if image.dims.value is Undefined:
             return
 
