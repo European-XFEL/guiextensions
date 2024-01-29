@@ -105,7 +105,7 @@ class DisplayDynamicGraph(BaseBindingController):
             return
 
         # NOTE: WE cast boolean as int, as numpy method is deprecated
-        if y.dtype == np.bool:
+        if y.dtype == np.bool_:
             y = y.astype(np.int)
 
         model = self.model
