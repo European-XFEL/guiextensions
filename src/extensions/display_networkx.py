@@ -469,7 +469,7 @@ class GraphWidget(QGraphicsView):
 
     def itemMoved(self):
         if self.timer_id == 0:
-            self.timer_id = self.startTimer(1000.0 / 25)
+            self.timer_id = self.startTimer(1000 // 25)
             self.main_widget.toggle_freeze_button(True)
 
     def timerEvent(self, event):

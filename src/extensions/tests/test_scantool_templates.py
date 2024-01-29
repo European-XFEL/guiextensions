@@ -65,4 +65,4 @@ class TestScantoolTemplatesWidget(GuiTestCase):
         for index in range(cbox.count()):
             self.assertEqual(cbox.itemText(index),
                              data[index]["name"])
-        self.assertEquals(cbox.currentText(), "template3")
+        self.assertEqual(cbox.currentText(), "template3")
