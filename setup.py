@@ -5,6 +5,7 @@ entries = {
         'Amore = extensions.amore.display_roi_annotate',
         'BeamGraph = extensions.display_beam_graph',
         'CircleRoiGraph = extensions.roi_graph',
+        'CodeEditor = extensions.edit_code_editor',
         'ConditionCommand = extensions.display_condition',
         'DateTimeEdit = extensions.edit_datetime_label',
         'DetectorCells = extensions.display_detector_cells',

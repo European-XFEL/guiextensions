@@ -18,9 +18,10 @@ from .simple import (
     DisplayConditionCommandModel, DynamicPulseIdMapModel,
     EditableAssistantOverviewModel, EditableDateTimeModel,
     EditableTextOptionsModel, FileUploaderModel, IPMQuadrantModel,
-    LimitedIntLineEditModel, PointAndClickModel, PulseIdMapModel,
-    ScantoolBaseModel, ScantoolDeviceViewModel, ScantoolTemplatesModel,
-    StateAwareComponentManagerModel, VectorLimitedIntLineEditModel)
+    LimitedIntLineEditModel, MetroEditorModel, PointAndClickModel,
+    PulseIdMapModel, ScantoolBaseModel, ScantoolDeviceViewModel,
+    ScantoolTemplatesModel, StateAwareComponentManagerModel,
+    VectorLimitedIntLineEditModel)
 from .tables import (
     CriticalCompareViewModel, DeviceReconfigurationTableModel,
     DoocsLocationTableModel, DoocsMirrorTableModel, MotorAssignmentTableModel,

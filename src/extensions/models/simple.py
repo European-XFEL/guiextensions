@@ -78,6 +78,10 @@ class LimitedIntLineEditModel(BaseEditWidget):
     """A model for Int Line edit with min and max defined two integers"""
 
 
+class MetroEditorModel(BaseWidgetObjectData):
+    """A model to display the code editor widget."""
+
+
 # Reader and writers ...
 # --------------------------------------------------------------------------
 
@@ -87,7 +91,7 @@ _SIMPLE_WIDGET_MODELS = (
     "IPMQuadrantModel", "PulseIdMapModel", "DynamicPulseIdMapModel",
     "DisplayConditionCommandModel", "VectorLimitedIntLineEditModel",
     "LimitedIntLineEditModel", "EditableAssistantOverviewModel",
-    "FileUploaderModel")
+    "FileUploaderModel", "MetroEditorModel")
 
 _SIMPLE_DISPLAY_EDIT_MODELS = (
     "StateAwareComponentManagerModel", "PointAndClickModel")
