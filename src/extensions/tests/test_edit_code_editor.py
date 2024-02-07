@@ -31,16 +31,16 @@ def test_editor_widget(controller, mocker):
     editor.set_code(code)
     assert editor.code_book.getEditorCode() == code
 
-    with mocker.patch("extensions.edit_code_editor.QMessageBox.question",
-                      return_value=True):
-        # Save code
-        editor.onSaveClicked()
-        assert controller.saveCode.call_count == 1
-        controller.saveCode.assert_called_with(code)
+    mocker.patch("extensions.edit_code_editor.QMessageBox.question",
+                 return_value=True)
+    # Save code
+    editor.onSaveClicked()
+    assert controller.saveCode.call_count == 1
+    controller.saveCode.assert_called_with(code)
 
-        # Reload code
-        editor.reloadRequested.emit()
-        assert controller.fetch_code.call_count == 1
+    # Reload code
+    editor.reloadRequested.emit()
+    assert controller.fetch_code.call_count == 1
 
 
 def test_compare_code():
