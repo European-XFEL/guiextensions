@@ -126,7 +126,7 @@ class PulseIdMapWidget(QWidget):
 
             w_fel.setBrush(BRUSH_FEL if fel[idx] else BRUSH_EMPTY)
             w_fel.setPen(PEN_DET if det[idx] else PEN_EMPTY)
-            w_ppl.setVisible(ppl[idx])
+            w_ppl.setVisible(bool(ppl[idx]))
 
             w_fel.setToolTip(
                 f'Pulse {idx}'
