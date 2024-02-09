@@ -26,8 +26,21 @@ lint:
 
 .release_build: &release-build
   stage: build
+  variables:
+    TWINE_USERNAME: gitlab-ci-token
+    TWINE_PASSWORD: $CI_JOB_TOKEN
+    UPLOAD_URL: $CI_API_V4_URL/projects/$CI_PROJECT_ID/packages/pypi
   script:
     - python ci/build.py extensions --clean --test --upload-wheel -P karaboExtensions/tags
+    - python -m pip install twine
+    - cd dist
+    - >
+      for FILE in *.whl; do
+        echo "Uploading to XFEL package registry: $FILE"
+        # when an upload fails (400: bad request), it is because the package already exists
+        # the '|| true' follows this command to ignore upload failures
+        python3 -m twine upload --disable-progress-bar --skip-existing --repository-url $UPLOAD_URL $FILE || true
+      done
   only:
     - /^(\d+\.)(\d+\.?)(\d+)$/
   except:
