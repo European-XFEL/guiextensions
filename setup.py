@@ -43,6 +43,7 @@ entries = {
         'ScantoolTemplates = extensions.edit_scantool_templates',
         'SelectionTable = extensions.edit_selection_table',
         'StateAwareComponentManager = extensions.stateaware_component_manager',
+        'Base64Image = extensions.display_base64_string',
         'TickedImageGraph = extensions.display_ticked_image_graph',
         'UncertaintyGraph = extensions.display_uncertainty_graph',
         'XasGraph = extensions.display_xas_graph',

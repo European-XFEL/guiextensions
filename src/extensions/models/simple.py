@@ -13,6 +13,10 @@ from karabo.common.scenemodel.registry import (
     register_scene_reader, register_scene_writer)
 
 
+class Base64ImageModel(BaseEditWidget):
+    """ A model for displaying String Images """
+
+
 class IPMQuadrantModel(BaseWidgetObjectData):
     """ A model for the Intensity Position Monitor"""
 
@@ -91,7 +95,7 @@ _SIMPLE_WIDGET_MODELS = (
     "IPMQuadrantModel", "PulseIdMapModel", "DynamicPulseIdMapModel",
     "DisplayConditionCommandModel", "VectorLimitedIntLineEditModel",
     "LimitedIntLineEditModel", "EditableAssistantOverviewModel",
-    "FileUploaderModel", "MetroEditorModel")
+    "FileUploaderModel", "MetroEditorModel", "Base64ImageModel")
 
 _SIMPLE_DISPLAY_EDIT_MODELS = (
     "StateAwareComponentManagerModel", "PointAndClickModel")

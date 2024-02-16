@@ -15,7 +15,7 @@ from .plots import (
     PeakIntegrationGraphModel, ScatterPositionModel, TableVectorXYGraphModel,
     UncertaintyGraphModel, VectorGraphWithLinearRegionsModel, XasGraphModel)
 from .simple import (
-    DisplayConditionCommandModel, DynamicPulseIdMapModel,
+    Base64ImageModel, DisplayConditionCommandModel, DynamicPulseIdMapModel,
     EditableAssistantOverviewModel, EditableDateTimeModel,
     EditableTextOptionsModel, FileUploaderModel, IPMQuadrantModel,
     LimitedIntLineEditModel, MetroEditorModel, PointAndClickModel,
