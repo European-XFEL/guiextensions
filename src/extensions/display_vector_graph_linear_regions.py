@@ -68,7 +68,7 @@ class DisplayVectorGraphWithLinearRegions(BaseArrayGraph):
             plot_item.sigPositionChangeFinished.connect(
                 partial(self._inf_line_changed, proxy))
             self._inf_lines[proxy] = plot_item
-        if plot_item:
+        if plot_item is not None:
             self.widget.plotItem.addItem(plot_item)
             return True
         else:
