@@ -66,7 +66,8 @@ class BaseXasGraph(BaseBindingController):
         widget.stateChanged.connect(self._change_model)
 
         # Standard deviation plot
-        self.std_plot = widget.add_curve_item()
+        self.std_plot = widget.add_curve_item(connect="all")
+        widget.enable_data_toggle(activate=True)
 
         # Intensity bar plot
         intensity_plot = VectorBarGraphPlot(width=DEFAULT_BAR_WIDTH,
