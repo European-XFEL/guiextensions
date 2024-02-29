@@ -180,7 +180,8 @@ class DisplayExtendedVectorXYGraph(BaseVectorXYGraph):
 
     def add_proxy(self, proxy):
         curve = self.widget.add_curve_item(name=self._retrieve_legend(proxy),
-                                           pen=next(self._pens))
+                                           pen=next(self._pens),
+                                           connect='all')
         self._curves[proxy] = curve
         if len(self._curves) > 1:
             self.widget.set_legend(True)
@@ -301,7 +302,8 @@ class DisplayExtendedVectorXYGraph(BaseVectorXYGraph):
                     name += CONFLICT_LEGEND_SUFFIX
                 persistent_legends.append(name)
 
-                curve = self.widget.add_curve_item(pen=next(self._pens))
+                curve = self.widget.add_curve_item(pen=next(self._pens),
+                                                   connect='all')
                 curve.setData(*array)
                 curve.opts["name"] = name
                 self._persistent_curves.append((name, curve))
@@ -413,7 +415,7 @@ class BaseTableVectorXYGraph(BaseVectorXYGraph):
             # Add more data items
             for _ in range(num_values - num_items):
                 pen = make_pen(next(self._colors))
-                item = self.widget.add_curve_item(pen=pen)
+                item = self.widget.add_curve_item(pen=pen, connect='all')
                 self._curves[str(uuid.uuid4())] = item
         elif num_values < num_items:
             # Remove unused data items
