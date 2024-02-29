@@ -2,11 +2,14 @@ from contextlib import contextmanager
 from unittest import mock
 
 import numpy as np
+import pytest
 
-from extensions.roi_graph import CircleRoiGraph, RectRoiGraph
+from extensions.roi_graph import CircleRoiGraph, RectRoiGraph, TableRoiGraph
 from karabo.native import (
-    Configurable, EncodingType, Image, ImageData, Node, UInt32, VectorFloat,
-    VectorUInt32)
+    Configurable, EncodingType, Hash, Image, ImageData, Node, String, UInt32,
+    VectorFloat, VectorHash, VectorInt32, VectorUInt32)
+from karabogui.binding.api import (
+    DeviceProxy, PropertyProxy, ProxyStatus, build_binding)
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_value)
 from karabogui.util import SignalBlocker
@@ -23,12 +26,27 @@ class ChannelNode(Configurable):
     data = Node(DataNode)
 
 
-class ObjectNode(Configurable):
+class RoiTableSchema(Configurable):
+    label = String()
+    roi = VectorInt32()
+
+
+class Device(Configurable):
+    # General settings
+    output = Node(ChannelNode)
+
+    # For RectRoiGraph
     roi1 = VectorUInt32()
     roi2 = VectorFloat()
 
+    # For CircleRoiGraph
     center = VectorUInt32()
     radius = UInt32()
+
+    # For TableRoiGraph
+    roiTable = VectorHash(
+        rows=RoiTableSchema,
+        displayType='TableRoiValues')
 
 
 class AdditionalNode(Configurable):
@@ -46,7 +64,7 @@ class BaseRoiGraphTest(GuiTestCase):
         self.image_proxy = get_class_property_proxy(output_schema,
                                                     'data.image')
 
-        device_schema = ObjectNode.getClassSchema()
+        device_schema = Device.getClassSchema()
         self.roi1_proxy = get_class_property_proxy(device_schema, 'roi1')
         self.roi2_proxy = get_class_property_proxy(device_schema, 'roi2')
         self.center_proxy = get_class_property_proxy(device_schema, 'center')
@@ -351,3 +369,97 @@ class TestRoiLabelChanges(BaseRoiGraphTest):
             {"names": ['roi1', 'roi2'],
              "labels": ['foo', 'bar']},
             parent=self.controller.widget)
+
+
+# I'll try to convert the rest of this test into `pytest` soon(tm).
+# I would start now with the Table ROI Graph.
+
+# -----------------------------------------------------------------------------
+# TableRoiGraph
+
+
+@pytest.fixture
+def device_proxy(gui_app):
+    schema = Device.getClassSchema()
+    binding = build_binding(schema)
+    device = DeviceProxy(device_id="Device",
+                         server_id="Server",
+                         binding=binding,
+                         status=ProxyStatus.OFFLINE)
+    return device
+
+
+@pytest.fixture(name='trg_controller')
+def table_roi_graph_controller(device_proxy):
+    proxy = PropertyProxy(root_proxy=device_proxy, path="output.data.image")
+    controller = TableRoiGraph(proxy=proxy)
+    controller.create(None)
+    yield controller
+    controller.destroy()
+    assert controller.widget is None
+
+
+@pytest.fixture
+def roi_table_proxy(device_proxy):
+    return PropertyProxy(root_proxy=device_proxy, path="roiTable")
+
+
+@pytest.fixture
+def roi_table_proxy_with_default_value(roi_table_proxy):
+    roi1 = {'label': 'ROI 1', 'roi': [100, 200, 100, 200]}
+    roi2 = {'label': 'ROI 2', 'roi': [300, 400, 300, 400]}
+    set_proxy_value(roi_table_proxy, 'roiTable', [Hash(roi1), Hash(roi2)])
+    return roi_table_proxy, [roi1, roi2]
+
+
+def test_table_roi_graph_basics(trg_controller):
+    assert trg_controller._roi_proxy is None
+    assert len(trg_controller.rois) == 0
+
+
+def test_table_roi_graph_with_empty_table(trg_controller, roi_table_proxy):
+    trg_controller.visualize_additional_property(roi_table_proxy)
+
+    assert trg_controller._roi_proxy is roi_table_proxy
+    assert len(trg_controller.rois) == 0
+
+
+def test_table_roi_graph_with_valid_table(trg_controller,
+                                          roi_table_proxy_with_default_value):
+    proxy, default_value = roi_table_proxy_with_default_value
+    trg_controller.visualize_additional_property(proxy)
+
+    assert len(trg_controller.rois) == 2
+    for expected_val, actual_obj in zip(default_value, trg_controller.rois):
+        assert expected_val['label'] == actual_obj.label_text
+        assert tuple(expected_val['roi']) == actual_obj.geometry
+
+
+def test_table_roi_graph_with_moved_roi(trg_controller,
+                                        roi_table_proxy_with_default_value,
+                                        mocker):
+    call_device_slot = 'extensions.roi_graph.call_device_slot'
+    mock_call_device_slot = mocker.patch(call_device_slot)
+
+    proxy, default_value = roi_table_proxy_with_default_value
+    trg_controller.visualize_additional_property(proxy)
+    roi = trg_controller.rois[0]
+
+    # Start user movement.
+    item = roi.roi_item
+    item._moveStarted()
+    with SignalBlocker(item):
+        item.setPos((100, 300))
+        item.setSize((100, 200))
+    item.sigRegionChanged.emit(item)
+    item._moveFinished()
+    new_geometry = (100, 200, 300, 500)
+
+    assert roi.geometry == new_geometry
+    assert trg_controller.is_waiting is True
+
+    mock_call_device_slot.assert_called()
+    actual = mock_call_device_slot.call_args[1].get('table')
+    expected = [Hash(value) for value in default_value]
+    expected[0]['roi'] = list(new_geometry)
+    assert actual == expected

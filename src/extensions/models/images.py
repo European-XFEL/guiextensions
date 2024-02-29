@@ -31,6 +31,11 @@ class ZonePlateGraphModel(RoiGraphModel):
     """ A model for the zone plate graph """
 
 
+class TableRoiGraphModel(ImageGraphModel):
+    """ A model for the Table ROI graph """
+    show_scale = Bool(False)
+
+
 class BeamGraphModel(ImageGraphModel):
     """ A model for the beam graph """
     show_scale = Bool(False)
@@ -103,6 +108,20 @@ def _zone_plate_graph_writer(model, parent):
     write_base_widget_data(model, element, "ZonePlateGraph")
     write_base_karabo_image_model(model, element)
     element.set(NS_KARABO + "labels", ",".join(model.labels))
+    return element
+
+
+@register_scene_reader('TableRoiGraph')
+def _table_roi_graph_reader(element):
+    traits = read_base_karabo_image_model(element)
+    return TableRoiGraphModel(**traits)
+
+
+@register_scene_writer(TableRoiGraphModel)
+def _table_roi_graph_writer(model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_widget_data(model, element, "TableRoiGraph")
+    write_base_karabo_image_model(model, element)
     return element
 
 
