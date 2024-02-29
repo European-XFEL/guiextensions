@@ -5,7 +5,8 @@ from .complex import (
     VectorLimitedDoubleLineEditModel)
 from .images import (
     BeamGraphModel, CircleRoiGraphModel, ImageCrossHairGraphModel,
-    RectRoiGraphModel, ROIAnnotateModel, TickedImageGraphModel)
+    RectRoiGraphModel, ROIAnnotateModel, TableRoiGraphModel,
+    TickedImageGraphModel)
 from .metro import (
     MetroSecAxisGraphModel, MetroTwinXGraphModel, MetroXasGraphModel,
     MetroZonePlateModel)

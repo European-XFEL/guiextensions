@@ -17,20 +17,27 @@ from traits.api import (
 
 from karabo.common.scenemodel.api import (
     build_graph_config, restore_graph_config)
-from karabo.native import EncodingType
-from karabogui import icons
+from karabo.native import EncodingType, Hash
+from karabogui.api import icons, messagebox
 from karabogui.binding.api import (
     FloatBinding, ImageBinding, IntBinding, PropertyProxy, VectorBoolBinding,
-    VectorNumberBinding, get_binding_value)
+    VectorHashBinding, VectorNumberBinding, get_binding_value)
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
 from karabogui.graph.common.api import create_tool_button, make_pen
 from karabogui.graph.image.api import (
     KaraboImageNode, KaraboImagePlot, KaraboImageView)
-from karabogui.request import send_property_changes
+from karabogui.request import call_device_slot, send_property_changes
 from karabogui.util import SignalBlocker
 
-from .models.api import CircleRoiGraphModel, RectRoiGraphModel
+# Conditionally import WeakMethodRef
+try:
+    from karabogui.util import WeakMethodRef
+except ImportError:
+    from karabo.common.api import WeakMethodRef
+
+from .models.api import (
+    CircleRoiGraphModel, RectRoiGraphModel, TableRoiGraphModel)
 
 NUMBER_BINDINGS = (IntBinding, FloatBinding)
 
@@ -99,6 +106,11 @@ class BaseRoiController(HasStrictTraits):
         plotItem.vb.addItem(self.roi_item, ignoreBounds=False)
         if self.text_item is not None:
             plotItem.vb.addItem(self.text_item, ignoreBounds=False)
+
+    def remove_from(self, plotItem):
+        plotItem.vb.removeItem(self.roi_item)
+        if self.text_item is not None:
+            plotItem.vb.removeItem(self.text_item)
 
     def set_position(self, pos, update=True):
         self.position = pos
@@ -302,6 +314,7 @@ class CircleRoi(BaseRoiController):
 
 class BaseRoiGraph(BaseBindingController):
     grayscale = Bool(True)
+    with_labels = Bool(True)
 
     # Image plots
     _plot = WeakRef(KaraboImagePlot)
@@ -326,17 +339,18 @@ class BaseRoiGraph(BaseBindingController):
         # Finalize and add ROI afterwards
         toolbar = widget.add_toolbar()
         # Displayed data
-        self._edit_button = edit_button = create_tool_button(
-            checkable=False,
-            icon=icons.edit,
-            tooltip="Edit ROI labels",
-            on_clicked=self._edit_labels)
-        try:
-            toolbar.add_button(name=edit_button.toolTip(),
-                               button=edit_button)
-        except TypeError:
-            # The toolbar from the GUI has been changed.
-            toolbar.add_button(button=edit_button)
+        if self.with_labels:
+            self._edit_button = edit_button = create_tool_button(
+                checkable=False,
+                icon=icons.edit,
+                tooltip="Edit ROI labels",
+                on_clicked=self._edit_labels)
+            try:
+                toolbar.add_button(name=edit_button.toolTip(),
+                                   button=edit_button)
+            except TypeError:
+                # The toolbar from the GUI has been changed.
+                toolbar.add_button(button=edit_button)
 
         # Get a reference for our plotting
         self._plot = widget.plot()
@@ -588,6 +602,129 @@ class CircleRoiGraph(BaseRoiGraph):
             return
 
         roi.set_center(center, quiet=True)
+
+
+def _is_table_roi_values(binding):
+    return (isinstance(binding, VectorHashBinding)
+            and binding.display_type == "TableRoiValues")
+
+
+@register_binding_controller(
+    ui_name='Table ROI Graph',
+    klassname='TableRoiGraph',
+    binding_type=(ImageBinding, VectorHashBinding),
+    is_compatible=_is_compatible,
+    priority=-1000, can_show_nothing=False)
+class TableRoiGraph(BaseRoiGraph):
+    # Our Image Graph Model
+    model = Instance(TableRoiGraphModel, args=())
+    with_labels = Bool(False)
+    is_waiting = Bool(False)
+
+    _roi_proxy = Instance(PropertyProxy)
+
+    def binding_update(self, proxy):
+        # We now add the proxies that is postponed.
+        self.add_proxy(proxy)
+        self.is_waiting = False
+
+    def add_proxy(self, proxy):
+        binding = proxy.binding
+
+        # We postpone adding the proxy if it is still None:
+        # This is usual for properties of offline devices
+        if binding is None:
+            return True
+        # Ignore the bindings that we do not want: initial proxy is an image
+        if isinstance(binding, ImageBinding):
+            return False
+        # Ignore if we already have the ROI table proxy
+        if self._roi_proxy is not None:
+            return False
+        # Ignore if not compatible table
+        if not _is_table_roi_values(binding):
+            return False
+
+        # Add ROI on proxy
+        value = get_binding_value(binding, [])
+        for hsh in value:
+            self._create_roi(hsh['label'])
+
+        self._roi_proxy = proxy
+        return True
+
+    def value_update(self, proxy):
+        value = get_binding_value(proxy)
+
+        # Update image
+        if proxy is self.proxy:
+            self._update_image(value)
+            return
+
+        # Do not do anything if still waiting for the sent update
+        if self.is_waiting:
+            if (len(value) == len(self.rois)
+                and all([new.fullyEqual(old)
+                         for new, old in zip(value, self._roi_table)])):
+                self.is_waiting = False
+            return
+
+        # Add or delete ROIs
+        difference = len(value) - len(self.rois)
+        if difference > 0:
+            for _ in range(difference):
+                self._create_roi()
+        elif difference < 0:
+            removed = self.rois[difference:]
+            self.rois = self.rois[:difference]
+            for roi in removed:
+                roi.remove_from(self._plot)
+
+        for index, hsh in enumerate(value):
+            self._update_roi(self.rois[index], hsh['roi'], label=hsh['label'])
+
+    def _create_roi(self, label='ROI'):
+        roi = BaseRoiController(
+            roi_klass=pg.RectROI,
+            color=next(self._colors),
+            label_text=label)
+        roi.add_to(self._plot)
+        self.rois.append(roi)
+
+    def _update_roi(self, roi, geometry=None, label=''):
+        if geometry is None:
+            roi.is_visible = False
+            return
+
+        roi.set_geometry(geometry, quiet=True)
+        roi.label_text = label
+
+    @on_trait_change("rois:geometry_updated")
+    def _send_rois(self):
+        call_device_slot(
+            WeakMethodRef(self.request_handler),
+            instance_id=self._roi_device,
+            slot_name='updateRegionsOfInterest',
+            table=self._roi_table)
+        self.is_waiting = True
+
+    def request_handler(self, success, reply):
+        if not success or not reply.get('payload.success', False):
+            message = f'Setting the ROI for {self._roi_device} failed.'
+            messagebox.show_warning(message,
+                                    title='Setting ROI failed',
+                                    parent=self.widget)
+
+    @property
+    def _roi_device(self):
+        return (self._roi_proxy.root_proxy.device_id
+                if self._roi_proxy is not None else None)
+
+    @property
+    def _roi_table(self):
+        return [
+            Hash({'label': roi.label_text, 'roi': list(roi.geometry)})
+            for roi in self.rois]
 
 
 # ----------------------------------------------------------------------------
