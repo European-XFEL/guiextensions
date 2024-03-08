@@ -505,7 +505,7 @@ class GraphWidget(QGraphicsView):
             self.save_node_positions()
         else:
             if self.timer_id == 0:
-                self.timer_id = self.startTimer(1000.0 / 25)
+                self.timer_id = self.startTimer(1000 // 25)
 
     def save_node_positions(self):
         """
