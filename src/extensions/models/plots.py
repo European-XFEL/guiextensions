@@ -76,6 +76,12 @@ class UncertaintyGraphModel(BasePlotModel):
     """ A model for the uncertainty graph """
 
 
+class PolarPlotModel(BasePlotModel):
+    """ A model for the polar plot """
+    num_ellipses = Int(5)
+    max_ellipses_radius = Int(100)
+
+
 @register_scene_reader("ScatterPosition")
 def _scatter_position_reader(element):
     traits = read_base_plot(element)
@@ -221,3 +227,23 @@ def _uncertainty_graph_reader(element):
 def _uncertainty_graph_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_plot(model, element, "UncertaintyGraph")
+
+
+@register_scene_reader("PolarPlot")
+def _polar_plot_reader(element):
+    traits = read_base_plot(element)
+    traits["num_ellipses"] = int(element.get(NS_KARABO + "num_ellipses", 5))
+    traits["max_ellipses_radius"] = int(element.get(
+        NS_KARABO + "max_ellipses_radius", 100))
+
+    return PolarPlotModel(**traits)
+
+
+@register_scene_writer(PolarPlotModel)
+def _polar_plot_writer(model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_plot(model, element, "PolarPlot")
+    element.set(NS_KARABO + "num_ellipses", str(model.num_ellipses))
+    element.set(NS_KARABO + "max_ellipses_radius",
+                str(model.max_ellipses_radius))
+    return element

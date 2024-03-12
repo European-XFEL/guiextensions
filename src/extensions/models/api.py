@@ -13,8 +13,9 @@ from .metro import (
 from .networkx import FilterInstance, NetworkXModel, NodePosition
 from .plots import (
     DynamicDigitizerModel, DynamicGraphModel, ExtendedVectorXYGraph,
-    PeakIntegrationGraphModel, ScatterPositionModel, TableVectorXYGraphModel,
-    UncertaintyGraphModel, VectorGraphWithLinearRegionsModel, XasGraphModel)
+    PeakIntegrationGraphModel, PolarPlotModel, ScatterPositionModel,
+    TableVectorXYGraphModel, UncertaintyGraphModel,
+    VectorGraphWithLinearRegionsModel, XasGraphModel)
 from .simple import (
     Base64ImageModel, DisplayConditionCommandModel, DynamicPulseIdMapModel,
     EditableAssistantOverviewModel, EditableDateTimeModel,

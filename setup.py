@@ -33,6 +33,7 @@ entries = {
         'NetworkX = extensions.display_networkx',
         'PeakIntegrationGraph = extensions.peak_integration_graph',
         'PointAndClick = extensions.point_and_click',
+        'PolarPlot = extensions.display_polar_plot',
         'PulseIdMap = extensions.display_pulse_info',
         'RecoveryCompareView = extensions.display_recovery_compare_view',
         'RectRoiGraph = extensions.roi_graph',
