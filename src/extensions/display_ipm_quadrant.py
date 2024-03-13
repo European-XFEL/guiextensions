@@ -4,7 +4,7 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from qtpy.QtCore import QPoint, QRect, Qt
+from qtpy.QtCore import QPoint, QRectF, Qt
 from qtpy.QtGui import QColor, QPainter, QPen
 from qtpy.QtWidgets import QLabel
 from traits.api import Instance
@@ -52,7 +52,7 @@ class Quadrant(QLabel):
     def paintEvent(self, event):
         width = self.width()
         height = self.height()
-        center = QPoint((width + 1) / 2, (height + 1) / 2)
+        center = QPoint((width + 1) // 2, (height + 1) // 2)
         diameter = width - 2
         if height < width:
             diameter = height - 2
@@ -60,11 +60,11 @@ class Quadrant(QLabel):
         width_beam = diameter * (self.beam_width / self.diameter)
         height_beam = diameter * (self.beam_height / self.diameter)
         gap_width_x = diameter * (self.gap_size_x / self.diameter)
-        gap_x = QRect(center.x() + 1 - gap_width_x / 2, center.y()
-                      - diameter / 2, gap_width_x, diameter + 2)
+        gap_x = QRectF(center.x() + 1 - gap_width_x / 2, center.y()
+                       - diameter / 2, gap_width_x, diameter + 2)
         gap_width_y = diameter * (self.gap_size_y / self.diameter)
-        gap_y = QRect(center.x() - 1 - diameter / 2, center.y() + 1
-                      - gap_width_y / 2, diameter + 2, gap_width_y)
+        gap_y = QRectF(center.x() - 1 - diameter / 2, center.y() + 1
+                       - gap_width_y / 2, diameter + 2, gap_width_y)
         pos_x = center.x() + self.pos_x * center.x() / 2
         pos_y = center.y() - self.pos_y * center.y() / 2
 
@@ -79,8 +79,10 @@ class Quadrant(QLabel):
             if abs(self.pos_x) <= 1 and abs(self.pos_y) <= 1:
                 painter.setPen(QPen(FIREBRICK))
                 painter.setBrush(Qt.transparent)
-                painter.drawEllipse(pos_x + 1 - width_beam / 2, pos_y + 1
-                                    - height_beam / 2, width_beam, height_beam)
+                painter.drawEllipse(
+                    int(pos_x + 1 - width_beam / 2),
+                    int(pos_y + 1 - height_beam / 2),
+                    int(width_beam), int(height_beam))
 
     def set_parameter(self, x, y, intensity):
         self.pos_x = x if abs(x) < 1 else sign(x)
