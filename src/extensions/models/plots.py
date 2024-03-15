@@ -54,6 +54,12 @@ class VectorGraphWithLinearRegionsModel(BasePlotModel):
     number = Int(10)
 
 
+class XYTwoAxisGraphModel(BasePlotModel):
+    """ A model for the TwoAxisGraph"""
+    roi_items = List(Instance(BaseROIData))
+    roi_tool = Int(0)
+
+
 class TableVectorXYGraphModel(BasePlotModel):
     """ A model for the TableVectorXYGraph"""
     x_grid = Bool(True)
@@ -190,6 +196,19 @@ def _table_vector_xy_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_plot(model, element, "TableVectorXYGraph")
     element.set(NS_KARABO + "legends", ",".join(model.legends))
+    return element
+
+
+@register_scene_reader("XYTwoAxisGraphModel")
+def _two_axis_graph_reader(element):
+    traits = read_base_plot(element)
+    return XYTwoAxisGraphModel(**traits)
+
+
+@register_scene_writer(XYTwoAxisGraphModel)
+def _two_axis_graph_writer(model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_plot(model, element, "XYTwoAxisGraphModel")
     return element
 
 

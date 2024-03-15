@@ -49,6 +49,7 @@ entries = {
         'TickedImageGraph = extensions.display_ticked_image_graph',
         'UncertaintyGraph = extensions.display_uncertainty_graph',
         'XasGraph = extensions.display_xas_graph',
+        'XYTwoAxisGraph = extensions.display_two_axis_graph',
         'ZonePlateGraph = extensions.zone_plate_graph',
     ],
 }

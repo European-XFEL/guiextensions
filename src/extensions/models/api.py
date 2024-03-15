@@ -15,7 +15,7 @@ from .plots import (
     DynamicDigitizerModel, DynamicGraphModel, ExtendedVectorXYGraph,
     PeakIntegrationGraphModel, PolarPlotModel, ScatterPositionModel,
     TableVectorXYGraphModel, UncertaintyGraphModel,
-    VectorGraphWithLinearRegionsModel, XasGraphModel)
+    VectorGraphWithLinearRegionsModel, XasGraphModel, XYTwoAxisGraphModel)
 from .simple import (
     Base64ImageModel, DisplayConditionCommandModel, DynamicPulseIdMapModel,
     EditableAssistantOverviewModel, EditableDateTimeModel,
