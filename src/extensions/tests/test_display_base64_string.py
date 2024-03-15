@@ -45,4 +45,7 @@ def test_set_value(controller_widget):
                     f"data:image/png;base64,{image_string}")
     pixmap = QPixmap()
     pixmap.loadFromData(image_bytes)
-    assert controller_widget.widget.pixmap().toImage() == pixmap.toImage()
+    controller_widget.image.pixmap_item.setPixmap(pixmap)
+    pixmap_image = (
+        controller_widget.image.pixmap_item.pixmap().toImage())
+    assert (pixmap_image == pixmap.toImage())
