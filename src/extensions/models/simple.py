@@ -13,7 +13,7 @@ from karabo.common.scenemodel.registry import (
     register_scene_reader, register_scene_writer)
 
 
-class Base64ImageModel(BaseEditWidget):
+class Base64ImageModel(BaseWidgetObjectData):
     """ A model for displaying String Images """
 
 
@@ -92,10 +92,11 @@ class MetroEditorModel(BaseWidgetObjectData):
 
 # Model must have __NAME__Model. Widget must have __NAME__ as class name
 _SIMPLE_WIDGET_MODELS = (
-    "IPMQuadrantModel", "PulseIdMapModel", "DynamicPulseIdMapModel",
-    "DisplayConditionCommandModel", "VectorLimitedIntLineEditModel",
-    "LimitedIntLineEditModel", "EditableAssistantOverviewModel",
-    "FileUploaderModel", "MetroEditorModel", "Base64ImageModel")
+    "Base64ImageModel", "IPMQuadrantModel", "PulseIdMapModel",
+    "DynamicPulseIdMapModel", "DisplayConditionCommandModel",
+    "VectorLimitedIntLineEditModel", "LimitedIntLineEditModel",
+    "EditableAssistantOverviewModel", "FileUploaderModel",
+    "MetroEditorModel")
 
 _SIMPLE_DISPLAY_EDIT_MODELS = (
     "StateAwareComponentManagerModel", "PointAndClickModel")
