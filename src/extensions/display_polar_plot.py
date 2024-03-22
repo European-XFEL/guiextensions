@@ -112,10 +112,9 @@ class DisplayPolarPlot(BaseBindingController):
                 self._text_items[idx].setText(f"{theta[idx]}°")
 
             if fit_theta is not None and fit_radius is not None:
-                min_size = min(len(theta), len(radius))
-                fit_theta = fit_theta[:min_size]
-                fit_radius = fit_radius[:min_size]
-                fit_x, fit_y = deg_to_cart(fit_theta, fit_radius)
+                min_size = min(len(fit_theta), len(fit_radius))
+                fit_x, fit_y = deg_to_cart(fit_theta[:min_size],
+                                           fit_radius[:min_size])
                 self._fit_curve.setData(fit_x, fit_y)
 
     def _get_value(self, proxy, prop):
