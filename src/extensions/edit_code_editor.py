@@ -32,15 +32,16 @@ class DisplayCodeEditor(BaseBindingController):
     `slotGetCode` and `slotWriteCode` defined. """
 
     model = Instance(MetroEditorModel, args=())
+    _timestamp = Instance(float)
 
     def create_widget(self, parent):
         widget = CodeEditor(parent=parent)
-        widget.saveRequested.connect(self.saveCode)
+        widget.saveRequested.connect(self.compare_and_save)
         widget.reloadRequested.connect(self.fetch_code)
         return widget
 
     def value_update(self, proxy):
-        self.widget.update_label(str(proxy.value))
+        self.widget.on_value_update(str(proxy.value))
 
     def clear_widget(self):
         self.widget.clear()
@@ -50,7 +51,24 @@ class DisplayCodeEditor(BaseBindingController):
         def handler(success, reply):
             if success:
                 code = reply.get("code")
+                current_code = self.get_editor_code()
+                if current_code.strip():
+                    # Check if the code in editor is different before reloading
+                    # from the file.
+                    code_same = compare_code(code, current_code)
+                    if not code_same:
+                        question = (
+                            "The code in the editor is different from the "
+                            "file content. Do you wish to load from file?")
+                        ask = QMessageBox.question(
+                            self.widget, "Overwrite", question,
+                            QMessageBox.Yes | QMessageBox.Cancel)
+                        if ask != QMessageBox.Yes:
+                            return
                 self.widget.set_code(code)
+
+                timestamp = reply.get("timeStamp")
+                self._timestamp = timestamp
             else:
                 reason, details = get_reason_parts(reply)
                 messagebox.show_error(
@@ -61,32 +79,56 @@ class DisplayCodeEditor(BaseBindingController):
         slot_name = "slotGetCode"
         call_device_slot(handler, instance_id, slot_name)
 
-    def saveCode(self, code):
+    def save_code(self):
         logger = get_logger()
 
         def handler(success, reply):
             if success:
-                logger.info("Successfully saved the code to the file")
+                if timestamp := reply.get("timeStamp"):
+                    self._timestamp = timestamp
+                logger.info("Saved the code successfully to the file.")
             else:
                 reason, details = get_reason_parts(reply)
                 messagebox.show_error(
                     f"Failed to save to the file {reason}", details=details,
                     parent=self.widget)
 
+        code = self.get_editor_code()
         instance_id = self.getInstanceId()
         slot_name = "slotWriteCode"
         params = Hash("code", code)
         call_device_slot(handler, instance_id, slot_name, params=params)
 
+    def compare_and_save(self):
+        def handler(success, reply):
+            if success:
+                if reply.get("modified"):
+                    question = ("The file has been modified someone else. Do "
+                                "you wish to overwrite with your changes?")
+                    ask = QMessageBox.question(
+                        self.widget, "Overwrite the file", question,
+                        QMessageBox.Yes | QMessageBox.Cancel)
+                    if ask != QMessageBox.Yes:
+                        return
+                self.save_code()
+
+        instance_id = self.getInstanceId()
+        slot_name = "slotCompareCode"
+        params = Hash("timeStamp", self._timestamp)
+        call_device_slot(handler, instance_id, slot_name, params=params)
+
+    def get_editor_code(self):
+        return self.widget.code_book.getEditorCode()
+
 
 class CodeEditor(QFrame):
 
-    saveRequested = Signal(str)
+    saveRequested = Signal()
     reloadRequested = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent=parent)
-
+        self._file_path = None
         object_name = generateObjectName(self)
         self.setObjectName(object_name)
         layout = QVBoxLayout(self)
@@ -104,6 +146,9 @@ class CodeEditor(QFrame):
              f"QFrame[objectName = '{object_name}'] {{ "
              f"border: 1px solid gray;}}")
         self.label = QLabel(parent=self)
+        label_object_name = generateObjectName(self.label)
+        self.label.setObjectName(label_object_name)
+        self._label_style_sheet = f"QLabel[objectName = '{label_object_name}']"
         self.label.setContentsMargins(5, 0, 0, 0)
         layout.addWidget(self.label)
 
@@ -148,10 +193,9 @@ class CodeEditor(QFrame):
         question = "Do you want to save the changes?"
         reply = QMessageBox.question(self, "Save to File", question,
                                      QMessageBox.Yes | QMessageBox.Cancel)
-        if reply == QMessageBox.Cancel:
+        if reply != QMessageBox.Yes:
             return
-        code = self.code_book.getEditorCode()
-        self.saveRequested.emit(code)
+        self.saveRequested.emit()
 
     def _setClearButtonVisibility(self):
         """ The 'clear_button' should be visible only when the issues are
@@ -190,27 +234,34 @@ class CodeEditor(QFrame):
         self.clear_button.setVisible(True)
 
     def set_code(self, code: str):
-        current_code = self.code_book.getEditorCode()
-        if current_code.strip():
-            # Check if the code in editor is different before reloading from
-            # the file.
-            code_same = compare_code(code, current_code)
-            if not code_same:
-                question = "Code is different. Do you wish to overwrite?"
-                reply = QMessageBox.question(
-                    self, "Overwrite", question,
-                    QMessageBox.Yes | QMessageBox.Cancel)
-                if reply == QMessageBox.Cancel:
-                    return
         self.code_book.code_editor.setText(code)
-        self.label.setStyleSheet("")
+        style = f"{self._label_style_sheet} {{ }}"
+        self.label.setStyleSheet(style)
+        self.label.setText(self._file_path)
+        self.code_book.setEnabled(True)
 
     def clear(self):
         self.code_book.clear()
 
-    def update_label(self, file_path: str):
-        self.label.setText(file_path)
-        self.label.setStyleSheet("color:red")
+    def on_value_update(self, file_path: str):
+        """When the file path changes, fetch the code very first time
+        after the widget is created and then onvwards disabled the editor.
+        User has to be aware of this change and fetch the code forcefully."""
+        if self._file_path is None:
+            # The first time after creating the widget.
+            self.reloadRequested.emit()
+        else:
+            self.file_path_changed(file_path)
+        self._file_path = file_path
+
+    def file_path_changed(self, file_path: str):
+        self.code_book.setEnabled(False)
+        text = ("The file path has been changed. Press Reload to enable the "
+                "editor with the new content.")
+        self.label.setText(text)
+        style = (f"{self._label_style_sheet} {{color:red;}}")
+        self.label.setStyleSheet(style)
+        self._file_path = file_path
 
 
 def compare_code(first_code: str, second_code: str):
