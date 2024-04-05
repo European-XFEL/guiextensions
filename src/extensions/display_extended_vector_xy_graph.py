@@ -120,28 +120,7 @@ class BaseVectorXYGraph(BaseBindingController):
                                             deviation=False))
 
 
-# -----------------------------------------------------------------------------
-# Extended Vector XY graph
-
-
-def _is_vector_number_binding(binding):
-    """Don't allow plotting of boolean vectors"""
-    return not isinstance(binding, VectorBoolBinding)
-
-
-@register_binding_controller(ui_name='Extended Vector XY Graph',
-                             klassname='ExtendedVectorXYGraph',
-                             binding_type=VectorNumberBinding,
-                             is_compatible=_is_vector_number_binding,
-                             can_show_nothing=True,
-                             priority=-1000)
-class DisplayExtendedVectorXYGraph(BaseVectorXYGraph):
-    """The vector xy plot graph class
-
-    - First property proxy (dragged) will declare the x axis
-    - Other property proxy (added) will declare the y axis curves
-    """
-    model = Instance(ExtendedVectorXYGraph, args=())
+class BaseExtendedVectorXYGraph(BaseVectorXYGraph):
 
     _persistent_curves = List(Tuple(str, Instance(pg.PlotDataItem)))
 
@@ -346,8 +325,9 @@ class DisplayExtendedVectorXYGraph(BaseVectorXYGraph):
 
     def _retrieve_legend(self, proxy):
         name = proxy.key
-        index = (self.proxies.index(proxy) if proxy in self.proxies  # existing
-                 else len(self.proxies) - 1)  # new proxy
+        index = (
+            self.proxies[1:].index(proxy) if proxy in self.proxies  # existing
+            else len(self.proxies) - 1)  # new proxy
         try:
             legend = self.model.legends[index]
             if legend:
@@ -357,6 +337,30 @@ class DisplayExtendedVectorXYGraph(BaseVectorXYGraph):
             for _ in range(index + 1 - len(self.model.legends)):
                 self.model.legends.append('')
         return name
+
+
+# -----------------------------------------------------------------------------
+# Extended Vector XY graph
+
+
+def _is_vector_number_binding(binding):
+    """Don't allow plotting of boolean vectors"""
+    return not isinstance(binding, VectorBoolBinding)
+
+
+@register_binding_controller(ui_name='Extended Vector XY Graph',
+                             klassname='ExtendedVectorXYGraph',
+                             binding_type=VectorNumberBinding,
+                             is_compatible=_is_vector_number_binding,
+                             can_show_nothing=True,
+                             priority=-1000)
+class DisplayExtendedVectorXYGraph(BaseExtendedVectorXYGraph):
+    """The vector xy plot graph class
+
+    - First property proxy (dragged) will declare the x axis
+    - Other property proxy (added) will declare the y axis curves
+    """
+    model = Instance(ExtendedVectorXYGraph, args=())
 
 
 # -----------------------------------------------------------------------------
