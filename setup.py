@@ -22,6 +22,7 @@ entries = {
         'VectorLimitedDoubleLineEdit = extensions.edit_limited_lineedit',
         'VectorLimitedIntLineEdit = extensions.edit_limited_lineedit',
         'VectorGraphWithLinearRegions = extensions.display_vector_graph_linear_regions',  # noqa
+        'VectorXYGraphWithLinearRegions = extensions.display_vector_graph_linear_regions',  # noqa
         'LimitedDoubleLineEdit = extensions.edit_limited_lineedit',
         'LimitedIntLineEdit = extensions.edit_limited_lineedit',
         'MetroXasGraph = extensions.metro.xas_graph',

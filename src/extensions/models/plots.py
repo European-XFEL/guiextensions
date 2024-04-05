@@ -53,6 +53,14 @@ class VectorGraphWithLinearRegionsModel(BasePlotModel):
     y_grid = Bool(True)
     number = Int(10)
 
+    # Make the distinction between the curves and the linear regions
+    linear_regions = List(String)
+
+
+class VectorXYGraphWithLinearRegionsModel(VectorGraphWithLinearRegionsModel):
+    """ A model for the VectorXYGraphWithLinearRegions"""
+    legends = List(String)
+
 
 class XYTwoAxisGraphModel(BasePlotModel):
     """ A model for the TwoAxisGraph"""
@@ -171,13 +179,39 @@ def _extended_vector_xy_writer(model, parent):
 @register_scene_reader("VectorGraphWithLinearRegionsModel")
 def _vector_graph_with_linear_regions_reader(element):
     traits = read_base_plot(element)
+    linear_regions = element.get(NS_KARABO + "linear_regions", "")
+    if len(linear_regions):
+        traits["linear_regions"] = linear_regions.split(",")
     return VectorGraphWithLinearRegionsModel(**traits)
 
 
 @register_scene_writer(VectorGraphWithLinearRegionsModel)
 def _vector_graph_with_linear_regions_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    element.set(NS_KARABO + "linear_regions", ",".join(model.linear_regions))
     write_base_plot(model, element, "VectorGraphWithLinearRegionsModel")
+    return element
+
+
+@register_scene_reader("VectorXYGraphWithLinearRegionsModel")
+def _vector_xy_graph_with_linear_regions_reader(element):
+    traits = read_base_plot(element)
+    legends = element.get(NS_KARABO + "legends", "")
+    if len(legends):
+        traits["legends"] = legends.split(",")
+    linear_regions = element.get(NS_KARABO + "linear_regions", "")
+    if len(linear_regions):
+        traits["linear_regions"] = linear_regions.split(",")
+
+    return VectorXYGraphWithLinearRegionsModel(**traits)
+
+
+@register_scene_writer(VectorXYGraphWithLinearRegionsModel)
+def _vector_xy_graph_with_linear_regions_writer(model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    element.set(NS_KARABO + "legends", ",".join(model.legends))
+    element.set(NS_KARABO + "linear_regions", ",".join(model.linear_regions))
+    write_base_plot(model, element, "VectorXYGraphWithLinearRegionsModel")
     return element
 
 

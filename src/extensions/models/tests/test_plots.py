@@ -92,6 +92,19 @@ def test_peak_integration_graph_model():
 
 def test_vector_with_linear_regions_model():
     traits = _geometry_traits()
+    traits["linear_regions"] = ['proxy_1', 'proxy_2']
     model = api.VectorGraphWithLinearRegionsModel(**traits)
     read_model = single_model_round_trip(model)
     _assert_geometry_traits(read_model)
+    assert read_model.linear_regions == ['proxy_1', 'proxy_2']
+
+
+def test_vector_xy_with_linear_regions_model():
+    traits = _geometry_traits()
+    traits["linear_regions"] = ['proxy_1', 'proxy_2']
+    traits["legends"] = ["legend_y", "legend_1", "legend_2"]
+    model = api.VectorXYGraphWithLinearRegionsModel(**traits)
+    read_model = single_model_round_trip(model)
+    _assert_geometry_traits(read_model)
+    assert read_model.linear_regions == ['proxy_1', 'proxy_2']
+    assert read_model.legends == ["legend_y", "legend_1", "legend_2"]
