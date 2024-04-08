@@ -18,13 +18,13 @@ from .plots import (
     VectorGraphWithLinearRegionsModel, VectorXYGraphWithLinearRegionsModel,
     XasGraphModel, XYTwoAxisGraphModel)
 from .simple import (
-    Base64ImageModel, DisplayConditionCommandModel, DynamicPulseIdMapModel,
-    EditableAssistantOverviewModel, EditableDateTimeModel,
-    EditableTextOptionsModel, FileUploaderModel, IPMQuadrantModel,
-    LimitedIntLineEditModel, MetroEditorModel, PointAndClickModel,
-    PulseIdMapModel, ScantoolBaseModel, ScantoolDeviceViewModel,
-    ScantoolTemplatesModel, StateAwareComponentManagerModel,
-    VectorLimitedIntLineEditModel)
+    Base64ImageModel, ColoredLabelModel, DisplayConditionCommandModel,
+    DynamicPulseIdMapModel, EditableAssistantOverviewModel,
+    EditableDateTimeModel, EditableTextOptionsModel, FileUploaderModel,
+    IPMQuadrantModel, LimitedIntLineEditModel, MetroEditorModel,
+    PointAndClickModel, PulseIdMapModel, ScantoolBaseModel,
+    ScantoolDeviceViewModel, ScantoolTemplatesModel,
+    StateAwareComponentManagerModel, VectorLimitedIntLineEditModel)
 from .tables import (
     CriticalCompareViewModel, DeviceReconfigurationTableModel,
     DoocsLocationTableModel, DoocsMirrorTableModel, MotorAssignmentTableModel,
