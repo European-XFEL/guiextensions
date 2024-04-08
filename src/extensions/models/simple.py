@@ -8,9 +8,10 @@ from karabo.common.scenemodel.bases import BaseEditWidget
 from karabo.common.scenemodel.const import NS_KARABO, WIDGET_ELEMENT_TAG
 from karabo.common.scenemodel.io_utils import (
     read_base_widget_data, read_empty_display_editable_widget,
-    write_base_widget_data)
+    read_font_format_data, write_base_widget_data, write_font_format_data)
 from karabo.common.scenemodel.registry import (
     register_scene_reader, register_scene_writer)
+from karabo.common.scenemodel.widgets.simple import BaseLabelModel
 
 
 class Base64ImageModel(BaseWidgetObjectData):
@@ -76,6 +77,10 @@ class DynamicPulseIdMapModel(BaseWidgetObjectData):
 
 class VectorLimitedIntLineEditModel(BaseEditWidget):
     """A model for Int Line edit with min and max defined by a vector"""
+
+
+class ColoredLabelModel(BaseLabelModel):
+    """A model for colored label based on the displayedName"""
 
 
 class LimitedIntLineEditModel(BaseEditWidget):
@@ -172,6 +177,22 @@ def _editable_options_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, "EditableTextOptions")
     element.set(NS_KARABO + "strict", str(model.strict).lower())
+
+
+@register_scene_reader("ColoredLabelModel")
+def _display_colored_label_reader(element):
+    traits = read_base_widget_data(element)
+    traits.update(read_font_format_data(element))
+    return ColoredLabelModel(**traits)
+
+
+@register_scene_writer(ColoredLabelModel)
+def _display_colored_label_writer(model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_widget_data(model, element, "ColorLabel")
+    write_font_format_data(model, element)
+
+    return element
 
 
 # ----------------------------------------------------------------------------
