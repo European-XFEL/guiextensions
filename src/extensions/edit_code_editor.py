@@ -184,7 +184,8 @@ class CodeEditor(QFrame):
         save_button.setText("Save")
         save_button.setToolTip("Save Code")
         save_button.clicked.connect(self.onSaveClicked)
-        toolbar_layout.addWidget(save_button)
+        self.save_button = save_button
+        toolbar_layout.addWidget(self.save_button)
 
         return toolbar_widget
 
@@ -238,7 +239,7 @@ class CodeEditor(QFrame):
         style = f"{self._label_style_sheet} {{ }}"
         self.label.setStyleSheet(style)
         self.label.setText(self._file_path)
-        self.code_book.setEnabled(True)
+        self.save_button.setEnabled(True)
 
     def clear(self):
         self.code_book.clear()
@@ -251,17 +252,20 @@ class CodeEditor(QFrame):
             # The first time after creating the widget.
             self.reloadRequested.emit()
         else:
-            self.file_path_changed(file_path)
+            self._highlight_conflict()
         self._file_path = file_path
 
-    def file_path_changed(self, file_path: str):
-        self.code_book.setEnabled(False)
+    def _highlight_conflict(self):
+        """
+        Disable Save button and show the warning text on file_path
+        changed.
+        """
+        self.save_button.setEnabled(False)
         text = ("The file path has been changed. Press Reload to enable the "
                 "editor with the new content.")
         self.label.setText(text)
         style = (f"{self._label_style_sheet} {{color:red;}}")
         self.label.setStyleSheet(style)
-        self._file_path = file_path
 
 
 def compare_code(first_code: str, second_code: str):
