@@ -64,8 +64,8 @@ def test_editor_widget():
     assert "color:red" not in editor_widget.label.styleSheet()
 
     # File path changed
-    editor_widget.file_path_changed("/a/new/code/file")
-    assert not editor_widget.code_book.isEnabled()
+    editor_widget._highlight_conflict()
+    assert not editor_widget.save_button.isEnabled()
     assert "color:red" in editor_widget.label.styleSheet()
     text = ("The file path has been changed. Press Reload to enable the "
             "editor with the new content.")
