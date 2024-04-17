@@ -91,6 +91,10 @@ class MetroEditorModel(BaseWidgetObjectData):
     """A model to display the code editor widget."""
 
 
+class EventConfigurationModel(BaseWidgetObjectData):
+    """ A model for the Event Configuration widget"""
+
+
 # Reader and writers ...
 # --------------------------------------------------------------------------
 
@@ -101,7 +105,7 @@ _SIMPLE_WIDGET_MODELS = (
     "DynamicPulseIdMapModel", "DisplayConditionCommandModel",
     "VectorLimitedIntLineEditModel", "LimitedIntLineEditModel",
     "EditableAssistantOverviewModel", "FileUploaderModel",
-    "MetroEditorModel")
+    "MetroEditorModel", "EventConfigurationModel")
 
 _SIMPLE_DISPLAY_EDIT_MODELS = (
     "StateAwareComponentManagerModel", "PointAndClickModel")
