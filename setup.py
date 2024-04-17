@@ -17,6 +17,7 @@ entries = {
         'DynamicGraph = extensions.display_dynamic_graph',
         'ExtendedVectorXYGraph = extensions.display_extended_vector_xy_graph',
         'EditableTextOptions = extensions.edit_text_options',
+        'EventConfigurationView = extensions.event_manager.edit_event_configuration_view',
         'FileUploader = extensions.display_file_uploader',
         'IPMQuadrant = extensions.display_ipm_quadrant',
         'ImageCrossHairGraph = extensions.display_image_crosshair_graph',

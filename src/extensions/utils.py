@@ -3,9 +3,10 @@ from collections import namedtuple
 import numpy as np
 import pyqtgraph as pg
 from qtpy.QtCore import Qt, Slot
+from qtpy.QtWidgets import QComboBox, QStyledItemDelegate
 from traits.api import Undefined
 
-from karabo.native import Hash, Timestamp, Type
+from karabo.native import Hash, Timestamp, Type, is_equal
 from karabogui.binding.api import NodeBinding, get_binding_value
 
 try:
@@ -183,6 +184,30 @@ def add_twinx(plotItem, data_item=None, y_label=None):
 
 class CompatibilityError(RuntimeError):
     pass
+
+
+class OptionsDelegate(QStyledItemDelegate):
+    """Represents a combo box item in the table or tree.
+    """
+
+    def __init__(self, options, parent=None):
+        super().__init__(parent)
+        self.options = options
+
+    def createEditor(self, parent, option, index):
+        """Reimplemented function of QStyledItemDelegate"""
+        editor = QComboBox(parent)
+        editor.addItems(self.options)
+        editor.setCurrentIndex(0)
+        return editor
+
+    def setModelData(self, editor, model, index):
+        """Reimplemented function of QStyledItemDelegate"""
+        old = index.model().data(index, Qt.DisplayRole)
+        new = editor.currentText()
+        if not is_equal(old, new):
+            model.setData(index, new, Qt.EditRole)
+            self.commitData.emit(self.sender())
 
 
 def requires_gui_version(major: int, minor: int):

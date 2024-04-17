@@ -20,9 +20,9 @@ from .plots import (
 from .simple import (
     Base64ImageModel, ColoredLabelModel, DisplayConditionCommandModel,
     DynamicPulseIdMapModel, EditableAssistantOverviewModel,
-    EditableDateTimeModel, EditableTextOptionsModel, FileUploaderModel,
-    IPMQuadrantModel, LimitedIntLineEditModel, MetroEditorModel,
-    PointAndClickModel, PulseIdMapModel, ScantoolBaseModel,
+    EditableDateTimeModel, EditableTextOptionsModel, EventConfigurationModel,
+    FileUploaderModel, IPMQuadrantModel, LimitedIntLineEditModel,
+    MetroEditorModel, PointAndClickModel, PulseIdMapModel, ScantoolBaseModel,
     ScantoolDeviceViewModel, ScantoolTemplatesModel,
     StateAwareComponentManagerModel, VectorLimitedIntLineEditModel)
 from .tables import (
