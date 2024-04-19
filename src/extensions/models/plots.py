@@ -90,6 +90,10 @@ class UncertaintyGraphModel(BasePlotModel):
     """ A model for the uncertainty graph """
 
 
+class TriggerSliceGraphModel(BasePlotModel):
+    """ A model for the trigger slice graph with digitizer trace plot """
+
+
 class PolarPlotModel(BasePlotModel):
     """ A model for the polar plot """
     num_ellipses = Int(5)
@@ -280,6 +284,18 @@ def _uncertainty_graph_reader(element):
 def _uncertainty_graph_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_plot(model, element, "UncertaintyGraph")
+
+
+@register_scene_reader("TriggerSliceGraph")
+def _trigger_slice_graph_reader(element):
+    traits = read_base_plot(element)
+    return TriggerSliceGraphModel(**traits)
+
+
+@register_scene_writer(TriggerSliceGraphModel)
+def _trigger_slice_graph_writer(model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_plot(model, element, "TriggerSliceGraph")
 
 
 @register_scene_reader("PolarPlot")

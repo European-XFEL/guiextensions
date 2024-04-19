@@ -14,7 +14,7 @@ from .networkx import FilterInstance, NetworkXModel, NodePosition
 from .plots import (
     DynamicDigitizerModel, DynamicGraphModel, ExtendedVectorXYGraph,
     PeakIntegrationGraphModel, PolarPlotModel, ScatterPositionModel,
-    TableVectorXYGraphModel, UncertaintyGraphModel,
+    TableVectorXYGraphModel, TriggerSliceGraphModel, UncertaintyGraphModel,
     VectorGraphWithLinearRegionsModel, VectorXYGraphWithLinearRegionsModel,
     XasGraphModel, XYTwoAxisGraphModel)
 from .simple import (
