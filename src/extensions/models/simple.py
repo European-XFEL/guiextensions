@@ -26,6 +26,10 @@ class EditableAssistantOverviewModel(BaseEditWidget):
     """ A model for the RunAssistant Overview"""
 
 
+class DisplayRunMonitorHistoryModel(BaseWidgetObjectData):
+    """ A model for the RunMonitor History"""
+
+
 class FileUploaderModel(BaseWidgetObjectData):
     """ A model for the File Uploader"""
 
@@ -91,7 +95,7 @@ class MetroEditorModel(BaseWidgetObjectData):
     """A model to display the code editor widget."""
 
 
-class EventConfigurationModel(BaseWidgetObjectData):
+class EventConfigurationModel(BaseEditWidget):
     """ A model for the Event Configuration widget"""
 
 
@@ -105,7 +109,8 @@ _SIMPLE_WIDGET_MODELS = (
     "DynamicPulseIdMapModel", "DisplayConditionCommandModel",
     "VectorLimitedIntLineEditModel", "LimitedIntLineEditModel",
     "EditableAssistantOverviewModel", "FileUploaderModel",
-    "MetroEditorModel", "EventConfigurationModel")
+    "MetroEditorModel", "EventConfigurationModel",
+    "DisplayRunMonitorHistoryModel")
 
 _SIMPLE_DISPLAY_EDIT_MODELS = (
     "StateAwareComponentManagerModel", "PointAndClickModel")
