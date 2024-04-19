@@ -51,6 +51,7 @@ entries = {
         'TableRoiGraph = extensions.roi_graph',
         'Base64Image = extensions.display_base64_string',
         'TickedImageGraph = extensions.display_ticked_image_graph',
+        'TriggerSliceGraph = extensions.display_trigger_slice_graph',
         'UncertaintyGraph = extensions.display_uncertainty_graph',
         'XasGraph = extensions.display_xas_graph',
         'XYTwoAxisGraph = extensions.display_two_axis_graph',

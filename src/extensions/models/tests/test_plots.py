@@ -90,13 +90,20 @@ def test_peak_integration_graph_model():
     _assert_geometry_traits(read_model)
 
 
+def test_trigger_slice_graph():
+    traits = _geometry_traits()
+    model = api.TriggerSliceGraphModel(**traits)
+    read_model = single_model_round_trip(model)
+    _assert_geometry_traits(read_model)
+
+
 def test_vector_with_linear_regions_model():
     traits = _geometry_traits()
-    traits["linear_regions"] = ['proxy_1', 'proxy_2']
+    traits["linear_regions"] = ["proxy_1", "proxy_2"]
     model = api.VectorGraphWithLinearRegionsModel(**traits)
     read_model = single_model_round_trip(model)
     _assert_geometry_traits(read_model)
-    assert read_model.linear_regions == ['proxy_1', 'proxy_2']
+    assert read_model.linear_regions == ["proxy_1", "proxy_2"]
 
 
 def test_vector_xy_with_linear_regions_model():
