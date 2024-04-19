@@ -41,6 +41,7 @@ entries = {
         'RecoveryCompareView = extensions.display_recovery_compare_view',
         'RectRoiGraph = extensions.roi_graph',
         'RunAssistantOverview = extensions.daq.edit_runassistant',
+        'RunMonitorHistory = extensions.daq.display_runhistory',
         'ScatterPosition = extensions.display_scatter_position',
         'ScantoolDynamic = extensions.display_scantool_dynamic',
         'ScantoolDeviceView = extensions.display_scantool_device_view',

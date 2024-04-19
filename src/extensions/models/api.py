@@ -19,10 +19,11 @@ from .plots import (
     XasGraphModel, XYTwoAxisGraphModel)
 from .simple import (
     Base64ImageModel, ColoredLabelModel, DisplayConditionCommandModel,
-    DynamicPulseIdMapModel, EditableAssistantOverviewModel,
-    EditableDateTimeModel, EditableTextOptionsModel, EventConfigurationModel,
-    FileUploaderModel, IPMQuadrantModel, LimitedIntLineEditModel,
-    MetroEditorModel, PointAndClickModel, PulseIdMapModel, ScantoolBaseModel,
+    DisplayRunMonitorHistoryModel, DynamicPulseIdMapModel,
+    EditableAssistantOverviewModel, EditableDateTimeModel,
+    EditableTextOptionsModel, EventConfigurationModel, FileUploaderModel,
+    IPMQuadrantModel, LimitedIntLineEditModel, MetroEditorModel,
+    PointAndClickModel, PulseIdMapModel, ScantoolBaseModel,
     ScantoolDeviceViewModel, ScantoolTemplatesModel,
     StateAwareComponentManagerModel, VectorLimitedIntLineEditModel)
 from .tables import (
