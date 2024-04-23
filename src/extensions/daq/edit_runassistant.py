@@ -4,19 +4,22 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from qtpy.QtCore import QModelIndex, QSortFilterProxyModel, Qt
-from qtpy.QtGui import QStandardItem, QStandardItemModel
+from qtpy.QtGui import QBrush, QFont, QStandardItem, QStandardItemModel
 from qtpy.QtWidgets import (
-    QAbstractItemView, QHeaderView, QMenu, QSizePolicy, QTreeView, QVBoxLayout,
-    QWidget)
+    QAbstractItemView, QDialog, QHeaderView, QMenu, QSizePolicy, QTreeView,
+    QVBoxLayout, QWidget)
 from traits.api import Bool, Instance, WeakRef
 
+from karabo.common.api import WeakMethodRef
 from karabo.native import Hash
 from karabogui.api import (
-    BaseBindingController, PropertyProxy, VectorHashBinding, get_binding_value,
-    get_editor_value, get_scene_from_server, is_proxy_allowed,
+    BaseBindingController, PropertyProxy, VectorHashBinding, call_device_slot,
+    get_binding_value, get_editor_value, get_reason_parts,
+    get_scene_from_server, is_proxy_allowed, messagebox,
     register_binding_controller, with_display_type)
 
 from ..models.api import EditableAssistantOverviewModel
+from .selection_dialog import SelectionDialog
 from .toolbar import SearchBar
 
 HEADER_LABELS = ["Selected", "Group"]
@@ -25,6 +28,7 @@ KEY_SELECTED = "selected"
 KEY_NAME = "name"
 DEVICES_DISPLAY_TYPE = "RunAssistant|GroupDevices"
 OVERVIEW_DISPLAY_TYPE = "RunAssistant|Overview"
+SELECTION_DISPLAY_TYPE = "RunAssistant|DeviceSelection"
 
 
 @register_binding_controller(
@@ -39,6 +43,7 @@ class RunAssistantEdit(BaseBindingController):
     _is_editing = Bool(False)
     _expanded = Bool(False)
     _group_devices = Instance(PropertyProxy)
+    _excluded_devices = Instance(PropertyProxy)
 
     tree_widget = WeakRef(QTreeView)
     toolbar = WeakRef(QWidget)
@@ -87,18 +92,28 @@ class RunAssistantEdit(BaseBindingController):
 
     def add_proxy(self, proxy):
         if proxy.binding is None:
-            self._group_devices = proxy
             return True
 
-        if proxy.binding.display_type == DEVICES_DISPLAY_TYPE:
+        display_type = proxy.binding.display_type
+        if (display_type == DEVICES_DISPLAY_TYPE
+                and self._group_devices is None):
             self._group_devices = proxy
+            return True
+        elif (display_type == SELECTION_DISPLAY_TYPE
+              and self._excluded_devices is None):
+            self._excluded_devices = proxy
             return True
 
         return False
 
+    def binding_update(self, proxy):
+        if proxy is self.proxy:
+            return
+        self.add_proxy(proxy)
+
     def value_update(self, proxy):
         # Avoid messing with the item model when the user checks an item
-        if proxy is not self.proxy or self._is_editing:
+        if proxy is self._group_devices or self._is_editing:
             return
 
         # We reset on every value update!
@@ -115,16 +130,25 @@ class RunAssistantEdit(BaseBindingController):
             selection_item = QStandardItem()
             selection_item.setCheckable(True)
             selection_item.setCheckState(selected)
+            selection_item.setEditable(False)
             parent_item.appendRow([selection_item, group_item])
 
+            modified = False
             if self._group_devices:
-                devices = self.get_group_devices(identifier)
+                devices, excluded = self.get_group_devices(identifier)
                 for source in devices:
                     spacer = QStandardItem()
                     spacer.setEditable(False)
                     add_item = QStandardItem(source)
+                    if source in excluded:
+                        add_item.setForeground(QBrush(Qt.gray))
+                        modified = True
                     add_item.setEditable(False)
                     selection_item.appendRow([spacer, add_item])
+            if modified:
+                font = QFont()
+                font.setBold(True)
+                group_item.setFont(font)
 
         self.tree_widget.setUpdatesEnabled(False)
         # Clear item_model before updating
@@ -132,7 +156,7 @@ class RunAssistantEdit(BaseBindingController):
         item_model.removeRows(0, item_model.rowCount())
 
         root_item = item_model.invisibleRootItem()
-        for entry in get_editor_value(proxy, []):
+        for entry in get_editor_value(self.proxy, []):
             create_group(entry, root_item)
 
         self.tree_widget.setUpdatesEnabled(True)
@@ -155,8 +179,17 @@ class RunAssistantEdit(BaseBindingController):
         devices = get_binding_value(self._group_devices, [])
         for group in devices:
             if group[KEY_GROUP_ID] == name:
-                return group["sources"]
-        return []
+                devices = group["sources"]
+
+        excluded = []
+        if self._excluded_devices:
+            sources = get_binding_value(self._excluded_devices, [])
+            for group in sources:
+                if group[KEY_GROUP_ID] == name:
+                    excluded = group["sources"]
+                    break
+
+        return devices, excluded
 
     def create_edit_value(self):
         values = []
@@ -207,6 +240,9 @@ class RunAssistantEdit(BaseBindingController):
         action_validate.triggered.connect(self.on_validate)
         action_show = menu.addAction("Show Detailed Scene")
         action_show.triggered.connect(self.on_show_scene)
+        if self._excluded_devices:
+            device_exclude = menu.addAction("Device Selection")
+            device_exclude.triggered.connect(self.on_device_exclude)
         menu.exec(self.tree_widget.viewport().mapToGlobal(pos))
 
     def current_item(self):
@@ -234,3 +270,23 @@ class RunAssistantEdit(BaseBindingController):
 
         get_scene_from_server(self.instanceId, "group_detail",
                               groupId=item.text(), validate=True)
+
+    def on_device_exclude(self):
+        item = self.current_item()
+        if item is None:
+            return
+
+        groupId = item.text()
+        devices, excluded = self.get_group_devices(groupId)
+        dialog = SelectionDialog(devices, excluded, parent=self.widget)
+        if dialog.exec() == QDialog.Accepted:
+            sources = dialog.devices
+            call_device_slot(WeakMethodRef(self.on_selection),
+                             self.instanceId, "requestAction",
+                             action="excludedDevices", groupId=groupId,
+                             sources=sources)
+
+    def on_selection(self, success, reply):
+        if not success:
+            reason, detail = get_reason_parts(reply)
+            messagebox.show_error(reason, details=detail)
