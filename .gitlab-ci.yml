@@ -29,7 +29,7 @@ lint:
   variables:
     TWINE_USERNAME: gitlab-ci-token
     TWINE_PASSWORD: $CI_JOB_TOKEN
-    UPLOAD_URL: $CI_API_V4_URL/projects/$CI_PROJECT_ID/packages/pypi
+    UPLOAD_URL: $CI_API_V4_URL/projects/4562/packages/pypi
   script:
     - python ci/build.py extensions --clean --test --upload-wheel -P karaboExtensions/tags
     - python -m pip install twine
