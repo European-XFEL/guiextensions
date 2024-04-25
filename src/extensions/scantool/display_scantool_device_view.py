@@ -19,10 +19,10 @@ from karabogui.binding.api import (
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller, with_display_type)
 
-from .dialogs.scantool_device_dialog import ScantoolDeviceDialog
-from .models.api import ScantoolDeviceViewModel
-from .scantool.const import BUTTON_DEV_DIALOG, BUTTON_REMOVE_ALL, BUTTON_SORT
-from .scantool.device_tree import ButtonToolbar, DeviceTreeWidget
+from ..models.api import ScantoolDeviceViewModel
+from .const import BUTTON_DEV_DIALOG, BUTTON_REMOVE_ALL, BUTTON_SORT
+from .device_tree import ButtonToolbar, DeviceTreeWidget
+from .dialogs.device_dialog import ScantoolDeviceDialog
 
 HEADER_LABELS = ["Alias", "Device", "Axis/Source"]
 MOTORS_PROXY_PATH = "deviceEnv.motors"

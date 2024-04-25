@@ -2,14 +2,13 @@
 # Author: Ivars Karpics
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
+from pathlib import Path
 
 from qtpy import uic
 from qtpy.QtCore import Qt, Signal
 from qtpy.QtWidgets import QAbstractItemView, QDialog
 
 from karabogui.request import get_topology
-
-from .utils import get_dialog_ui
 
 
 class ScantoolDeviceDialog(QDialog):
@@ -21,7 +20,7 @@ class ScantoolDeviceDialog(QDialog):
 
         self.devices = []
 
-        uic.loadUi(get_dialog_ui("device_dialog.ui"), self)
+        uic.loadUi(str(Path(__file__).parent / "device_dialog.ui"), self)
         self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
         self.setModal(False)
         self.device_listwidget.setSelectionMode(
