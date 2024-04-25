@@ -8,7 +8,7 @@ from qtpy.QtWidgets import (
 import karabogui.icons as icons
 from karabogui.itemtypes import NavigationItemTypes, ProjectItemTypes
 
-from ..scantool.const import BUTTON_DEV_DIALOG, BUTTON_REMOVE_ALL, BUTTON_SORT
+from .const import BUTTON_DEV_DIALOG, BUTTON_REMOVE_ALL, BUTTON_SORT
 
 
 class ButtonToolbar(QWidget):

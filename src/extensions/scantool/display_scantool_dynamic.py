@@ -14,13 +14,13 @@ from karabogui.binding.api import (
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller, with_display_type)
 
-from .models.api import ScantoolBaseModel
-from .scantool.const import (
+from ..models.api import ScantoolBaseModel
+from .const import (
     ACTUAL_STEP, ALIGNER, CURRENT_INDEX, IS_VECTOR_DATA, MESHES, MOTOR_IDS,
     MOTOR_NAMES, MOTORS, SCAN_TYPE, SOURCE_IDS, SOURCE_NAMES, SOURCES,
     START_POSITIONS, STEPS, STOP_POSITIONS, VECTOR_DATA)
-from .scantool.controller import ScanController
-from .scantool.data.scan import Scan
+from .controller import ScanController
+from .data.scan import Scan
 
 HISTORY_PROXY_PATH = "history.output.schema.data"
 
@@ -123,6 +123,8 @@ class ScantoolDynamicWidget(BaseBindingController):
                        MOTORS: motors, SOURCES: sources})
 
         if config[IS_VECTOR_DATA]:
+            # Handle vector plot as mesh
+            config[SCAN_TYPE] = MESHES[0]
             config[MOTORS] = MOTOR_NAMES[:2]
             config[MOTOR_IDS] = ["array_index", motor_ids[0]]
             config[START_POSITIONS] = [0, config[START_POSITIONS][0]]
@@ -132,7 +134,7 @@ class ScantoolDynamicWidget(BaseBindingController):
         scan = self._controller.new_scan(config)
 
         # Use plot  scan type
-        if config[IS_VECTOR_DATA] or config[SCAN_TYPE] in MESHES:
+        if config[SCAN_TYPE] in MESHES:
             self._controller.use_heatmap_plot()
         else:
             self._controller.use_multicurve_plot()

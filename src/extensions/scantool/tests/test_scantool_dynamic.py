@@ -19,12 +19,12 @@ from karabogui.binding.api import (
     DeviceClassProxy, PropertyProxy, apply_configuration, build_binding)
 from karabogui.testing import GuiTestCase, get_property_proxy, set_proxy_value
 
-from ..display_scantool_dynamic import (
-    HISTORY_PROXY_PATH, ScantoolDynamicWidget)
-from ..scantool.const import (
+from ..const import (
     ACTUAL_STEP, CURRENT_INDEX, MESHES, MOTOR_IDS, MOTOR_NAMES, MOTORS,
     NR_MOTORS, NR_VALUES, SCAN_TYPE, SOURCE_IDS, SOURCE_NAMES, SOURCES,
     START_POSITIONS, STEPS, STOP_POSITIONS, X_DATA, Y_DATA, Z_DATA)
+from ..display_scantool_dynamic import (
+    HISTORY_PROXY_PATH, ScantoolDynamicWidget)
 
 MAX_OUTPUT_POINTS = 100
 

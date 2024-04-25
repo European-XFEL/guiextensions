@@ -17,7 +17,7 @@ from karabogui.api import (
     get_binding_value, get_reason_parts, icons, messagebox,
     register_binding_controller, with_display_type)
 
-from .models.api import ScantoolTemplatesModel
+from ..models.api import ScantoolTemplatesModel
 
 
 @register_binding_controller(
