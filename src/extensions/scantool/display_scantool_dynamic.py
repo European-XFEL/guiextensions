@@ -8,11 +8,10 @@ from traits.api import Bool, Instance, on_trait_change
 
 from karabo.common.api import WeakMethodRef
 from karabo.common.states import State
-from karabogui.api import call_device_slot, get_reason_parts, messagebox
-from karabogui.binding.api import (
-    PropertyProxy, VectorHashBinding, WidgetNodeBinding, get_binding_value)
-from karabogui.controllers.api import (
-    BaseBindingController, register_binding_controller, with_display_type)
+from karabogui.api import (
+    BaseBindingController, PropertyProxy, VectorHashBinding, WidgetNodeBinding,
+    call_device_slot, get_binding_value, get_reason_parts, messagebox,
+    register_binding_controller, with_display_type)
 
 from ..models.api import ScantoolBaseModel
 from .const import (

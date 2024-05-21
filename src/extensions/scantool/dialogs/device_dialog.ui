@@ -92,14 +92,26 @@
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="prop_ledit">
-       <property name="text">
-        <string>default</string>
+      <widget class="QComboBox" name="prop_cbox">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="editable">
+        <bool>true</bool>
        </property>
       </widget>
      </item>
      <item>
       <widget class="QPushButton" name="add_devices_bt">
+       <property name="maximumSize">
+        <size>
+         <width>80</width>
+         <height>16777215</height>
+        </size>
+       </property>
        <property name="text">
         <string>Add Devices</string>
        </property>

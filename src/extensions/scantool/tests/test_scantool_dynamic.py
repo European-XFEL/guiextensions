@@ -1,22 +1,12 @@
 import numpy as np
 
-from extensions.scantool.plots.heatmap import HeatmapPlot
-from extensions.scantool.plots.multicurve import MultiCurvePlot
-from extensions.scantool.tests.confs import (
-    A2SCAN_CONFIG, ASCAN_CONFIG, C2SCAN_CONFIG, MESH_CONFIG)
-
-try:
-    from karabogui.binding.api import ProxyStatus
-except ImportError:
-    # compatibility with GUI version < 2.16
-    from karabo.common.api import ProxyStatus
-
 from karabo.common.api import State
 from karabo.native import (
     AccessMode, Configurable, Double, Hash, Node, String, UInt32, VectorDouble,
     VectorInt32, VectorString)
 from karabogui.binding.api import (
-    DeviceClassProxy, PropertyProxy, apply_configuration, build_binding)
+    DeviceClassProxy, PropertyProxy, ProxyStatus, apply_configuration,
+    build_binding)
 from karabogui.testing import GuiTestCase, get_property_proxy, set_proxy_value
 
 from ..const import (
@@ -25,6 +15,10 @@ from ..const import (
     START_POSITIONS, STEPS, STOP_POSITIONS, X_DATA, Y_DATA, Z_DATA)
 from ..display_scantool_dynamic import (
     HISTORY_PROXY_PATH, ScantoolDynamicWidget)
+from ..plots.heatmap import HeatmapPlot
+from ..plots.multicurve import MultiCurvePlot
+from ..tests.confs import (
+    A2SCAN_CONFIG, ASCAN_CONFIG, C2SCAN_CONFIG, MESH_CONFIG)
 
 MAX_OUTPUT_POINTS = 100
 

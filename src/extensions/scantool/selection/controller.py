@@ -3,7 +3,7 @@ from traits.api import Event, HasStrictTraits, Instance
 
 from ..selection.image_data import ImageDataSelectionWidget
 from ..selection.xy_data import XYDataSelectionWidget
-from ..widget import get_container
+from ..widgets import get_container
 
 
 class DataSelectionController(HasStrictTraits):

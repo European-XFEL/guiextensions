@@ -11,7 +11,7 @@ from .plots.base import BasePlot
 from .plots.heatmap import HeatmapPlot
 from .plots.multicurve import MultiCurvePlot
 from .selection.controller import DataSelectionController
-from .widget import get_container
+from .widgets import get_container
 
 
 class ScanController(HasStrictTraits):
