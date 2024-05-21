@@ -1,16 +1,11 @@
 
-try:
-    from karabogui.binding.api import ProxyStatus
-except ImportError:
-    # compatibility with GUI version < 2.16
-    from karabo.common.api import ProxyStatus
-
 from karabo.native import Bool, Configurable, Hash, Node, String, VectorHash
 from karabogui.binding.api import (
-    DeviceClassProxy, PropertyProxy, build_binding)
+    DeviceClassProxy, PropertyProxy, ProxyStatus, build_binding)
 from karabogui.testing import GuiTestCase, get_property_proxy, set_proxy_value
 
-from ..display_scantool_device_view import DEVICE_PROXY_MAP, ScantoolDeviceView
+from ..display_scantool_device_view import (
+    DEVICE_ATTRIBUTES_MAP, ScantoolDeviceView)
 
 
 class MotorRow(Configurable):
@@ -113,8 +108,9 @@ class TestScantoolDeviceViewWidget(GuiTestCase):
     def test_init(self):
         self.assertIsNotNone(self.controller.widget)
         # Check if tree has group items
-        self.assertEqual(self.controller._treewidget.topLevelItemCount(),
-                         len(DEVICE_PROXY_MAP))
+        treewidget = self.controller.widget._device_tree
+        self.assertEqual(treewidget.topLevelItemCount(),
+                         len(DEVICE_ATTRIBUTES_MAP))
 
     def test_env(self):
         data = [Hash("alias", "m1", "deviceId", "TEST_DEVICE", "axis",
@@ -134,7 +130,7 @@ class TestScantoolDeviceViewWidget(GuiTestCase):
         self.assertTrue(self._has_group_item_child("Sources", "s1"))
 
     def _has_group_item_child(self, parent_text, child_text):
-        treewidget = self.controller._treewidget
+        treewidget = self.controller.widget._device_tree
         for parent_index in range(treewidget.topLevelItemCount()):
             parent = treewidget.topLevelItem(parent_index)
             if parent.text(0) == parent_text:

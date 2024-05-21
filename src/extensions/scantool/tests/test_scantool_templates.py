@@ -1,14 +1,8 @@
 
-try:
-    from karabogui.binding.api import ProxyStatus
-except ImportError:
-    # compatibility with GUI version < 2.16
-    from karabo.common.api import ProxyStatus
-
 from karabo.native import (
     Bool, Configurable, Hash, String, Timestamp, VectorHash)
 from karabogui.binding.api import (
-    DeviceClassProxy, PropertyProxy, build_binding)
+    DeviceClassProxy, PropertyProxy, ProxyStatus, build_binding)
 from karabogui.testing import GuiTestCase, set_proxy_value
 
 from ..edit_scantool_templates import ScantoolTemplates
