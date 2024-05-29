@@ -98,6 +98,8 @@ class RoiRequestor(QObject):
             return
 
     def update_and_plot_rois(self, color):
+        self._display_image_annotate.widget.roi.selected.emit(
+            ROITool.NoROI)
         # Retrieve and save the regions of interest (ROIs) from device node.
         self._display_image_annotate.saved_rois = {
             history_key: self._display_image_annotate._get_value(
