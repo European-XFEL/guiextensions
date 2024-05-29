@@ -120,22 +120,25 @@ class Builder:
         conda_run(Commands.RUN, '-n', 'base', 'conda', 'devenv',
                   '--file', op.join(framework_dir, devenv_path))
 
+        conda_run(Commands.RUN, '-n', 'karabogui', 'python', '-m', 'pip',
+                  'install', '--upgrade', 'pip')
+
         # Install pythonGui in the environment to register the entrypoints
         gui_root = op.join(framework_dir, 'src', 'pythonGui')
         conda_run(Commands.RUN, '-n', 'karabogui', '--cwd', gui_root,
-                  'python', 'setup.py', 'install')
+                  'python', '-m', 'pip', 'install', '.')
 
         # Install pythonKarabo in the environment as well, but only native
         os.environ["BUILD_KARABO_SUBMODULE"] = "NATIVE"
         py_karabo_root = op.join(framework_dir, 'src', 'pythonKarabo')
         conda_run(Commands.RUN, '-n', 'karabogui', '--cwd', py_karabo_root,
-                  'python', 'setup.py', 'install')
+                  'python', '-m', 'pip', 'install', '.')
 
         os.environ.pop("BUILD_KARABO_SUBMODULE")
 
         # Then install the package
         conda_run(Commands.RUN, '-n', 'karabogui', '--cwd', self.root_path,
-                  'python', 'setup.py', 'install')
+                  'python', '-m', 'pip', 'install', '.')
 
         # Run tests locally
         extensions_path = op.join(self.root_path, "src")
@@ -153,7 +156,7 @@ class Builder:
 
     def create_wheel(self):
         print(f"Creating wheel at {os.environ.get('CI_PROJECT_DIR')}")
-        command_run(['python', 'setup.py', 'bdist_wheel'])
+        command_run(['python', '-m', 'pip', 'wheel'])
         filename = op.join(self.root_path, '**', WHEEL_FILENAME)
         filenames = glob.glob(filename)
         # Verify if a wheel is created
