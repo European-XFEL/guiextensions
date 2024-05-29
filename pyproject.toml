@@ -79,3 +79,5 @@ readme = "README.md"
 dependencies = [
 ]
 
+[project.optional-dependencies]
+all = ["cadge"]
