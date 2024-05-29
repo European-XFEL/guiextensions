@@ -156,7 +156,7 @@ class Builder:
 
     def create_wheel(self):
         print(f"Creating wheel at {os.environ.get('CI_PROJECT_DIR')}")
-        command_run(['python', '-m', 'pip', 'wheel', '.'])
+        command_run(['python', '-m', 'pip', 'wheel', '.', '-w', 'dist'])
         filename = op.join(self.root_path, '**', WHEEL_FILENAME)
         filenames = glob.glob(filename)
         # Verify if a wheel is created
