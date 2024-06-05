@@ -143,7 +143,7 @@ class DisplayConditionCommand(BaseBindingController):
 
     def setEnabled(self, enable):
         """Reimplemented to account for access level changes"""
-        self.widget.setEnabled(enable)
+        self._set_button_enabled()
 
     def execute_action(self):
         """Execute the action on the command proxy"""
