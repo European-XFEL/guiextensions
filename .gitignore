@@ -4,5 +4,6 @@ __pycache__/
 *.egg-info/
 *.org
 .idea/
+.vscode/
 *.pyc
 src/extensions/_version.py

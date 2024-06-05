@@ -3,6 +3,7 @@
 from .complex import (
     DetectorCellsModel, LimitedDoubleLineEditModel, MultipleDetectorCellsModel,
     VectorLimitedDoubleLineEditModel)
+from .detectors import RunAssistantModuleSelectionModel
 from .images import (
     BeamGraphModel, CircleRoiGraphModel, ImageCrossHairGraphModel,
     RectRoiGraphModel, ROIAnnotateModel, TableRoiGraphModel,
