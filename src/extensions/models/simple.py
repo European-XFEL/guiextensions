@@ -188,7 +188,7 @@ def _editable_options_writer(model, parent):
     element.set(NS_KARABO + "strict", str(model.strict).lower())
 
 
-@register_scene_reader("ColoredLabelModel")
+@register_scene_reader("ColoredLabel")
 def _display_colored_label_reader(element):
     traits = read_base_widget_data(element)
     traits.update(read_font_format_data(element))
@@ -198,9 +198,8 @@ def _display_colored_label_reader(element):
 @register_scene_writer(ColoredLabelModel)
 def _display_colored_label_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
-    write_base_widget_data(model, element, "ColorLabel")
+    write_base_widget_data(model, element, "ColoredLabel")
     write_font_format_data(model, element)
-
     return element
 
 
