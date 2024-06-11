@@ -193,9 +193,14 @@ class OptionsDelegate(QStyledItemDelegate):
     def __init__(self, options, parent=None):
         super().__init__(parent)
         self.options = options
+        self.tree = parent
 
     def createEditor(self, parent, option, index):
         """Reimplemented function of QStyledItemDelegate"""
+        # This is specific for event condition tree
+        item = self.tree.itemFromIndex(index)
+        if not item.text(1):
+            return
         editor = QComboBox(parent)
         editor.addItems(self.options)
         editor.setCurrentIndex(0)
