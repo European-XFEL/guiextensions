@@ -5,6 +5,7 @@ import json
 from enum import Enum
 
 from qtpy.QtCore import Qt, Signal
+from qtpy.QtGui import QBrush, QColor
 from qtpy.QtWidgets import (
     QAbstractItemView, QHBoxLayout, QHeaderView, QPushButton, QSizePolicy,
     QTreeWidget, QTreeWidgetItem, QVBoxLayout, QWidget)
@@ -13,7 +14,8 @@ from traits.api import Bool, Instance
 from karabo.native import Hash
 from karabogui.api import (
     BaseBindingController, SignalBlocker, VectorHashBinding, get_binding_value,
-    icons, make_brush, register_binding_controller, with_display_type)
+    icons, is_proxy_allowed, make_brush, register_binding_controller,
+    with_display_type)
 from karabogui.itemtypes import (
     ConfiguratorItemType, NavigationItemTypes, ProjectItemTypes)
 
@@ -21,6 +23,7 @@ from ..models.api import EventConfigurationModel
 from ..utils import OptionsDelegate
 
 EVENT_ATTRIBUTES = ["alias", "level", "condition"]
+GRAY = QColor(178, 178, 178, 60)
 
 
 class EventColorMap(Enum):
@@ -70,29 +73,37 @@ class EventTreeWidget(QTreeWidget):
         for event in events:
             self.add_tree_item(event=event)
 
-    def add_tree_item(self, event, level=None, parent=None):
+    def add_tree_item(self, event, level_item=None, parent=None):
         if parent is None:
             # Try to find top level item
             for idx in range(self.topLevelItemCount()):
                 if self.topLevelItem(idx).text(0) == event["alias"]:
                     parent = self.topLevelItem(idx)
 
+        item_to_select = None
         if parent is None:
             parent = QTreeWidgetItem([event["alias"]])
-            parent.setFlags(parent.flags() | Qt.ItemIsEditable)
+            parent.setFlags(parent.flags() ^ Qt.ItemIsEditable)
             self.addTopLevelItem(parent)
+            item_to_select = parent
 
-        if level is None:
-            level = QTreeWidgetItem(["", event["level"], ""])
-            level.setFlags(level.flags() | Qt.ItemIsEditable)
-            level.setBackground(1,
-                                getattr(EventColorMap, event["level"]).value)
-            parent.addChild(level)
+        if level_item is None:
+            level_item = QTreeWidgetItem(["", event["level"], ""])
+            level_item.setFlags(level_item.flags() ^ Qt.ItemIsEditable)
+            level_item.setBackground(
+                1, getattr(EventColorMap, event["level"]).value)
+            parent.addChild(level_item)
+            if not item_to_select:
+                item_to_select = level_item
 
-        for cond in event["condition"]:
+        for idx, cond in enumerate(event["condition"]):
             cond_item = QTreeWidgetItem(["", "", cond])
-            cond_item.setFlags(cond_item.flags() | Qt.ItemIsEditable)
-            level.addChild(cond_item)
+            cond_item.setFlags(cond_item.flags() ^ Qt.ItemIsEditable)
+            level_item.addChild(cond_item)
+            brush = QBrush(GRAY) if idx % 2 else QBrush(Qt.white)
+            cond_item.setBackground(2, brush)
+            if not item_to_select:
+                item_to_select = cond_item
 
         # Sort level items by critical level
         last_index = 0
@@ -103,8 +114,19 @@ class EventTreeWidget(QTreeWidget):
                     parent.insertChild(last_index, item)
                     last_index += 1
 
-        level.setExpanded(True)
+        # Expand event branch
         parent.setExpanded(True)
+        for idx in range(parent.childCount()):
+            parent.child(idx).setExpanded(True)
+        self.setCurrentItem(item_to_select)
+
+    def mouseDoubleClickEvent(self, event):
+        # Do not allow to edit items without text
+        index = self.indexAt(event.pos())
+        text = index.data(Qt.DisplayRole)
+        if text:
+            event.accept()
+            return super().mouseDoubleClickEvent(event)
 
     def dragEnterEvent(self, event):
         self._check_drag_event(event)
@@ -259,26 +281,20 @@ class EventConfigurationWidget(QWidget):
         parent = item.parent() if item else None
 
         if button == "add":
-            # Top level item is selected, we add new level item
-            if item is None or parent is None:
-                event = {"alias": "NEW_EVENT",
-                         "level": EventColorMap.IMPORTANT.name,
-                         "condition": ["NEW_CONDITION"]}
-                self._event_tree.add_tree_item(event)
-            # Level item or child item is selected
-            else:
-                level = ""
+            level_item = None
+            event = {"alias": "NEW_EVENT",
+                     "level": EventColorMap.IMPORTANT.name,
+                     "condition": ["NEW_CONDITION"]}
+            # Level or conditions item is selected
+            if item and parent:
+                event["alias"] = ""
                 if item.childCount() == 0:
-                    level_item = item.parent()
+                    level_item = parent
+                    parent = level_item.parent()
+                    event["level"] = level_item.text(1)
                 else:
-                    level_item = item
-                    level = level_item.text(1)
-                parent = level_item.parent()
-
-                event = {"alias": "",
-                         "level": level,
-                         "condition": ["NEW_CONDITION"]}
-                self._event_tree.add_tree_item(event, level_item, parent)
+                    event["level"] = EventColorMap.IMPORTANT.name
+            self._event_tree.add_tree_item(event, level_item, parent)
         elif button == "copy":
             new_item = item.clone()
             if parent is None:
@@ -340,6 +356,10 @@ class EventConfigurationView(BaseBindingController):
         events = get_binding_value(proxy)
         self.widget.update_event_tree(events)
         self._is_updating = False
+
+    def state_update(self, proxy):
+        enable = is_proxy_allowed(proxy)
+        self.widget.setEnabled(enable)
 
     def _event_tree_changed(self):
         if self.proxy.binding is None or self._is_updating:
