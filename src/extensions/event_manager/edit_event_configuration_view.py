@@ -7,8 +7,8 @@ from enum import Enum
 from qtpy.QtCore import Qt, Signal
 from qtpy.QtGui import QBrush, QColor
 from qtpy.QtWidgets import (
-    QAbstractItemView, QHBoxLayout, QHeaderView, QPushButton, QSizePolicy,
-    QTreeWidget, QTreeWidgetItem, QVBoxLayout, QWidget)
+    QAbstractItemView, QHBoxLayout, QHeaderView, QMenu, QPushButton,
+    QSizePolicy, QTreeWidget, QTreeWidgetItem, QVBoxLayout, QWidget)
 from traits.api import Bool, Instance
 
 from karabo.native import Hash
@@ -34,6 +34,8 @@ class EventColorMap(Enum):
 
 class EventTreeWidget(QTreeWidget):
 
+    eventTreeChanged = Signal()
+
     def __init__(self, parent=None):
         super().__init__(parent)
 
@@ -43,12 +45,15 @@ class EventTreeWidget(QTreeWidget):
         self.setDropIndicatorShown(True)
         self.setUniformRowHeights(True)
         self.setExpandsOnDoubleClick(True)
+        self.setAlternatingRowColors(True)
         self.setSizePolicy(QSizePolicy.MinimumExpanding,
                            QSizePolicy.MinimumExpanding)
 
         self.setDragDropMode(QAbstractItemView.InternalMove)
         self.setSelectionMode(QAbstractItemView.SingleSelection)
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.customContextMenuRequested.connect(self.context_menu)
 
         self.header().setSectionResizeMode(QHeaderView.Interactive)
         self.setColumnCount(len(EVENT_ATTRIBUTES))
@@ -57,6 +62,100 @@ class EventTreeWidget(QTreeWidget):
         options = [cond_type.name for cond_type in EventColorMap]
         delegate = OptionsDelegate(options, parent=self)
         self.setItemDelegateForColumn(1, delegate)
+
+        self.itemChanged.connect(self.item_changed)
+
+    def context_menu(self, pos):
+        selection_model = self.selectionModel()
+        if selection_model is None:
+            return
+
+        menu = QMenu(parent=self)
+        add_action = menu.addAction("Add Item")
+        add_action.triggered.connect(self.add_item)
+
+        copy_action = menu.addAction("Copy Item")
+        copy_action.triggered.connect(self.copy_item)
+        remove_action = menu.addAction("Remove Item")
+        remove_action.triggered.connect(self.remove_item)
+        remove_all_action = menu.addAction("Remove All Items")
+        remove_all_action.triggered.connect(self.remove_all_items)
+
+        copy_action.setEnabled(len(selection_model.selectedRows()) > 0)
+        remove_action.setEnabled(len(selection_model.selectedRows()) > 0)
+        remove_all_action.setEnabled(len(selection_model.selectedRows()) > 0)
+        menu.exec(self.viewport().mapToGlobal(pos))
+
+    def item_changed(self, item, col):
+        self.eventTreeChanged.emit()
+        if col == 1:
+            item.setBackground(1, getattr(EventColorMap, item.text(1)).value)
+
+        # self.update_background_color()
+
+    def copy_item(self):
+        item = self.currentItem()
+        parent = item.parent() if item else None
+
+        new_item = item.clone()
+        if parent is None:
+            index = self.indexOfTopLevelItem(item)
+            self.insertTopLevelItem(index + 1, new_item)
+        else:
+            index = parent.indexOfChild(item)
+            parent.insertChild(index + 1, new_item)
+        new_item.setExpanded(True)
+        self.setCurrentItem(new_item)
+        self.eventTreeChanged.emit()
+        self.update_background_color()
+
+    def add_item(self):
+        item = self.currentItem()
+        parent = item.parent() if item else None
+
+        level_item = None
+        event = {"alias": "NEW_EVENT",
+                 "level": EventColorMap.IMPORTANT.name,
+                 "condition": ["NEW_CONDITION"]}
+        # Level or conditions item is selected
+        if item and parent:
+            event["alias"] = ""
+            if item.childCount() == 0:
+                level_item = parent
+                parent = level_item.parent()
+                event["level"] = level_item.text(1)
+            else:
+                event["level"] = EventColorMap.IMPORTANT.name
+        self.add_tree_item(event, level_item, parent)
+        self.eventTreeChanged.emit()
+        self.update_background_color()
+
+    def remove_item(self):
+        item = self.currentItem()
+        parent = item.parent() if item else None
+
+        if parent is None:
+            index = self.indexOfTopLevelItem(item)
+            self.takeTopLevelItem(index)
+        else:
+            is_condition_leaf = item.childCount() == 0
+            parent.removeChild(item)
+            if not parent.childCount():
+                if is_condition_leaf:
+                    # Not conditions left in the alias level, remove level
+                    top_level_item = parent.parent()
+                    top_level_item.removeChild(parent)
+                else:
+                    top_level_item = parent
+                if not top_level_item.childCount():
+                    index = self.indexOfTopLevelItem(top_level_item)
+                    self.takeTopLevelItem(index)
+        self.eventTreeChanged.emit()
+        self.update_background_color()
+
+    def remove_all_items(self):
+        self.clear()
+        self.eventTreeChanged.emit()
 
     def refresh(self, events):
         """Update event conditions tree
@@ -72,6 +171,7 @@ class EventTreeWidget(QTreeWidget):
 
         for event in events:
             self.add_tree_item(event=event)
+        self.update_background_color()
 
     def add_tree_item(self, event, level_item=None, parent=None):
         if parent is None:
@@ -90,9 +190,9 @@ class EventTreeWidget(QTreeWidget):
         if level_item is None:
             level_item = QTreeWidgetItem(["", event["level"], ""])
             level_item.setFlags(level_item.flags() ^ Qt.ItemIsEditable)
+            parent.addChild(level_item)
             level_item.setBackground(
                 1, getattr(EventColorMap, event["level"]).value)
-            parent.addChild(level_item)
             if not item_to_select:
                 item_to_select = level_item
 
@@ -100,8 +200,6 @@ class EventTreeWidget(QTreeWidget):
             cond_item = QTreeWidgetItem(["", "", cond])
             cond_item.setFlags(cond_item.flags() ^ Qt.ItemIsEditable)
             level_item.addChild(cond_item)
-            brush = QBrush(GRAY) if idx % 2 else QBrush(Qt.white)
-            cond_item.setBackground(2, brush)
             if not item_to_select:
                 item_to_select = cond_item
 
@@ -165,6 +263,8 @@ class EventTreeWidget(QTreeWidget):
                           "condition": [key]}
             self.add_tree_item(event=event_item, level=level_item,
                                parent=parent_item)
+            self.update_background_color()
+            self.eventTreeChanged.emit()
 
     def _check_drag_event(self, event):
         """Check the drag event for enter, drag, and drop events.
@@ -202,6 +302,28 @@ class EventTreeWidget(QTreeWidget):
 
         event.ignore()
         return False, ()
+
+    def update_background_color(self):
+        #  Ah, this is ugly...
+        return
+        for a_idx in range(self.topLevelItemCount()):
+            brush = QBrush(GRAY) if a_idx % 2 else QBrush(Qt.white)
+            alias_item = self.topLevelItem(a_idx)
+            for col in range(len(EVENT_ATTRIBUTES)):
+                alias_item.setBackground(col, brush)
+            for l_idx in range(alias_item.childCount()):
+                level_item = alias_item.child(l_idx)
+                for col in range(len(EVENT_ATTRIBUTES)):
+                    text = level_item.text(col)
+                    if text in iter(EventColorMap):
+                        level_item.setBackground(
+                            col, getattr(EventColorMap, text).value)
+                    else:
+                        level_item.setBackground(col, brush)
+                for c_idx in range(level_item.childCount()):
+                    cond_item = level_item.child(c_idx)
+                    for col in range(len(EVENT_ATTRIBUTES)):
+                        cond_item.setBackground(col, brush)
 
 
 class ButtonToolbar(QWidget):
@@ -243,8 +365,6 @@ class ButtonToolbar(QWidget):
 
 class EventConfigurationWidget(QWidget):
 
-    eventTreeChanged = Signal()
-
     def __init__(self, parent):
         super().__init__(parent)
 
@@ -257,8 +377,6 @@ class EventConfigurationWidget(QWidget):
 
         self.setSizePolicy(QSizePolicy.MinimumExpanding,
                            QSizePolicy.MinimumExpanding)
-        self._event_tree.itemChanged.connect(
-            self._event_item_changed)
         self._event_tree.itemSelectionChanged.connect(
             self._event_selection_changed)
         self._toolbar.buttonClicked.connect(self._toolbar_button_clicked)
@@ -267,53 +385,19 @@ class EventConfigurationWidget(QWidget):
         with SignalBlocker(self._event_tree):
             self._event_tree.refresh(events)
 
-    def _event_item_changed(self, item, col):
-        if col == 1:
-            item.setBackground(1, getattr(EventColorMap, item.text(1)).value)
-        self.eventTreeChanged.emit()
-
     def _event_selection_changed(self):
         selected_items = self._event_tree.selectedItems()
         self._toolbar.set_button_state(selected_items)
 
     def _toolbar_button_clicked(self, button):
-        item = self._event_tree.currentItem()
-        parent = item.parent() if item else None
-
         if button == "add":
-            level_item = None
-            event = {"alias": "NEW_EVENT",
-                     "level": EventColorMap.IMPORTANT.name,
-                     "condition": ["NEW_CONDITION"]}
-            # Level or conditions item is selected
-            if item and parent:
-                event["alias"] = ""
-                if item.childCount() == 0:
-                    level_item = parent
-                    parent = level_item.parent()
-                    event["level"] = level_item.text(1)
-                else:
-                    event["level"] = EventColorMap.IMPORTANT.name
-            self._event_tree.add_tree_item(event, level_item, parent)
+            self._event_tree.add_item()
         elif button == "copy":
-            new_item = item.clone()
-            if parent is None:
-                index = self._event_tree.indexOfTopLevelItem(item)
-                self._event_tree.insertTopLevelItem(index + 1, new_item)
-            else:
-                index = parent.indexOfChild(item)
-                parent.insertChild(index + 1, new_item)
-            new_item.setExpanded(True)
-            self._event_tree.setCurrentItem(new_item)
+            self._event_tree.copy_item()
         elif button == "remove":
-            if parent is None:
-                index = self._event_tree.indexOfTopLevelItem(item)
-                self._event_tree.takeTopLevelItem(index)
-            else:
-                parent.removeChild(item)
+            self._event_tree.remove_item()
         elif button == "remove_all":
-            self._event_tree.clear()
-        self.eventTreeChanged.emit()
+            self._event_tree.remove_all_items()
 
     def get_event_config(self):
         result = []
@@ -345,7 +429,8 @@ class EventConfigurationView(BaseBindingController):
 
     def create_widget(self, parent):
         main_widget = EventConfigurationWidget(parent=parent)
-        main_widget.eventTreeChanged.connect(self._event_tree_changed)
+        main_widget._event_tree.eventTreeChanged.connect(
+            self._event_tree_changed)
         return main_widget
 
     def value_update(self, proxy):

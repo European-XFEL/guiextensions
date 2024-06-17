@@ -30,4 +30,5 @@ from .simple import (
 from .tables import (
     CriticalCompareViewModel, DeviceReconfigurationTableModel,
     DoocsLocationTableModel, DoocsMirrorTableModel, MotorAssignmentTableModel,
-    MotorParametersTableModel, SelectionTableModel)
+    MotorParametersTableModel, NotificationConfigurationTableModel,
+    SelectionTableModel)

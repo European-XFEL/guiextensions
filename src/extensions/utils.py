@@ -1,18 +1,21 @@
+from ast import literal_eval
 from collections import namedtuple
 
 import numpy as np
 import pyqtgraph as pg
 from qtpy.QtCore import Qt, Slot
-from qtpy.QtWidgets import QComboBox, QStyledItemDelegate
+from qtpy.QtGui import QPalette
+from qtpy.QtWidgets import (
+    QComboBox, QDialog, QHBoxLayout, QLineEdit, QStyledItemDelegate,
+    QToolButton, QWidget)
 from traits.api import Undefined
 
 from karabo.native import Hash, Timestamp, Type, is_equal
-from karabogui.binding.api import NodeBinding, get_binding_value
-
-try:
-    from karabogui.controllers.api import REFERENCE_TYPENUM_TO_DTYPE
-except ImportError:
-    from karabogui.binding.api import REFERENCE_TYPENUM_TO_DTYPE
+from karabogui.api import (
+    REFERENCE_TYPENUM_TO_DTYPE, NodeBinding, SignalBlocker,
+    VectorStringBinding, get_binding_value, get_editor_value, icons)
+from karabogui.const import WIDGET_MIN_HEIGHT
+from karabogui.dialogs.listedit import ListEditDialog
 
 VERSION = namedtuple("VERSION", ["major", "minor"])
 
@@ -213,6 +216,98 @@ class OptionsDelegate(QStyledItemDelegate):
         if not is_equal(old, new):
             model.setData(index, new, Qt.EditRole)
             self.commitData.emit(self.sender())
+
+
+class VectorDelegate(QStyledItemDelegate):
+    """Represents vector item with linedit and button
+    """
+
+    def __init__(self, proxy, col, parent=None):
+        super().__init__(parent)
+        self.proxy = proxy
+        self.col = col
+        self.row = None
+        self.last_cursor_position = 0
+        self._internal_widget = None
+
+    def createEditor(self, parent, option, index):
+        widget = QWidget(parent)
+        widget.setMinimumHeight(WIDGET_MIN_HEIGHT)
+        layout = QHBoxLayout(widget)
+        layout.setContentsMargins(0, 0, 0, 0)
+
+        self._internal_widget = QLineEdit(parent)
+        layout.addWidget(self._internal_widget)
+        self._normal_palette = self._internal_widget.palette()
+        self._error_palette = QPalette(self._normal_palette)
+        self._error_palette.setColor(QPalette.Text, Qt.red)
+        widget.setFocusProxy(self._internal_widget)
+
+        self._internal_widget.textChanged.connect(self._on_user_edit)
+        self._internal_widget.setFocusPolicy(Qt.StrongFocus)
+
+        text = "Edit"
+        edit_tb = QToolButton()
+        edit_tb.setStatusTip(text)
+        edit_tb.setToolTip(text)
+        edit_tb.setIcon(icons.edit)
+        edit_tb.setMinimumSize(WIDGET_MIN_HEIGHT, WIDGET_MIN_HEIGHT)
+        edit_tb.setMaximumSize(25, 25)
+        edit_tb.setFocusPolicy(Qt.NoFocus)
+        edit_tb.clicked.connect(self._on_edit_clicked)
+        layout.addWidget(edit_tb)
+
+        self.row = self.parent().model().mapToSource(index).row()
+        value = get_editor_value(self.proxy, [])
+        # Extract data by column and row
+        if value:
+            value = value[self.row][f"{self.col}"]
+        with SignalBlocker(self._internal_widget):
+            self._internal_widget.setText(','.join(str(v) for v in value))
+        self._internal_widget.setCursorPosition(self.last_cursor_position)
+
+        return widget
+
+    def _on_user_edit(self, text):
+        if self.proxy.binding is None:
+            return
+
+        acceptable_input = self._internal_widget.hasAcceptableInput()
+        self.last_cursor_position = self._internal_widget.cursorPosition()
+        # update color after text change!
+        palette = (self._normal_palette if acceptable_input
+                   else self._error_palette)
+        self._internal_widget.setPalette(palette)
+
+    def setModelData(self, editor, model, index):
+        """Reimplemented function of QStyledItemDelegate"""
+        old = index.model().data(index, Qt.DisplayRole)
+        new = self._internal_widget.text()
+        if not is_equal(old, new):
+            model.setData(index, new, Qt.EditRole)
+            self.commitData.emit(self.sender())
+
+    def _on_edit_clicked(self):
+        if self.proxy.binding is None:
+            return
+
+        list_edit = ListEditDialog(self.proxy.binding, duplicates_ok=True,
+                                   parent=self._internal_widget)
+
+        values = get_editor_value(self.proxy, [])
+        # Extract data by column and row
+        if values:
+            values = values[self.row][f"{self.col}"]
+
+        list_edit.set_list(values)
+        if list_edit.exec() == QDialog.Accepted:
+            self.proxy.edit_value = list_edit.values
+            with SignalBlocker(self._internal_widget):
+                display = ','.join(str(v) for v in list_edit.values)
+                self._internal_widget.setText(display)
+            self._internal_widget.setCursorPosition(self.last_cursor_position)
+        # Give back the focus!
+        self._internal_widget.setFocus(Qt.PopupFocusReason)
 
 
 def requires_gui_version(major: int, minor: int):
