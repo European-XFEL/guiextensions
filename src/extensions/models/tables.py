@@ -27,6 +27,7 @@ TABLE_WIDGET_MODELS = (
     ("MotorAssignmentTableModel", True),
     ("MotorParametersTableModel", True),
     ("SelectionTableModel", True),
+    ("NotificationConfigurationTableModel", True),
 )
 
 
@@ -72,6 +73,13 @@ class DeviceReconfigurationTableModel(BaseWidgetObjectData):
 
 class SelectionTableModel(BaseEditWidget):
     """A model for the convenience selections in a Table"""
+    resizeToContents = Bool(False)
+    filterKeyColumn = Int(0)
+    sortingEnabled = Bool(False)
+
+
+class NotificationConfigurationTableModel(BaseEditWidget):
+    """A model for the notification configuration in a Table"""
     resizeToContents = Bool(False)
     filterKeyColumn = Int(0)
     sortingEnabled = Bool(False)
