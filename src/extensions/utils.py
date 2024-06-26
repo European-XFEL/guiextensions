@@ -1,4 +1,3 @@
-from ast import literal_eval
 from collections import namedtuple
 
 import numpy as np
@@ -12,10 +11,13 @@ from traits.api import Undefined
 
 from karabo.native import Hash, Timestamp, Type, is_equal
 from karabogui.api import (
-    REFERENCE_TYPENUM_TO_DTYPE, NodeBinding, SignalBlocker,
-    VectorStringBinding, get_binding_value, get_editor_value, icons)
-from karabogui.const import WIDGET_MIN_HEIGHT
-from karabogui.dialogs.listedit import ListEditDialog
+    REFERENCE_TYPENUM_TO_DTYPE, ListEditDialog, NodeBinding, SignalBlocker,
+    get_binding_value, get_editor_value, icons)
+
+try:
+    from karabogui.api import WIDGET_MIN_HEIGHT
+except ImportError:
+    from karabogui.const import WIDGET_MIN_HEIGHT
 
 VERSION = namedtuple("VERSION", ["major", "minor"])
 
