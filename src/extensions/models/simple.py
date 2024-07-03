@@ -1,6 +1,6 @@
 from xml.etree.ElementTree import SubElement
 
-from traits.api import Bool, Enum, String
+from traits.api import Bool, Enum, Int, String
 
 from karabo.common.scenemodel.api import (
     BaseDisplayEditableWidget, BaseWidgetObjectData)
@@ -98,6 +98,10 @@ class MetroEditorModel(BaseWidgetObjectData):
 class EventConfigurationModel(BaseEditWidget):
     """ A model for the Event Configuration widget"""
 
+
+class LiveDataIndicatorModel(BaseWidgetObjectData):
+    """A model for LiveDataIndicator Widget."""
+    refresh_interval = Int(10)
 
 # Reader and writers ...
 # --------------------------------------------------------------------------
@@ -202,6 +206,21 @@ def _display_colored_label_writer(model, parent):
     write_font_format_data(model, element)
     return element
 
+
+@register_scene_reader("LiveDataIndicatorModel")
+def _live_data_indicator_reader(element):
+    traits = read_base_widget_data(element)
+    traits["refresh_interval"] = int(
+        (element.get(NS_KARABO + "refresh_interval", 10)))
+    return LiveDataIndicatorModel(**traits)
+
+
+@register_scene_writer(LiveDataIndicatorModel)
+def _live_data_indicator_writer(model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_widget_data(model, element, 'LiveDataIndicatorModel')
+    element.set(NS_KARABO + "refresh_interval", str(model.refresh_interval))
+    return element
 
 # ----------------------------------------------------------------------------
 # Private
