@@ -22,7 +22,7 @@ from karabogui.itemtypes import (
 from ..models.api import EventConfigurationModel
 from ..utils import OptionsDelegate
 
-EVENT_ATTRIBUTES = ["alias", "level", "condition"]
+EVENT_ATTRIBUTES = ["alias", "level", "condition", "comment"]
 GRAY = QColor(178, 178, 178, 60)
 
 
@@ -78,12 +78,9 @@ class EventTreeWidget(QTreeWidget):
         copy_action.triggered.connect(self.copy_item)
         remove_action = menu.addAction("Remove Item")
         remove_action.triggered.connect(self.remove_item)
-        remove_all_action = menu.addAction("Remove All Items")
-        remove_all_action.triggered.connect(self.remove_all_items)
 
         copy_action.setEnabled(len(selection_model.selectedRows()) > 0)
         remove_action.setEnabled(len(selection_model.selectedRows()) > 0)
-        remove_all_action.setEnabled(len(selection_model.selectedRows()) > 0)
         menu.exec(self.viewport().mapToGlobal(pos))
 
     def item_changed(self, item, col):
@@ -153,10 +150,6 @@ class EventTreeWidget(QTreeWidget):
         self.eventTreeChanged.emit()
         self.update_background_color()
 
-    def remove_all_items(self):
-        self.clear()
-        self.eventTreeChanged.emit()
-
     def refresh(self, events):
         """Update event conditions tree
 
@@ -188,7 +181,7 @@ class EventTreeWidget(QTreeWidget):
             item_to_select = parent
 
         if level_item is None:
-            level_item = QTreeWidgetItem(["", event["level"], ""])
+            level_item = QTreeWidgetItem(["", event["level"], "", ""])
             level_item.setFlags(level_item.flags() ^ Qt.ItemIsEditable)
             parent.addChild(level_item)
             level_item.setBackground(
@@ -197,7 +190,11 @@ class EventTreeWidget(QTreeWidget):
                 item_to_select = level_item
 
         for idx, cond in enumerate(event["condition"]):
-            cond_item = QTreeWidgetItem(["", "", cond])
+            if idx < len(event["comment"]):
+                comment = event["comment"][idx]
+            else:
+                comment = ""
+            cond_item = QTreeWidgetItem(["", "", cond, comment])
             cond_item.setFlags(cond_item.flags() ^ Qt.ItemIsEditable)
             level_item.addChild(cond_item)
             if not item_to_select:
@@ -219,10 +216,10 @@ class EventTreeWidget(QTreeWidget):
         self.setCurrentItem(item_to_select)
 
     def mouseDoubleClickEvent(self, event):
-        # Do not allow to edit items without text
         index = self.indexAt(event.pos())
         text = index.data(Qt.DisplayRole)
-        if text:
+        # Allow edit cells with text or columns cell
+        if text or index.column() == 3:
             event.accept()
             return super().mouseDoubleClickEvent(event)
 
@@ -340,13 +337,10 @@ class ButtonToolbar(QWidget):
         self.remove_bt = QPushButton(icons.no, "", self)
         self.remove_bt.setToolTip("Remove selected item")
         self.remove_bt.setEnabled(False)
-        self.remove_all_bt = QPushButton(icons.delete, "", self)
-        self.remove_all_bt.setToolTip("Remove all items")
 
         self.buttons = {self.add_bt: "add",
                         self.copy_bt: "copy",
-                        self.remove_bt: "remove",
-                        self.remove_all_bt: "remove_all"}
+                        self.remove_bt: "remove"}
 
         hlayout = QHBoxLayout(self)
         for widget in self.buttons.keys():
@@ -396,8 +390,6 @@ class EventConfigurationWidget(QWidget):
             self._event_tree.copy_item()
         elif button == "remove":
             self._event_tree.remove_item()
-        elif button == "remove_all":
-            self._event_tree.remove_all_items()
 
     def get_event_config(self):
         result = []
@@ -409,7 +401,10 @@ class EventConfigurationWidget(QWidget):
                          "level", level_item.text(1))
                 conditions = [level_item.child(idx).text(2)
                               for idx in range(level_item.childCount())]
+                comments = [level_item.child(idx).text(3)
+                            for idx in range(level_item.childCount())]
                 h["condition"] = conditions
+                h["comment"] = comments
                 result.append(h)
         return result
 

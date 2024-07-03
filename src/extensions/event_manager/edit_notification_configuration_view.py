@@ -5,8 +5,8 @@ from enum import Enum, IntEnum
 
 from qtpy.QtCore import QModelIndex, QRegExp, Qt, Signal
 from qtpy.QtWidgets import (
-    QAbstractItemView, QHBoxLayout, QListWidget, QListWidgetItem, QSplitter,
-    QToolButton, QVBoxLayout, QWidget)
+    QAbstractItemView, QHBoxLayout, QListWidget, QListWidgetItem, QMenu,
+    QSplitter, QToolButton, QVBoxLayout, QWidget)
 from traits.api import Instance, WeakRef
 
 from karabogui.api import (
@@ -92,6 +92,13 @@ class DeviceIdsWidget(QWidget):
         self.current_device_id = device_id
         self.selectedDeviceIdChanged.emit(device_id)
 
+    def get_device_ids(self):
+        return [self.device_ids_lwidget.item(x).text()
+                for x in range(self.device_ids_lwidget.count())]
+
+    def get_current_device_id(self):
+        return self.current_device_id
+
     def _item_changed(self, item):
         self.deviceIdChanged.emit(DeviceAction.RENAME,
                                   [self.current_device_id, item.text()])
@@ -161,6 +168,7 @@ class NotificationConfigurationView(BaseFilterTableController):
             index = model.index(model.rowCount() - 1, 0, QModelIndex())
             model.setData(index, device_ids[0])
         elif action == DeviceAction.REMOVE:
+            #  TODO iter over table and remove
             pass
         elif action == DeviceAction.RENAME:
             old_device_id, new_device_ids = device_ids
@@ -175,3 +183,41 @@ class NotificationConfigurationView(BaseFilterTableController):
         # TODO hide all rows if None passed
         self.tableWidget().model().setFilterRegExp(
             QRegExp(f"^{device_id}$", Qt.CaseInsensitive))
+
+    def get_basic_menu(self):
+        """Used by subclassed controller to get the basic menu"""
+        index = self.currentIndex()
+        menu = QMenu(parent=self.tableWidget())
+        if index.isValid():
+            up_action = menu.addAction(icons.arrowFancyUp, "Move Row Up")
+            up_action.triggered.connect(self.move_row_up)
+            down_action = menu.addAction(icons.arrowFancyDown, "Move Row Down")
+            down_action.triggered.connect(self.move_row_down)
+            menu.addSeparator()
+
+            add_action = menu.addAction(icons.add, "Add Row below")
+            add_action.triggered.connect(self.add_row)
+            du_action = menu.addAction(icons.editCopy, "Duplicate Row below")
+            du_action.triggered.connect(self.duplicate_row)
+
+            remove_action = menu.addAction(icons.delete, "Delete Row")
+            remove_action.triggered.connect(self.remove_row)
+
+            # Set actions enabled or disabled!
+            num_row = self.tableWidget().model().rowCount() - 1
+            up_action.setEnabled(index.row() > 0)
+            down_action.setEnabled(index.row() < num_row)
+            remove_action.setEnabled(num_row >= 0)
+        else:
+            add_action = menu.addAction(icons.add, "Add Row below")
+            add_action.triggered.connect(self.add_row)
+
+        return menu
+
+    def add_row(self):
+        model = self.sourceModel()
+        row = model.rowCount()
+        model.add_row(row)
+        device_id = self._device_ids_widget.get_current_device_id()
+        index = model.index(row, 0, QModelIndex())
+        model.setData(index, device_id)
