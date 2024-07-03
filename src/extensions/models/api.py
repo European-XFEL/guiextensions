@@ -23,8 +23,8 @@ from .simple import (
     DisplayRunMonitorHistoryModel, DynamicPulseIdMapModel,
     EditableAssistantOverviewModel, EditableDateTimeModel,
     EditableTextOptionsModel, EventConfigurationModel, FileUploaderModel,
-    IPMQuadrantModel, LimitedIntLineEditModel, MetroEditorModel,
-    PointAndClickModel, PulseIdMapModel, ScantoolBaseModel,
+    IPMQuadrantModel, LimitedIntLineEditModel, LiveDataIndicatorModel,
+    MetroEditorModel, PointAndClickModel, PulseIdMapModel, ScantoolBaseModel,
     ScantoolDeviceViewModel, ScantoolTemplatesModel,
     StateAwareComponentManagerModel, VectorLimitedIntLineEditModel)
 from .tables import (
