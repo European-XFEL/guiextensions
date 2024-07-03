@@ -28,7 +28,8 @@ from .simple import (
     ScantoolDeviceViewModel, ScantoolTemplatesModel,
     StateAwareComponentManagerModel, VectorLimitedIntLineEditModel)
 from .tables import (
-    CriticalCompareViewModel, DeviceReconfigurationTableModel,
-    DoocsLocationTableModel, DoocsMirrorTableModel, MotorAssignmentTableModel,
+    ActiveEventsTableModel, CriticalCompareViewModel,
+    DeviceReconfigurationTableModel, DoocsLocationTableModel,
+    DoocsMirrorTableModel, MotorAssignmentTableModel,
     MotorParametersTableModel, NotificationConfigurationTableModel,
     SelectionTableModel)

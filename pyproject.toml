@@ -13,6 +13,7 @@ where = ["src"]
 "extensions" = ["dialogs/ui/*.ui", "icons/*.svg", "daq/ui/*.ui", "scan_tool/dialogs/*.ui", "amore/*.ui"]
 
 [project.entry-points."karabogui.gui_extensions"]
+ActiveEventsTable = "extensions.event_manager.display_active_events_table"
 Amore = "extensions.amore.display_roi_annotate"
 BeamGraph = "extensions.display_beam_graph"
 CircleRoiGraph = "extensions.roi_graph"

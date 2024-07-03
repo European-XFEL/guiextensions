@@ -28,6 +28,7 @@ TABLE_WIDGET_MODELS = (
     ("MotorParametersTableModel", True),
     ("SelectionTableModel", True),
     ("NotificationConfigurationTableModel", True),
+    ("ActiveEventsTableModel", True)
 )
 
 
@@ -80,6 +81,13 @@ class SelectionTableModel(BaseEditWidget):
 
 class NotificationConfigurationTableModel(BaseEditWidget):
     """A model for the notification configuration in a Table"""
+    resizeToContents = Bool(False)
+    filterKeyColumn = Int(0)
+    sortingEnabled = Bool(False)
+
+
+class ActiveEventsTableModel(BaseEditWidget):
+    """A model for the active events table"""
     resizeToContents = Bool(False)
     filterKeyColumn = Int(0)
     sortingEnabled = Bool(False)
