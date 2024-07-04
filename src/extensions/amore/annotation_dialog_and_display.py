@@ -87,7 +87,7 @@ class AnnotationSearchDialog(QDialog):
 
         self.annotation_type.addItems(["Crosshair",
                                        "Rect"])
-        self.start_time.setDate(QDate.currentDate().addDays(-MAX_DAYS*2))
+        self.start_time.setDate(QDate.currentDate().addDays(-int(MAX_DAYS*2)))
         self.start_time.setCalendarPopup(True)
         self.start_time.setDisplayFormat("dd.MM.yyyy")
         self.start_time.setObjectName("start_time")
