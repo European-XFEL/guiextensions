@@ -271,4 +271,28 @@ A confirmation dialog box shows up with clicked position, before moving the cros
    :align: center
 
    Image Crosshair Graph with a crosshair.
-    
+
+
+Live Data Indicator
+===================
+
+The new widget, ``Live Data Indicator``, helps users understand whether a specific property's
+data has been recently updated. Like all other widgets, you can convert a property in the
+scene to a ``Live Data Indicator`` widget by right-clicking and selecting ``Change Widget``
+-> ``Live Data Indicator``. This widget continuously checks for data updates and indicates
+the status with specific icons. The frequency of this check is defined by the
+``Refresh Interval`` property, with a default value as 10 seconds. You can change this
+property value from the scene in Design mode using the right-click context menu -
+``"Update refresh interval..."``.
+
+
+.. figure:: images/live_data_indicator.png
+   :alt: live_data_indicator.png
+   :align: center
+
+   Left Side: Widget when data is up to date and right side when data is out of date.
+
+
+This widget is compatible with all property bindings except for Nodes. If you want to
+monitor data updates for a Node, you can apply the widget to one of the properties from
+the Node.
