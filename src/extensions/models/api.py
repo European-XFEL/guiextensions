@@ -26,7 +26,8 @@ from .simple import (
     IPMQuadrantModel, LimitedIntLineEditModel, LiveDataIndicatorModel,
     MetroEditorModel, PointAndClickModel, PulseIdMapModel, ScantoolBaseModel,
     ScantoolDeviceViewModel, ScantoolTemplatesModel,
-    StateAwareComponentManagerModel, VectorLimitedIntLineEditModel)
+    StateAwareComponentManagerModel, VectorLimitedIntLineEditModel,
+    VectorSliderModel)
 from .tables import (
     ActiveEventsTableModel, CriticalCompareViewModel,
     DeviceReconfigurationTableModel, DoocsLocationTableModel,
