@@ -1,9 +1,8 @@
 import pytest
 
 from extensions.amore.display_roi_annotate import DisplayImageAnnotate
-from extensions.models.api import ROIAnnotateModel
 from karabo.native import Configurable, Float, Int32, Node, String
-from karabogui.testing import get_class_property_proxy, set_proxy_value
+from karabogui.testing import get_class_property_proxy
 
 PIXELS = 1024
 IMAGE_SIZE = PIXELS, PIXELS
@@ -37,4 +36,4 @@ def controller_widget(gui_app):
 
 def test_annotate_display(controller_widget):
     """Test that default annotation type is 2"""
-    assert controller_widget.annotation_type is 2
+    assert controller_widget.annotation_type == 2

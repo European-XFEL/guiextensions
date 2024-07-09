@@ -99,6 +99,10 @@ class EventConfigurationModel(BaseEditWidget):
     """ A model for the Event Configuration widget"""
 
 
+class VectorSliderModel(BaseEditWidget):
+    """ A model for changing displayed images """
+
+
 class LiveDataIndicatorModel(BaseWidgetObjectData):
     """A model for LiveDataIndicator Widget."""
     refresh_interval = Int(10)
@@ -114,7 +118,7 @@ _SIMPLE_WIDGET_MODELS = (
     "VectorLimitedIntLineEditModel", "LimitedIntLineEditModel",
     "EditableAssistantOverviewModel", "FileUploaderModel",
     "MetroEditorModel", "EventConfigurationModel",
-    "DisplayRunMonitorHistoryModel")
+    "DisplayRunMonitorHistoryModel", "VectorSliderModel")
 
 _SIMPLE_DISPLAY_EDIT_MODELS = (
     "StateAwareComponentManagerModel", "PointAndClickModel")
