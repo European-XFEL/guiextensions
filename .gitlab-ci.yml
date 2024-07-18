@@ -4,6 +4,24 @@ stages:
   - deploy
   - package
 
+
+variables:
+  PIP_CACHE_DIR: $CI_PROJECT_DIR/.cache/pip
+
+
+.build_cache:
+  cache_rw:
+    key: common-ci-cache
+    paths:
+      - .cache/pip/
+    policy: pull-push
+  cache_ro:
+    key: common-ci-cache
+    paths:
+      - .cache/pip/
+    policy: pull
+
+
 # static source code analysis
 lint:
   stage: lint
@@ -16,6 +34,7 @@ lint:
     - master
 
 .unit_tests: &unit-tests-conda
+  cache: !reference [ .build_cache, cache_rw ]
   stage: build
   script:
     - python ci/build.py extensions --clean --test
@@ -25,6 +44,7 @@ lint:
     - master
 
 .release_build: &release-build
+  cache: !reference [ .build_cache, cache_rw ]
   stage: build
   variables:
     TWINE_USERNAME: gitlab-ci-token
@@ -48,6 +68,7 @@ lint:
     - schedules
 
 .nightly_build_conda: &nightly-test-conda
+  cache: !reference [ .build_cache, cache_rw ]
   stage: build
   script:
     - python ci/build.py extensions --clean --test --nightly

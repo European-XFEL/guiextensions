@@ -16,14 +16,8 @@ PLATFORMS = {
     "Linux": "linux-64"
 }
 
-WHEEL_FILENAME = 'GUIExtensions-*.whl'
+WHEEL_FILENAME = "GUIExtensions-*.whl"
 REMOTE_KARABO_DIR = "/var/www/html/karabo"
-
-XDG_RUNTIME_DIR = "/tmp/runtime-root"
-XVFB_ARGS = "-screen 0 1280x1024x24"
-XVFB_DISPLAY = ":0"
-XAUTHORITY_PATH = op.join(XDG_RUNTIME_DIR, ".Xauthority")
-
 SSH_HOST = "exflserv05"
 SSH_USER = "xkarabo"
 
@@ -38,12 +32,12 @@ class Builder:
 
     def __init__(self, args):
         # we get the root of the git repository here
-        r = command_run(['git', 'rev-parse', '--show-toplevel'])
+        r = command_run(["git", "rev-parse", "--show-toplevel"])
         self.root_path = op.normpath(r.decode().strip())
         self.args = args
         platform = PLATFORMS.get(sys_name())
         if platform is None:
-            raise RuntimeError(f'Unsupported platform {sys_name()}')
+            raise RuntimeError(f"Unsupported platform {sys_name()}")
         self.platform = platform
         self.version = get_version(self.root_path)
 
@@ -73,28 +67,20 @@ class Builder:
 
     def adapt_platform(self):
         """Performs platform specific tasks per recipe"""
-        if self.platform == 'osx-64':
-            os.environ['LANG'] = 'en_US.UTF-8'
-        elif self.platform == 'linux-64':
-            # Setup XVFB
-            os.environ['DISPLAY'] = XVFB_DISPLAY
-            os.environ['XDG_RUNTIME_DIR'] = XDG_RUNTIME_DIR
-            os.environ['XAUTHORITY'] = XAUTHORITY_PATH
-            command_run([
-                'start-stop-daemon', '--start', '-b', '-x', '/usr/bin/Xvfb',
-                '--', XVFB_DISPLAY, '-screen', '0', '1024x768x24'])
+        if self.platform == "osx-64":
+            os.environ["LANG"] = "en_US.UTF-8"
 
     def clean(self):
         """Cleans the environment of a package and purges old build dirs"""
         print("Cleaning", self.args.module)
         conda_run(
             Commands.RUN,
-            '-n', 'base',
-            'conda', 'build', 'purge-all')
+            "-n", "base",
+            "conda", "build", "purge-all")
 
         try:
             # Remove Karabo GUI environment
-            conda_run(Commands.REMOVE, '-n', 'karabogui', '--all')
+            conda_run(Commands.REMOVE, "-n", "karabogui", "--all")
         except RuntimeError:
             # this might fail if the environment does not exist
             print("Tried removing `karabogui` environment, "
@@ -103,61 +89,61 @@ class Builder:
 
         # Clean files that are not included in the branch
         # (potentially the Framework clone)
-        command_run(['git', 'clean', '-fdx'])
+        command_run(["git", "clean", "-fdx"])
 
     def run_tests(self):
         """We use the Framework master to test against with."""
         print(f"Running tests for {self.args.module}")
-        token = os.environ.get('XFEL_TOKEN')
+        token = os.environ.get("XFEL_TOKEN")
         git_path = f"https://{token}@git.xfel.eu/Karabo/Framework.git"
         # Clone Framework master
-        framework_dir = op.join(self.root_path, 'Framework')
-        command_run(['git', 'clone', git_path, framework_dir])
+        framework_dir = op.join(self.root_path, "Framework")
+        command_run(["git", "clone", git_path, framework_dir])
 
         # Create environment with Karabo GUI
-        devenv_path = op.join('conda-recipes', 'karabogui',
-                              'environment.devenv.yml')
-        conda_run(Commands.RUN, '-n', 'base', 'conda', 'devenv',
-                  '--file', op.join(framework_dir, devenv_path))
+        devenv_path = op.join("conda-recipes", "karabogui",
+                              "environment.devenv.yml")
+        conda_run(Commands.RUN, "-n", "base", "conda", "devenv",
+                  "--file", op.join(framework_dir, devenv_path))
 
-        conda_run(Commands.RUN, '-n', 'karabogui', 'python', '-m', 'pip',
-                  'install', '--upgrade', 'pip')
+        conda_run(Commands.RUN, "-n", "karabogui", "python", "-m", "pip",
+                  "install", "pytest-xvfb")
 
         # Install pythonGui in the environment to register the entrypoints
-        gui_root = op.join(framework_dir, 'src', 'pythonGui')
-        conda_run(Commands.RUN, '-n', 'karabogui', '--cwd', gui_root,
-                  'python', '-m', 'pip', 'install', '.')
+        gui_root = op.join(framework_dir, "src", "pythonGui")
+        conda_run(Commands.RUN, "-n", "karabogui", "--cwd", gui_root,
+                  "python", "-m", "pip", "install", ".")
 
         # Install pythonKarabo in the environment as well, but only native
         os.environ["BUILD_KARABO_SUBMODULE"] = "NATIVE"
-        py_karabo_root = op.join(framework_dir, 'src', 'pythonKarabo')
-        conda_run(Commands.RUN, '-n', 'karabogui', '--cwd', py_karabo_root,
-                  'python', '-m', 'pip', 'install', '.')
+        py_karabo_root = op.join(framework_dir, "src", "pythonKarabo")
+        conda_run(Commands.RUN, "-n", "karabogui", "--cwd", py_karabo_root,
+                  "python", "-m", "pip", "install", ".")
 
         os.environ.pop("BUILD_KARABO_SUBMODULE")
 
         # Then install the package
-        conda_run(Commands.RUN, '-n', 'karabogui', '--cwd', self.root_path,
-                  'python', '-m', 'pip', 'install', '.')
+        conda_run(Commands.RUN, "-n", "karabogui", "--cwd", self.root_path,
+                  "python", "-m", "pip", "install", ".")
 
         # Run tests locally
         extensions_path = op.join(self.root_path, "src")
-        cmd = [Commands.RUN, '-n', 'karabogui', '--cwd', extensions_path,
-               'python', '-m', 'pytest', '-v', '.']
+        cmd = [Commands.RUN, "-n", "karabogui", "--cwd", extensions_path,
+               "python", "-m", "pytest", "-v", "."]
         conda_run(*cmd)
 
         # When the tests are succesful, we make sure that we can run normal
         # gui tests
-        cmd = [Commands.RUN, '-n', 'karabogui', '--cwd', gui_root,
-               'python', '-m', 'pytest', '.']
+        cmd = [Commands.RUN, "-n", "karabogui", "--cwd", gui_root,
+               "python", "-m", "pytest", "."]
         conda_run(*cmd)
 
-        print('Tests successful')
+        print("Tests successful")
 
     def create_wheel(self):
         print(f"Creating wheel at {os.environ.get('CI_PROJECT_DIR')}")
-        command_run(['python', '-m', 'pip', 'wheel', '.', '-w', 'dist'])
-        filename = op.join(self.root_path, '**', WHEEL_FILENAME)
+        command_run(["python", "-m", "pip", "wheel", ".", "-w", "dist"])
+        filename = op.join(self.root_path, "**", WHEEL_FILENAME)
         filenames = glob.glob(filename)
         # Verify if a wheel is created
         if not filenames:
@@ -168,7 +154,7 @@ class Builder:
 
     def upload(self, local_file_path):
         """Uploads the local file to in the in specified remote path"""
-        remote_dir = '/'.join([self.args.remote_base_dir, str(self.version)])
+        remote_dir = "/".join([self.args.remote_base_dir, str(self.version)])
         print("Creating remote directories:", remote_dir)
 
         with SSHClient() as ssh_client:
@@ -181,17 +167,17 @@ class Builder:
 
                 # Upload file
                 filename = op.basename(local_file_path)
-                remote_file_path = '/'.join(
+                remote_file_path = "/".join(
                     [REMOTE_KARABO_DIR, remote_dir, filename])
-                print(f'Uploading {local_file_path} to {remote_file_path}')
+                print(f"Uploading {local_file_path} to {remote_file_path}")
                 sftp.put(local_file_path, remote_file_path)
 
 
 def conda_run(command, *args, **kwargs):
     stdout, stderr, ret_code = run_command(command, *args, **kwargs)
     if ret_code != 0:
-        msg = f'Command {command} [{args}] ' \
-              f'{kwargs} returned {ret_code}\n{stderr}'
+        msg = f"Command {command} [{args}] " \
+              f"{kwargs} returned {ret_code}\n{stderr}"
         raise RuntimeError(msg)
     return stdout
 
@@ -204,11 +190,11 @@ def command_run(cmd):
         raise e
 
 
-def mkdir(remote_path, basedir='', sftp=None):
-    rel_path = ''
-    for path in remote_path.split('/'):
-        rel_path = '/'.join([rel_path, path])
-        abs_path = '/'.join([basedir, rel_path])
+def mkdir(remote_path, basedir="", sftp=None):
+    rel_path = ""
+    for path in remote_path.split("/"):
+        rel_path = "/".join([rel_path, path])
+        abs_path = "/".join([basedir, rel_path])
         try:
             stat_ = sftp.stat(abs_path)
             if not S_ISDIR(stat_.st_mode):
@@ -231,32 +217,32 @@ This script will manage the running of tests and uploading of the build wheel
 to the desired destination.
 """
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     root_ap = argparse.ArgumentParser(
         description=DESCRIPTION)
 
-    root_ap.add_argument('module', type=str)
+    root_ap.add_argument("module", type=str)
 
     root_ap.add_argument(
-        '-f', '--clean', action='store_true',
-        help='clean development environment')
+        "-f", "--clean", action="store_true",
+        help="clean development environment")
 
     root_ap.add_argument(
-        '-T', '--test', action='store_true',
-        help='run tests')
+        "-T", "--test", action="store_true",
+        help="run tests")
 
     root_ap.add_argument(
-        '-N', '--nightly', action='store_true',
-        help='check if this is a nightly build')
+        "-N", "--nightly", action="store_true",
+        help="check if this is a nightly build")
 
     root_ap.add_argument(
-        '-U', '--upload-wheel', action='store_true',
-        help='upload the wheel on remote host')
+        "-U", "--upload-wheel", action="store_true",
+        help="upload the wheel on remote host")
 
     root_ap.add_argument(
-        '-P', '--remote-base-dir', type=str,
-        default='karaboExtensions/tags',
-        help='directory of the Extensions wheels on remote host.')
+        "-P", "--remote-base-dir", type=str,
+        default="karaboExtensions/tags",
+        help="directory of the Extensions wheels on remote host.")
 
     args = root_ap.parse_args()
     main(args)
