@@ -47,6 +47,7 @@ class DisplayXYTwoAxisGraph(BaseBindingController):
         config = build_graph_config(self.model)
         widget.restore(config)
 
+        widget.enable_data_toggle(activate=True)
         widget.set_legend(False)
         return widget
 
@@ -62,13 +63,13 @@ class DisplayXYTwoAxisGraph(BaseBindingController):
         legend = widget.plotItem.legend
         pen = next(self._pens)
         if self._left_y_data is None:
-            curve = widget.add_curve_item(name=name, pen=pen)
+            curve = widget.add_curve_item(name=name, pen=pen, connect="all")
             self._curves[proxy] = curve
             left_axis = widget.plotItem.getAxis("left")
             left_axis.setPen(pen)
             self._left_y_data = curve
         else:
-            data_item = pg.PlotDataItem(pen=pen, name=name)
+            data_item = pg.PlotDataItem(pen=pen, name=name, connect="all")
             if self._second_vb is None:
                 self._second_vb = add_twinx(
                    plotItem=widget.plotItem, data_item=data_item)
