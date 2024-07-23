@@ -19,7 +19,8 @@ from karabogui.api import (
     call_device_slot, get_font_size_from_dpi, get_reason_parts, messagebox)
 from karabogui.binding.api import VectorHashBinding, get_binding_value
 from karabogui.controllers.api import (
-    BaseBindingController, register_binding_controller, with_display_type)
+    BaseBindingController, is_proxy_allowed, register_binding_controller,
+    with_display_type)
 from karabogui.request import send_property_changes
 
 from ...models.detectors import RunAssistantModuleSelectionModel
@@ -46,6 +47,10 @@ class BaseAGIPDModuleSelection(BaseBindingController):
         qwidget = detector.widget.widget
         qwidget.setParent(parent)
 
+        # Disable scrolling
+        viewbox = qwidget.plotItem.getViewBox()
+        viewbox.setMouseEnabled(x=False, y=False)
+
         # Finalize
         self._detector = detector
         return qwidget
@@ -54,9 +59,9 @@ class BaseAGIPDModuleSelection(BaseBindingController):
         # Convert device value to detector selection
         value = self.to_detector_selection(get_binding_value(proxy))
 
-        # Don't do anything if value is explicitly None
+        # Use the default detector selection if there's no device value
         if value is None:
-            return
+            value = self.default_detector_selection
 
         # Coerce value to a set
         value = set(value)
@@ -174,7 +179,7 @@ class RunAssistantModuleSelection(BaseAGIPDModuleSelection):
         layout.addWidget(widget)
         layout.addWidget(self.detector_label)
 
-        container = QWidget(parent)
+        container = WidgetNoDoubleClick(parent)
         container.setLayout(layout)
 
         # Add an action to display an input dialog
@@ -183,6 +188,16 @@ class RunAssistantModuleSelection(BaseAGIPDModuleSelection):
         container.addAction(detector_action)
 
         return container
+
+    def clear_widget(self):
+        # Select all before disabling the widget
+        with self._waiting():
+            self._detector.selection = self.default_detector_selection
+        self.widget.setEnabled(False)
+
+    def state_update(self, proxy):
+        enable = is_proxy_allowed(proxy)
+        self.widget.setEnabled(enable)
 
     @property
     def default_detector_selection(self):
@@ -243,7 +258,7 @@ class RunAssistantModuleSelection(BaseAGIPDModuleSelection):
 
     def _detector_label_default(self):
         font = QFont()
-        font.setPointSize(get_font_size_from_dpi(18))
+        font.setPointSize(get_font_size_from_dpi(14))
         font.setBold(True)
 
         label = QLabel(self.model.detector)
@@ -269,3 +284,12 @@ class RunAssistantModuleSelection(BaseAGIPDModuleSelection):
             return
 
         self.model.detector = location
+
+
+class WidgetNoDoubleClick(QWidget):
+    """Just a simple widget that catches double click events and avoid
+       propagating it. This is to avoid showing default property scenes."""
+
+    def mouseDoubleClickEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            event.accept()
