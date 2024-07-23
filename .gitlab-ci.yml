@@ -52,7 +52,7 @@ lint:
     UPLOAD_URL: $CI_API_V4_URL/projects/4562/packages/pypi
   script:
     - python ci/build.py extensions --clean --test --upload-wheel -P karaboExtensions/tags
-    - python -m pip install twine
+    - python -m pip install twine --upgrade
     - cd dist
     - >
       for FILE in *.whl; do
